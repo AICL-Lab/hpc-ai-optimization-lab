@@ -37,13 +37,14 @@
 
 ```
 HPC-AI-Optimization-Lab/
-├── cmake/                      # 现代 CMake 工具链
 ├── src/
 │   ├── common/                 # 🔧 基础工具库
 │   │   ├── cuda_check.cuh      #    CUDA 错误检查宏
 │   │   ├── timer.cuh           #    高精度 GPU 计时器
 │   │   ├── tensor.cuh          #    RAII Tensor 类 (C++20 Concepts)
-│   │   └── types.cuh           #    Half/BF16 类型封装
+│   │   ├── types.cuh           #    Half/BF16 类型封装
+│   │   ├── opt_level.cuh       #    Elementwise 优化级别枚举
+│   │   └── reduce.cuh          #    Warp/Block 级归约原语
 │   │
 │   ├── 01_elementwise/         # 📊 访存密集型算子
 │   │   ├── relu.cu/cuh         #    ReLU: Naive → Vectorized → GridStride
@@ -83,7 +84,9 @@ HPC-AI-Optimization-Lab/
 │   └── benchmark/              # PyTorch 性能对比脚本
 │
 ├── tests/                      # GoogleTest + RapidCheck 测试
-├── docker/                     # CUDA 13.1 Docker 环境
+├── examples/                   # 各模块可运行示例
+├── docker/                     # CUDA 12.4 Docker 环境
+├── CMakePresets.json            # CMake 预设 (default/release/ci)
 └── README.md
 ```
 
@@ -99,23 +102,27 @@ HPC-AI-Optimization-Lab/
 | Python | 3.8+ | 用于 Benchmark 和 Python 绑定 |
 | PyTorch | 2.0+ | 用于性能对比测试 |
 
-### 方式一：本地构建
+### 方式一：本地构建 (CMake Presets)
 
 ```bash
 # 克隆仓库
 git clone https://github.com/yourusername/HPC-AI-Optimization-Lab.git
 cd HPC-AI-Optimization-Lab
 
-# 创建构建目录
-mkdir build && cd build
-
-# 配置 (自动检测 GPU 架构)
-cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
-
-# 编译
-ninja
+# 使用 CMake Preset 配置 + 构建
+cmake --preset release
+cmake --build --preset release
 
 # 运行测试
+ctest --preset release
+```
+
+也可以手动配置：
+
+```bash
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -GNinja
+ninja
 ctest --output-on-failure
 ```
 
@@ -138,7 +145,7 @@ cmake .. -GNinja && ninja
 
 ```bash
 # 在 build 目录下
-cmake .. -DBUILD_PYTHON=ON
+cmake .. -DBUILD_PYTHON_BINDINGS=ON
 ninja
 
 # 安装到 Python 环境

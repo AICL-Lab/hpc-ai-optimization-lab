@@ -1,8 +1,6 @@
 # Examples CMakeLists.txt
 # Build examples for HPC-AI-Optimization-Lab
 
-cmake_minimum_required(VERSION 3.18)
-
 # Option to build examples
 option(BUILD_EXAMPLES "Build example programs" ON)
 
@@ -29,10 +27,10 @@ function(add_cuda_example name source_file)
     )
     # Link against project libraries
     target_link_libraries(${name} PRIVATE
-        elementwise_ops
-        reduction_ops
-        gemm_ops
-        attention_ops
+        hpc_elementwise
+        hpc_reduction
+        hpc_gemm
+        hpc_attention
     )
 endfunction()
 

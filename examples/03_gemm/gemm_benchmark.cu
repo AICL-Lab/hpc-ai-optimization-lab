@@ -10,29 +10,17 @@
 
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 #include <vector>
 #include <string>
+#include <random>
 
-// Include GEMM implementations
-#include "../../src/03_gemm/gemm_naive.cuh"
-#include "../../src/03_gemm/gemm_tiled.cuh"
-#include "../../src/03_gemm/gemm_vectorized.cuh"
-#include "../../src/03_gemm/gemm_double_buffer.cuh"
-#include "../../src/03_gemm/gemm_warp_tiling.cuh"
-#include "../../src/03_gemm/gemm_wmma.cuh"
-#include "../../src/03_gemm/gemm_mma.cuh"
+#include "03_gemm/gemm.cuh"
+#include "common/cuda_check.cuh"
+#include "common/tensor.cuh"
 
-#define CUDA_CHECK(call)                                                       \
-    do {                                                                       \
-        cudaError_t err = call;                                                \
-        if (err != cudaSuccess) {                                              \
-            fprintf(stderr, "CUDA error at %s:%d: %s\n", __FILE__, __LINE__,   \
-                    cudaGetErrorString(err));                                  \
-            exit(EXIT_FAILURE);                                                \
-        }                                                                      \
-    } while (0)
+using hpc::gemm::gemm;
+using hpc::gemm::GemmOpt;
 
 #define CUBLAS_CHECK(call)                                                     \
     do {                                                                       \
@@ -101,24 +89,21 @@ void run_benchmarks(int M, int N, int K) {
     const size_t size_B = K * N * sizeof(float);
     const size_t size_C = M * N * sizeof(float);
 
-    // Allocate host memory
+    // Allocate host memory and initialize with random values
+    std::mt19937 rng(42);
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     std::vector<float> h_A(M * K);
     std::vector<float> h_B(K * N);
-    std::vector<float> h_C(M * N);
+    for (auto& val : h_A) val = dist(rng);
+    for (auto& val : h_B) val = dist(rng);
 
-    // Initialize with random values
-    srand(42);
-    for (auto& val : h_A) val = (float)rand() / RAND_MAX;
-    for (auto& val : h_B) val = (float)rand() / RAND_MAX;
+    // Allocate device memory (RAII)
+    hpc::Tensor<float> d_A(M * K);
+    hpc::Tensor<float> d_B(K * N);
+    hpc::Tensor<float> d_C(M * N);
 
-    // Allocate device memory
-    float *d_A, *d_B, *d_C;
-    CUDA_CHECK(cudaMalloc(&d_A, size_A));
-    CUDA_CHECK(cudaMalloc(&d_B, size_B));
-    CUDA_CHECK(cudaMalloc(&d_C, size_C));
-
-    CUDA_CHECK(cudaMemcpy(d_A, h_A.data(), size_A, cudaMemcpyHostToDevice));
-    CUDA_CHECK(cudaMemcpy(d_B, h_B.data(), size_B, cudaMemcpyHostToDevice));
+    d_A.copy_from_host(h_A);
+    d_B.copy_from_host(h_B);
 
     std::vector<BenchmarkResult> results;
 
@@ -129,7 +114,7 @@ void run_benchmarks(int M, int N, int K) {
 
     auto cublas_gemm = [&]() {
         cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
-                    N, M, K, &alpha, d_B, N, d_A, K, &beta, d_C, N);
+                    N, M, K, &alpha, d_B.data(), N, d_A.data(), K, &beta, d_C.data(), N);
     };
     float cublas_time = benchmark_gemm(cublas_gemm);
     float cublas_tflops = calculate_tflops(M, N, K, cublas_time);
@@ -137,66 +122,48 @@ void run_benchmarks(int M, int N, int K) {
 
     // Step 1: Naive GEMM
     auto naive_gemm = [&]() {
-        hpc_ai_opt::gemm_naive(d_A, d_B, d_C, M, N, K);
+        gemm<float, GemmOpt::Naive>(d_A.data(), d_B.data(), d_C.data(), M, N, K, 1.0f, 0.0f);
     };
     float naive_time = benchmark_gemm(naive_gemm);
     float naive_tflops = calculate_tflops(M, N, K, naive_time);
     results.push_back({"Step 1: Naive", naive_time, naive_tflops,
                        (cublas_time / naive_time) * 100.0f});
 
-    // Step 2: Tiled GEMM
+    // Step 2: SharedMem Tiling
     auto tiled_gemm = [&]() {
-        hpc_ai_opt::gemm_tiled(d_A, d_B, d_C, M, N, K);
+        gemm<float, GemmOpt::SharedMemTiling>(d_A.data(), d_B.data(), d_C.data(), M, N, K, 1.0f, 0.0f);
     };
     float tiled_time = benchmark_gemm(tiled_gemm);
     float tiled_tflops = calculate_tflops(M, N, K, tiled_time);
-    results.push_back({"Step 2: Tiled", tiled_time, tiled_tflops,
+    results.push_back({"Step 2: SharedMem Tiling", tiled_time, tiled_tflops,
                        (cublas_time / tiled_time) * 100.0f});
 
-    // Step 3: Vectorized
-    auto vec_gemm = [&]() {
-        hpc_ai_opt::gemm_vectorized(d_A, d_B, d_C, M, N, K);
-    };
-    float vec_time = benchmark_gemm(vec_gemm);
-    float vec_tflops = calculate_tflops(M, N, K, vec_time);
-    results.push_back({"Step 3: Vectorized", vec_time, vec_tflops,
-                       (cublas_time / vec_time) * 100.0f});
-
-    // Step 4: Double Buffer
+    // Step 3: Double Buffer
     auto db_gemm = [&]() {
-        hpc_ai_opt::gemm_double_buffer(d_A, d_B, d_C, M, N, K);
+        gemm<float, GemmOpt::DoubleBuffer>(d_A.data(), d_B.data(), d_C.data(), M, N, K, 1.0f, 0.0f);
     };
     float db_time = benchmark_gemm(db_gemm);
     float db_tflops = calculate_tflops(M, N, K, db_time);
-    results.push_back({"Step 4: Double Buffer", db_time, db_tflops,
+    results.push_back({"Step 3: Double Buffer", db_time, db_tflops,
                        (cublas_time / db_time) * 100.0f});
 
-    // Step 5: Warp Tiling
-    auto warp_gemm = [&]() {
-        hpc_ai_opt::gemm_warp_tiling(d_A, d_B, d_C, M, N, K);
+    // Step 4: Register Tiling
+    auto reg_gemm = [&]() {
+        gemm<float, GemmOpt::RegisterTiling>(d_A.data(), d_B.data(), d_C.data(), M, N, K, 1.0f, 0.0f);
     };
-    float warp_time = benchmark_gemm(warp_gemm);
-    float warp_tflops = calculate_tflops(M, N, K, warp_time);
-    results.push_back({"Step 5: Warp Tiling", warp_time, warp_tflops,
-                       (cublas_time / warp_time) * 100.0f});
+    float reg_time = benchmark_gemm(reg_gemm);
+    float reg_tflops = calculate_tflops(M, N, K, reg_time);
+    results.push_back({"Step 4: Register Tiling", reg_time, reg_tflops,
+                       (cublas_time / reg_time) * 100.0f});
 
-    // Step 6: WMMA (Tensor Core)
-    auto wmma_gemm = [&]() {
-        hpc_ai_opt::gemm_wmma(d_A, d_B, d_C, M, N, K);
+    // Step 5: Software Pipeline
+    auto pipe_gemm = [&]() {
+        gemm<float, GemmOpt::SoftwarePipeline>(d_A.data(), d_B.data(), d_C.data(), M, N, K, 1.0f, 0.0f);
     };
-    float wmma_time = benchmark_gemm(wmma_gemm);
-    float wmma_tflops = calculate_tflops(M, N, K, wmma_time);
-    results.push_back({"Step 6: WMMA", wmma_time, wmma_tflops,
-                       (cublas_time / wmma_time) * 100.0f});
-
-    // Step 7: MMA (PTX)
-    auto mma_gemm = [&]() {
-        hpc_ai_opt::gemm_mma(d_A, d_B, d_C, M, N, K);
-    };
-    float mma_time = benchmark_gemm(mma_gemm);
-    float mma_tflops = calculate_tflops(M, N, K, mma_time);
-    results.push_back({"Step 7: MMA (PTX)", mma_time, mma_tflops,
-                       (cublas_time / mma_time) * 100.0f});
+    float pipe_time = benchmark_gemm(pipe_gemm);
+    float pipe_tflops = calculate_tflops(M, N, K, pipe_time);
+    results.push_back({"Step 5: Software Pipeline", pipe_time, pipe_tflops,
+                       (cublas_time / pipe_time) * 100.0f});
 
     // Print results
     printf("\n%-25s %12s %12s %12s\n", "Implementation", "Time (ms)", "TFLOPS", "vs cuBLAS");
@@ -206,11 +173,8 @@ void run_benchmarks(int M, int N, int K) {
                r.name.c_str(), r.time_ms, r.tflops, r.efficiency);
     }
 
-    // Cleanup
+    // Cleanup (Tensors cleaned up by RAII)
     CUBLAS_CHECK(cublasDestroy(handle));
-    CUDA_CHECK(cudaFree(d_A));
-    CUDA_CHECK(cudaFree(d_B));
-    CUDA_CHECK(cudaFree(d_C));
 }
 
 int main(int argc, char** argv) {

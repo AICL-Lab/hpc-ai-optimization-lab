@@ -9,22 +9,13 @@
  */
 
 #include <cuda_runtime.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <chrono>
+#include <cstdio>
+#include <random>
+#include <vector>
 
-// Include the optimized ReLU kernel
-#include "../../src/01_elementwise/relu.cuh"
-
-#define CUDA_CHECK(call)                                                       \
-    do {                                                                       \
-        cudaError_t err = call;                                                \
-        if (err != cudaSuccess) {                                              \
-            fprintf(stderr, "CUDA error at %s:%d: %s\n", __FILE__, __LINE__,   \
-                    cudaGetErrorString(err));                                  \
-            exit(EXIT_FAILURE);                                                \
-        }                                                                      \
-    } while (0)
+#include "01_elementwise/relu.cuh"
+#include "common/cuda_check.cuh"
+#include "common/tensor.cuh"
 
 /**
  * @brief Naive ReLU kernel for comparison
@@ -89,25 +80,21 @@ int main(int argc, char** argv) {
     printf("=== ReLU Example ===\n");
     printf("Array size: %d elements (%.2f MB)\n", N, bytes / (1024.0f * 1024.0f));
 
-    // Allocate host memory
-    float* h_input = (float*)malloc(bytes);
-    float* h_output_naive = (float*)malloc(bytes);
-    float* h_output_optimized = (float*)malloc(bytes);
-
     // Initialize input with random values
-    srand(42);
+    std::mt19937 rng(42);
+    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+    std::vector<float> h_input(N);
     for (int i = 0; i < N; i++) {
-        h_input[i] = (float)rand() / RAND_MAX * 2.0f - 1.0f;  // [-1, 1]
+        h_input[i] = dist(rng);
     }
 
-    // Allocate device memory
-    float *d_input, *d_output_naive, *d_output_optimized;
-    CUDA_CHECK(cudaMalloc(&d_input, bytes));
-    CUDA_CHECK(cudaMalloc(&d_output_naive, bytes));
-    CUDA_CHECK(cudaMalloc(&d_output_optimized, bytes));
+    // Allocate device memory (RAII)
+    hpc::Tensor<float> d_input(N);
+    hpc::Tensor<float> d_output_naive(N);
+    hpc::Tensor<float> d_output_optimized(N);
 
     // Copy input to device
-    CUDA_CHECK(cudaMemcpy(d_input, h_input, bytes, cudaMemcpyHostToDevice));
+    d_input.copy_from_host(h_input);
 
     // Kernel configurations
     const int block_size = 256;
@@ -120,23 +107,23 @@ int main(int argc, char** argv) {
 
     // Benchmark naive kernel
     auto naive_kernel = [&]() {
-        relu_naive<<<grid_size_naive, block_size>>>(d_input, d_output_naive, N);
+        relu_naive<<<grid_size_naive, block_size>>>(d_input.data(), d_output_naive.data(), N);
     };
     float naive_time = benchmark_kernel(naive_kernel);
 
-    // Benchmark optimized kernel
+    // Benchmark optimized kernel (GridStride level)
     auto optimized_kernel = [&]() {
-        hpc_ai_opt::relu_forward(d_input, d_output_optimized, N);
+        hpc::elementwise::relu<float>(d_input.data(), d_output_optimized.data(), N);
     };
     float optimized_time = benchmark_kernel(optimized_kernel);
 
     // Copy results back
-    CUDA_CHECK(cudaMemcpy(h_output_naive, d_output_naive, bytes, cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(h_output_optimized, d_output_optimized, bytes, cudaMemcpyDeviceToHost));
+    auto h_output_naive = d_output_naive.to_host();
+    auto h_output_optimized = d_output_optimized.to_host();
 
     // Verify correctness
     printf("\nVerifying results...\n");
-    bool correct = verify_results(h_output_naive, h_output_optimized, N);
+    bool correct = verify_results(h_output_naive.data(), h_output_optimized.data(), N);
     printf("Results %s\n", correct ? "MATCH ✓" : "MISMATCH ✗");
 
     // Performance results
@@ -152,13 +139,6 @@ int main(int argc, char** argv) {
     printf("  Naive:     %.2f GB/s\n", naive_bandwidth);
     printf("  Optimized: %.2f GB/s\n", optimized_bandwidth);
 
-    // Cleanup
-    free(h_input);
-    free(h_output_naive);
-    free(h_output_optimized);
-    CUDA_CHECK(cudaFree(d_input));
-    CUDA_CHECK(cudaFree(d_output_naive));
-    CUDA_CHECK(cudaFree(d_output_optimized));
-
+    // Cleanup handled by RAII (hpc::Tensor destructors)
     return correct ? 0 : 1;
 }

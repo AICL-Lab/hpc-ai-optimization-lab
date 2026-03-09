@@ -12,7 +12,7 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
                                         const T* __restrict__ V,
                                         T* __restrict__ O,
                                         int batch_size, int num_heads,
-                                        int seq_len, int head_dim,
+                                        int seq_len,
                                         float scale, bool causal) {
     // Shared memory for Q, K, V tiles
     extern __shared__ float smem[];
@@ -27,19 +27,19 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
     int q_start = blockIdx.y * BLOCK_SIZE;
 
     // Offset to current batch and head
-    int offset = (b * num_heads + h) * seq_len * head_dim;
+    int offset = (b * num_heads + h) * seq_len * HEAD_DIM;
     const T* Q_ptr = Q + offset;
     const T* K_ptr = K + offset;
     const T* V_ptr = V + offset;
     T* O_ptr = O + offset;
 
     // Load Q tile
-    for (int i = threadIdx.x; i < BLOCK_SIZE * head_dim; i += blockDim.x) {
-        int row = i / head_dim;
-        int col = i % head_dim;
+    for (int i = threadIdx.x; i < BLOCK_SIZE * HEAD_DIM; i += blockDim.x) {
+        int row = i / HEAD_DIM;
+        int col = i % HEAD_DIM;
         int q_idx = q_start + row;
         if (q_idx < seq_len) {
-            q_tile[i] = static_cast<float>(Q_ptr[q_idx * head_dim + col]);
+            q_tile[i] = static_cast<float>(Q_ptr[q_idx * HEAD_DIM + col]);
         } else {
             q_tile[i] = 0.0f;
         }
@@ -54,13 +54,13 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
     // Iterate over K, V tiles
     for (int kv_start = 0; kv_start < seq_len; kv_start += BLOCK_SIZE) {
         // Load K, V tiles
-        for (int i = threadIdx.x; i < BLOCK_SIZE * head_dim; i += blockDim.x) {
-            int row = i / head_dim;
-            int col = i % head_dim;
+        for (int i = threadIdx.x; i < BLOCK_SIZE * HEAD_DIM; i += blockDim.x) {
+            int row = i / HEAD_DIM;
+            int col = i % HEAD_DIM;
             int kv_idx = kv_start + row;
             if (kv_idx < seq_len) {
-                k_tile[i] = static_cast<float>(K_ptr[kv_idx * head_dim + col]);
-                v_tile[i] = static_cast<float>(V_ptr[kv_idx * head_dim + col]);
+                k_tile[i] = static_cast<float>(K_ptr[kv_idx * HEAD_DIM + col]);
+                v_tile[i] = static_cast<float>(V_ptr[kv_idx * HEAD_DIM + col]);
             } else {
                 k_tile[i] = 0.0f;
                 v_tile[i] = 0.0f;
@@ -74,8 +74,8 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
         if (q_idx < seq_len && threadIdx.x < BLOCK_SIZE) {
             for (int j = 0; j < BLOCK_SIZE && (kv_start + j) < seq_len; ++j) {
                 float score = 0.0f;
-                for (int d = 0; d < head_dim; ++d) {
-                    score += q_tile[threadIdx.x * head_dim + d] * k_tile[j * head_dim + d];
+                for (int d = 0; d < HEAD_DIM; ++d) {
+                    score += q_tile[threadIdx.x * HEAD_DIM + d] * k_tile[j * HEAD_DIM + d];
                 }
                 score *= scale;
 
@@ -91,8 +91,8 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
                 float l_new = l_prev * exp_prev + exp_curr;
 
                 // Update output accumulator
-                for (int d = 0; d < head_dim; ++d) {
-                    o_acc[d] = o_acc[d] * exp_prev + exp_curr * v_tile[j * head_dim + d];
+                for (int d = 0; d < HEAD_DIM; ++d) {
+                    o_acc[d] = o_acc[d] * exp_prev + exp_curr * v_tile[j * HEAD_DIM + d];
                 }
 
                 m_prev = m_new;
@@ -106,8 +106,8 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
     int q_idx = q_start + threadIdx.x;
     if (q_idx < seq_len && threadIdx.x < BLOCK_SIZE) {
         float inv_l = 1.0f / l_prev;
-        for (int d = 0; d < head_dim; ++d) {
-            O_ptr[q_idx * head_dim + d] = static_cast<T>(o_acc[d] * inv_l);
+        for (int d = 0; d < HEAD_DIM; ++d) {
+            O_ptr[q_idx * HEAD_DIM + d] = static_cast<T>(o_acc[d] * inv_l);
         }
     }
 }
@@ -126,10 +126,17 @@ void flash_attention_forward<float>(const float* Q, const float* K, const float*
     size_t smem_size = 3 * BLOCK_SIZE * HEAD_DIM * sizeof(float) + 
                        BLOCK_SIZE * BLOCK_SIZE * sizeof(float);
     
+    // HEAD_DIM is a compile-time constant; assert config matches
+    if (config.head_dim != HEAD_DIM) {
+        fprintf(stderr, "flash_attention: config.head_dim=%d but compiled HEAD_DIM=%d\n",
+                config.head_dim, HEAD_DIM);
+        return;
+    }
+
     flash_attention_kernel<float, BLOCK_SIZE, HEAD_DIM><<<grid, block, smem_size, stream>>>(
         Q, K, V, O,
         config.batch_size, config.num_heads,
-        config.seq_len, config.head_dim,
+        config.seq_len,
         config.scale, config.causal);
     CUDA_CHECK_LAST();
 }
