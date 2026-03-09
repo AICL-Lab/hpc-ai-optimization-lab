@@ -1,4 +1,6 @@
-# 🚀 HPC-AI-Optimization-Lab
+# HPC-AI-Optimization-Lab
+
+简体中文 | [English](README.en.md)
 
 <p align="center">
   <b>一本"活的"高性能 CUDA 算子开发教科书</b><br>
@@ -10,6 +12,7 @@
   <img src="https://img.shields.io/badge/C++-20-00599C?style=flat-square&logo=cplusplus" alt="C++20">
   <img src="https://img.shields.io/badge/Architecture-Hopper%2FBlackwell-green?style=flat-square" alt="Architecture">
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
+  <a href="https://lessup.github.io/hpc-ai-optimization-lab/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-blue?style=flat-square&logo=github" alt="Docs"></a>
 </p>
 
 ---
@@ -106,7 +109,7 @@ HPC-AI-Optimization-Lab/
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/HPC-AI-Optimization-Lab.git
+git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
 cd HPC-AI-Optimization-Lab
 
 # 使用 CMake Preset 配置 + 构建
@@ -576,7 +579,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 📬 联系方式
 
-如有问题或建议，请提交 [Issue](https://github.com/yourusername/HPC-AI-Optimization-Lab/issues)。
+如有问题或建议，请提交 [Issue](https://github.com/LessUp/hpc-ai-optimization-lab/issues)。
 
 ---
 

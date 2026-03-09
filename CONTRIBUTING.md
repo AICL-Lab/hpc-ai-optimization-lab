@@ -23,7 +23,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### 报告 Bug | Reporting Bugs
 
-1. 检查 [Issues](https://github.com/yourusername/HPC-AI-Optimization-Lab/issues) 确认 Bug 未被报告
+1. 检查 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues) 确认 Bug 未被报告
 2. 使用 Bug Report 模板创建新 Issue
 3. 提供详细的复现步骤、环境信息和错误日志
 
@@ -58,7 +58,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/HPC-AI-Optimization-Lab.git
+git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
 cd HPC-AI-Optimization-Lab
 
 # 创建构建目录
@@ -184,7 +184,7 @@ Closes #123
 
 如有任何问题，请：
 - 查看 [文档](docs/)
-- 搜索 [Issues](https://github.com/yourusername/HPC-AI-Optimization-Lab/issues)
+- 搜索 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
 - 创建新 Issue 提问
 
 感谢你的贡献！🚀
