@@ -30,6 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docs
+            src
+            python
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
