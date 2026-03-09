@@ -4,8 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace hpc {
-
+// Macros are not scoped by namespaces; define them at file scope.
 #define CUDA_CHECK(call)                                                       \
     do {                                                                       \
         cudaError_t err = call;                                                \
@@ -17,5 +16,3 @@ namespace hpc {
     } while (0)
 
 #define CUDA_CHECK_LAST() CUDA_CHECK(cudaGetLastError())
-
-} // namespace hpc

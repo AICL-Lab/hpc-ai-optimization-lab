@@ -33,10 +33,9 @@ jobs:
 
       - name: Check Python formatting
         run: |
-          pip install black isort ruff
-          black --check python/
-          isort --check-only python/
+          pip install ruff
           ruff check python/
+          ruff format --check python/
 
   # Build and test with CUDA
   build-cuda:

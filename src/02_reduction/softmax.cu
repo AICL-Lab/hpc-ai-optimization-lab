@@ -29,17 +29,15 @@ __global__ void softmax_online_kernel(const T* __restrict__ input,
     }
 
     // Block reduction for max
+    float local_max = max_val;
     max_val = hpc::block_reduce_max(max_val);
     __shared__ float s_max, s_sum;
     if (threadIdx.x == 0) s_max = max_val;
     __syncthreads();
     max_val = s_max;
 
-    // Recompute sum with correct max
-    sum_exp = 0.0f;
-    for (int i = threadIdx.x; i < seq_len; i += blockDim.x) {
-        sum_exp += expf(static_cast<float>(row_input[i]) - max_val);
-    }
+    // Rescale per-thread sum_exp to the global max (avoids second data pass)
+    sum_exp *= expf(local_max - max_val);
     sum_exp = hpc::block_reduce_sum(sum_exp);
     if (threadIdx.x == 0) s_sum = sum_exp;
     __syncthreads();

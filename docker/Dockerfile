@@ -1,5 +1,5 @@
 # HPC-AI-Optimization-Lab Development Environment
-# Based on CUDA 13.1 with Ubuntu 22.04
+# Based on CUDA 12.4.1 with Ubuntu 22.04
 FROM nvcr.io/nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 # Prevent interactive prompts during package installation

@@ -3,15 +3,9 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <concepts>
+#include "../common/opt_level.cuh"
 
 namespace hpc::elementwise {
-
-// Optimization levels for elementwise operations
-enum class OptLevel {
-    Naive,       // Basic implementation
-    Vectorized,  // float4 load/store
-    GridStride   // Grid stride loop
-};
 
 // ReLU kernel interface
 template <typename T, OptLevel Level = OptLevel::GridStride>

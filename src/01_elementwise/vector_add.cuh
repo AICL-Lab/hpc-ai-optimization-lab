@@ -3,7 +3,7 @@
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 #include <concepts>
-#include "relu.cuh"  // For OptLevel enum
+#include "../common/opt_level.cuh"
 
 namespace hpc::elementwise {
 
