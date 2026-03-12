@@ -44,6 +44,7 @@ jobs:
   # Build and test with CUDA
   build-cuda:
     name: Build & Test (CUDA ${{ matrix.cuda }})
+    if: false  # Disabled: requires GPU runner not available on GitHub-hosted runners
     runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:${{ matrix.cuda }}-devel-ubuntu22.04
@@ -145,14 +146,13 @@ jobs:
   # Summary job
   ci-success:
     name: CI Success
-    needs: [format-check, build-cuda]
+    needs: [format-check]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Check all jobs
         run: |
-          if [[ "${{ needs.format-check.result }}" == "failure" ]] || \
-             [[ "${{ needs.build-cuda.result }}" == "failure" ]]; then
+          if [[ "${{ needs.format-check.result }}" == "failure" ]]; then
             echo "One or more jobs failed"
             exit 1
           fi
