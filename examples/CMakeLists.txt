@@ -1,13 +1,6 @@
 # Examples CMakeLists.txt
 # Build examples for HPC-AI-Optimization-Lab
 
-# Option to build examples
-option(BUILD_EXAMPLES "Build example programs" ON)
-
-if(NOT BUILD_EXAMPLES)
-    return()
-endif()
-
 message(STATUS "Building examples...")
 
 # Common include directories

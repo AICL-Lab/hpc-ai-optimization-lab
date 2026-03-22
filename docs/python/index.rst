@@ -1,101 +1,62 @@
-HPC-AI-Optimization-Lab Documentation
-=====================================
+hpc_ai_opt Python Bindings
+==========================
 
-Welcome to the HPC-AI-Optimization-Lab documentation! This project provides
-high-performance CUDA kernels optimized for AI/ML workloads.
+`hpc_ai_opt` exposes a small set of CUDA kernels through nanobind.
+The current Python API is intentionally thin:
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Getting Started
+- inputs and outputs are CUDA tensors supplied by the caller
+- several kernels require explicit shape arguments
+- the bindings mirror the C++ kernel layout through submodules
 
-   installation
-   quickstart
+Build and import
+----------------
 
-.. toctree::
-   :maxdepth: 2
-   :caption: User Guide
+.. code-block:: bash
 
-   tutorials/index
-   examples/index
+   cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON
+   cmake --build build
+   export PYTHONPATH="$(pwd)/build/python:${PYTHONPATH}"
+   python -c "import hpc_ai_opt; print(hpc_ai_opt.__doc__)"
 
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference
+Current modules
+---------------
 
-   api/elementwise
-   api/reduction
-   api/gemm
-   api/attention
+- ``hpc_ai_opt.elementwise``
+  - ``relu(input, output)``
+  - ``sigmoid(input, output)``
+  - ``transpose(input, output, rows, cols)``
+- ``hpc_ai_opt.reduction``
+  - ``softmax(input, output, batch, seq_len)``
+  - ``layer_norm(input, gamma, beta, output, batch, hidden_size, eps)``
+  - ``rms_norm(input, gamma, output, batch, hidden_size, eps)``
+- ``hpc_ai_opt.gemm``
+  - ``matmul(A, B, C, M, N, K, alpha, beta)``
 
-.. toctree::
-   :maxdepth: 2
-   :caption: C++ API
-
-   cpp_api
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Development
-
-   contributing
-   changelog
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-Overview
---------
-
-HPC-AI-Optimization-Lab is a comprehensive CUDA optimization learning project
-featuring:
-
-- **7-Step GEMM Optimization**: From naive implementation to Tensor Core
-- **LLM Operators**: FlashAttention, RoPE, TopK, and more
-- **Modern C++20 + CUDA 13.1**: Latest language and toolkit features
-- **Comprehensive Testing**: GoogleTest + RapidCheck property testing
-- **Python Bindings**: Easy-to-use Python interface via Nanobind
-
-Quick Example
--------------
+Minimal example
+---------------
 
 .. code-block:: python
 
+   import torch
    import hpc_ai_opt as opt
-   import numpy as np
 
-   # Create input arrays
-   a = np.random.randn(1024, 1024).astype(np.float32)
-   b = np.random.randn(1024, 1024).astype(np.float32)
+   x = torch.randn(1024, 1024, device="cuda", dtype=torch.float32)
+   y = torch.empty_like(x)
 
-   # Perform optimized GEMM
-   c = opt.gemm(a, b)
+   opt.elementwise.relu(x, y)
+   torch.testing.assert_close(y, torch.relu(x))
 
-   # Use FlashAttention
-   q = np.random.randn(2, 8, 512, 64).astype(np.float16)
-   k = np.random.randn(2, 8, 512, 64).astype(np.float16)
-   v = np.random.randn(2, 8, 512, 64).astype(np.float16)
-   output = opt.flash_attention(q, k, v)
+Notes and current limitations
+-----------------------------
 
-Performance
------------
+- The bindings currently target CUDA tensors rather than NumPy CPU arrays.
+- Output tensors are allocated by the caller.
+- The public Python surface currently includes elementwise, reduction, and GEMM bindings only.
+- Higher-level wrappers such as ``flash_attention`` and device-info helpers are not exposed in the current extension module.
 
-Our optimized kernels achieve near-peak performance:
+Reference files
+---------------
 
-+------------------+------------------+------------------+
-| Kernel           | vs cuBLAS        | vs PyTorch       |
-+==================+==================+==================+
-| GEMM (FP16)      | 95-98%           | 1.2-1.5x faster  |
-+------------------+------------------+------------------+
-| FlashAttention   | N/A              | 2-3x faster      |
-+------------------+------------------+------------------+
-| Reduction        | 90-95%           | 1.5-2x faster    |
-+------------------+------------------+------------------+
-
-License
--------
-
-This project is licensed under the MIT License.
+- ``examples/python/basic_usage.py``
+- ``python/bindings/bindings.cpp``
+- ``python/CMakeLists.txt``

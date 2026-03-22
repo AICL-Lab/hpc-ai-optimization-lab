@@ -147,15 +147,15 @@ cmake .. -GNinja && ninja
 ### 安装 Python 绑定
 
 ```bash
-# 在 build 目录下
-cmake .. -DBUILD_PYTHON_BINDINGS=ON
-ninja
+# 在仓库根目录下
+cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON
+cmake --build build
 
-# 安装到 Python 环境
-pip install python/
+# 将扩展模块加入 Python 搜索路径
+export PYTHONPATH="$(pwd)/build/python:${PYTHONPATH}"
 
 # 验证安装
-python -c "import hpc_kernels; print('Success!')"
+python -c "import hpc_ai_opt; print('Success!')"
 ```
 
 ## 📚 优化案例详解
@@ -459,14 +459,14 @@ constexpr int SMEM_SIZE = TILE_SIZE * (TILE_SIZE + 1);  // +1 避免 Bank Confli
 
 ```python
 import torch
-import hpc_kernels
+import hpc_ai_opt
 
 # 零拷贝：直接使用 PyTorch CUDA Tensor
 x = torch.randn(1024, 1024, device='cuda')
 y = torch.empty_like(x)
 
 # 调用我们的 Kernel
-hpc_kernels.elementwise.relu(x, y)
+hpc_ai_opt.elementwise.relu(x, y)
 
 # 验证结果
 assert torch.allclose(y, torch.relu(x))

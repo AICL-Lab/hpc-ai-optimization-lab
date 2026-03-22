@@ -91,7 +91,7 @@ void matmul_wrapper(nb::tensor<float, nb::device::cuda>& A,
     cudaDeviceSynchronize();
 }
 
-NB_MODULE(hpc_kernels, m) {
+NB_MODULE(hpc_ai_opt, m) {
     m.doc() = "HPC-AI-Optimization-Lab CUDA Kernels";
     
     // Elementwise submodule

@@ -1,174 +1,83 @@
 #!/usr/bin/env python3
-"""
-Basic usage example for HPC-AI-Optimization-Lab Python bindings.
+"""Basic usage example for the current hpc_ai_opt bindings."""
 
-This example demonstrates:
-- Basic elementwise operations
-- GEMM (matrix multiplication)
-- FlashAttention
-"""
+from __future__ import annotations
 
-import numpy as np
+import sys
+
+import torch
 
 try:
     import hpc_ai_opt as opt
-except ImportError:
-    print("Error: hpc_ai_opt module not found.")
-    print("Please install it first: pip install -e python/")
-    exit(1)
+except ImportError as exc:
+    raise SystemExit(
+        "Error: hpc_ai_opt module not found.\n"
+        "Build the bindings first:\n"
+        "  cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON\n"
+        "  cmake --build build\n"
+        "  export PYTHONPATH=\"$(pwd)/build/python:${PYTHONPATH}\"\n"
+    ) from exc
 
 
-def example_elementwise():
-    """Demonstrate elementwise operations."""
-    print("\n=== Elementwise Operations ===")
-
-    # Create input array
-    x = np.random.randn(1024, 1024).astype(np.float32)
-    print(f"Input shape: {x.shape}")
-
-    # ReLU
-    y_relu = opt.relu(x)
-    print(f"ReLU output range: [{y_relu.min():.4f}, {y_relu.max():.4f}]")
-
-    # Sigmoid
-    y_sigmoid = opt.sigmoid(x)
-    print(f"Sigmoid output range: [{y_sigmoid.min():.4f}, {y_sigmoid.max():.4f}]")
-
-    # Verify correctness
-    np_relu = np.maximum(x, 0)
-    np_sigmoid = 1 / (1 + np.exp(-x))
-
-    relu_correct = np.allclose(y_relu, np_relu, rtol=1e-5)
-    sigmoid_correct = np.allclose(y_sigmoid, np_sigmoid, rtol=1e-4)
-
-    print(f"ReLU correct: {relu_correct}")
-    print(f"Sigmoid correct: {sigmoid_correct}")
+def require_cuda() -> torch.device:
+    if not torch.cuda.is_available():
+        raise SystemExit("Error: this example requires a CUDA-enabled PyTorch installation.")
+    return torch.device("cuda")
 
 
-def example_gemm():
-    """Demonstrate GEMM (matrix multiplication)."""
-    print("\n=== GEMM (Matrix Multiplication) ===")
+def example_elementwise(device: torch.device) -> None:
+    print("\n=== Elementwise ===")
+    x = torch.randn(256, 256, device=device, dtype=torch.float32)
 
-    # Create input matrices
-    M, N, K = 1024, 1024, 1024
-    A = np.random.randn(M, K).astype(np.float32)
-    B = np.random.randn(K, N).astype(np.float32)
-    print(f"A shape: {A.shape}, B shape: {B.shape}")
+    relu_out = torch.empty_like(x)
+    opt.elementwise.relu(x, relu_out)
+    torch.testing.assert_close(relu_out, torch.relu(x))
+    print("ReLU passed")
 
-    # Perform GEMM
-    C = opt.gemm(A, B)
-    print(f"C shape: {C.shape}")
+    sigmoid_out = torch.empty_like(x)
+    opt.elementwise.sigmoid(x, sigmoid_out)
+    torch.testing.assert_close(sigmoid_out, torch.sigmoid(x), rtol=1e-5, atol=1e-5)
+    print("Sigmoid passed")
 
-    # Verify correctness
-    C_np = A @ B
-    max_diff = np.abs(C - C_np).max()
-    print(f"Max difference vs NumPy: {max_diff:.6f}")
-
-    # Benchmark
-    import time
-
-    iterations = 10
-
-    # NumPy timing
-    start = time.perf_counter()
-    for _ in range(iterations):
-        _ = A @ B
-    np_time = (time.perf_counter() - start) / iterations * 1000
-    print(f"NumPy time: {np_time:.2f} ms")
-
-    # Our implementation timing
-    start = time.perf_counter()
-    for _ in range(iterations):
-        _ = opt.gemm(A, B)
-    opt_time = (time.perf_counter() - start) / iterations * 1000
-    print(f"Optimized time: {opt_time:.2f} ms")
-    print(f"Speedup: {np_time / opt_time:.2f}x")
+    transpose_out = torch.empty((x.shape[1], x.shape[0]), device=device, dtype=x.dtype)
+    opt.elementwise.transpose(x, transpose_out, x.shape[0], x.shape[1])
+    torch.testing.assert_close(transpose_out, x.transpose(0, 1))
+    print("Transpose passed")
 
 
-def example_flash_attention():
-    """Demonstrate FlashAttention."""
-    print("\n=== FlashAttention ===")
-
-    # Create input tensors (batch, heads, seq_len, head_dim)
-    batch_size = 2
-    num_heads = 8
-    seq_len = 512
-    head_dim = 64
-
-    Q = np.random.randn(batch_size, num_heads, seq_len, head_dim).astype(np.float16)
-    K = np.random.randn(batch_size, num_heads, seq_len, head_dim).astype(np.float16)
-    V = np.random.randn(batch_size, num_heads, seq_len, head_dim).astype(np.float16)
-
-    print(f"Q shape: {Q.shape}")
-    print(f"K shape: {K.shape}")
-    print(f"V shape: {V.shape}")
-
-    # Perform FlashAttention
-    output = opt.flash_attention(Q, K, V)
-    print(f"Output shape: {output.shape}")
-
-    # Reference implementation (standard attention)
-    def standard_attention(Q, K, V):
-        scale = 1.0 / np.sqrt(head_dim)
-        scores = np.matmul(Q.astype(np.float32), K.astype(np.float32).transpose(0, 1, 3, 2)) * scale
-        attn = np.exp(scores - scores.max(axis=-1, keepdims=True))
-        attn = attn / attn.sum(axis=-1, keepdims=True)
-        return np.matmul(attn, V.astype(np.float32)).astype(np.float16)
-
-    output_ref = standard_attention(Q, K, V)
-    max_diff = np.abs(output.astype(np.float32) - output_ref.astype(np.float32)).max()
-    print(f"Max difference vs reference: {max_diff:.6f}")
+def example_reduction(device: torch.device) -> None:
+    print("\n=== Reduction ===")
+    x = torch.randn(64, 128, device=device, dtype=torch.float32)
+    softmax_out = torch.empty_like(x)
+    opt.reduction.softmax(x, softmax_out, x.shape[0], x.shape[1])
+    torch.testing.assert_close(softmax_out, torch.softmax(x, dim=-1), rtol=1e-5, atol=1e-5)
+    print("Softmax passed")
 
 
-def example_reduction():
-    """Demonstrate reduction operations."""
-    print("\n=== Reduction Operations ===")
+def example_gemm(device: torch.device) -> None:
+    print("\n=== GEMM ===")
+    m, n, k = 128, 96, 64
+    a = torch.randn(m, k, device=device, dtype=torch.float32)
+    b = torch.randn(k, n, device=device, dtype=torch.float32)
+    c = torch.empty(m, n, device=device, dtype=torch.float32)
 
-    # Create input array
-    x = np.random.randn(1024 * 1024).astype(np.float32)
-    print(f"Input size: {len(x)}")
-
-    # Sum reduction
-    sum_result = opt.sum(x)
-    sum_np = x.sum()
-    print(f"Sum: {sum_result:.4f} (NumPy: {sum_np:.4f})")
-
-    # Max reduction
-    max_result = opt.max(x)
-    max_np = x.max()
-    print(f"Max: {max_result:.4f} (NumPy: {max_np:.4f})")
-
-    # Softmax
-    x_2d = np.random.randn(1024, 1024).astype(np.float32)
-    softmax_result = opt.softmax(x_2d, axis=-1)
-    softmax_np = np.exp(x_2d) / np.exp(x_2d).sum(axis=-1, keepdims=True)
-
-    softmax_correct = np.allclose(softmax_result, softmax_np, rtol=1e-4)
-    print(f"Softmax correct: {softmax_correct}")
+    opt.gemm.matmul(a, b, c, m, n, k, 1.0, 0.0)
+    torch.testing.assert_close(c, a @ b, rtol=1e-4, atol=1e-4)
+    print("Matmul passed")
 
 
-def main():
-    """Run all examples."""
-    print("=" * 50)
-    print("HPC-AI-Optimization-Lab Python Examples")
-    print("=" * 50)
-
-    # Print device info
-    device_info = opt.get_device_info()
-    print(f"\nDevice: {device_info['name']}")
-    print(f"Compute Capability: {device_info['compute_capability']}")
-    print(f"Memory: {device_info['total_memory'] / 1e9:.1f} GB")
-
-    # Run examples
-    example_elementwise()
-    example_gemm()
-    example_flash_attention()
-    example_reduction()
-
-    print("\n" + "=" * 50)
-    print("All examples completed successfully!")
-    print("=" * 50)
+def main() -> None:
+    device = require_cuda()
+    print("Running hpc_ai_opt examples on", torch.cuda.get_device_name(device))
+    example_elementwise(device)
+    example_reduction(device)
+    example_gemm(device)
+    print("\nAll current binding examples passed.")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as exc:
+        print(f"Runtime error: {exc}", file=sys.stderr)
+        raise

@@ -3,14 +3,14 @@ name: Documentation
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
     paths:
       - 'docs/**'
       - 'src/**/*.cuh'
       - 'src/**/*.cu'
       - 'python/**'
   pull_request:
-    branches: [main]
+    branches: [master, main]
     paths:
       - 'docs/**'
   workflow_dispatch:
@@ -66,7 +66,7 @@ jobs:
       - name: Combine documentation
         run: |
           mkdir -p docs/_site
-          # Copy main docs
+          cp docs/index.html docs/_site/index.html
           cp -r docs/*.md docs/_site/
           # Copy Doxygen output
           if [ -d docs/api/html ]; then
@@ -85,7 +85,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build-docs
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
