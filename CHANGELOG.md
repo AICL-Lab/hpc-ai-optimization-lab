@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code quality tools: .clang-format, .clang-tidy, .editorconfig, pre-commit
 - CI/CD with GitHub Actions
 - Doxygen and Sphinx documentation configuration
+- Entry consistency checks for documented examples and Python module naming
+
+### Changed
+- Unified the Python extension module name to `hpc_ai_opt`
+- Reworked Python entry documentation and examples to match the current bindings surface
+- Connected `examples/` to the top-level CMake build via `BUILD_EXAMPLES`
+- Updated README and examples documentation to reflect the repository's actual structure and Python workflow
 
 ## [0.1.0] - 2024-01-01
 

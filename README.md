@@ -2,74 +2,72 @@
 
 English | [简体中文](README.zh-CN.md)
 
-<p align="center">
-  <b>A Living Textbook for High-Performance CUDA Kernel Development</b>
-</p>
+A CUDA optimization lab for AI kernels, organized as a set of focused kernel modules, tests, examples, and lightweight Python bindings.
 
-![CUDA](https://img.shields.io/badge/CUDA-13.1+-76B900?style=flat-square&logo=nvidia)
-![C++20](https://img.shields.io/badge/C++-20-00599C?style=flat-square&logo=cplusplus)
-![Architecture](https://img.shields.io/badge/Architecture-Hopper%2FBlackwell-green?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+## What is in the repository
 
----
+- `src/common/`: shared CUDA utilities such as tensor wrappers, timers, launch helpers, and reduction primitives
+- `src/01_elementwise/` to `src/07_cuda13_features/`: numbered kernel modules covering elementwise ops, reductions, GEMM, convolution, attention, quantization, and newer CUDA features
+- `tests/`: GoogleTest + RapidCheck coverage across kernel modules
+- `examples/`: currently shipped CUDA and Python examples
+- `python/`: nanobind bindings plus benchmark scripts
+- `docs/`: optimization notes and Python binding docs
 
-## Overview
-
-A systematic CUDA high-performance computing tutorial, from naive implementations to extreme optimization, covering core operators needed by modern AI models (LLM, Diffusion).
-
-## Modules
-
-| Module | Description | Key Techniques |
-|--------|-------------|----------------|
-| **GEMM** | Matrix multiplication optimization | Tiled → Register Blocked → Tensor Core |
-| **Attention** | FlashAttention variants | Online Softmax, causal masking |
-| **Normalization** | LayerNorm, RMSNorm | Warp shuffle, vectorized loads |
-| **Elementwise** | Activation functions | GELU, SiLU, vectorized |
-| **Quantization** | INT8/FP8 | Calibration, per-channel scaling |
-| **Fusion** | Kernel fusion patterns | Bias+Act, LayerNorm+Residual |
-
-## Quick Start
+## Build the C++/CUDA project
 
 ```bash
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
-cd hpc-ai-optimization-lab
-
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 ```
 
+## Build the Python bindings
+
+The current Python extension is named `hpc_ai_opt` and exposes low-level submodules such as `elementwise`, `reduction`, and `gemm`.
+
+```bash
+cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON
+cmake --build build
+export PYTHONPATH="$(pwd)/build/python:${PYTHONPATH}"
+python -c "import hpc_ai_opt; print(hpc_ai_opt.__doc__)"
+python examples/python/basic_usage.py
+```
+
+## Build the shipped examples
+
+```bash
+cmake -S . -B build -DBUILD_EXAMPLES=ON
+cmake --build build --target relu_example gemm_benchmark
+```
+
+## Current Python API shape
+
+```python
+import torch
+import hpc_ai_opt
+
+x = torch.randn(1024, 1024, device="cuda", dtype=torch.float32)
+y = torch.empty_like(x)
+
+hpc_ai_opt.elementwise.relu(x, y)
+```
+
+The current bindings are intentionally thin:
+- CUDA tensors are passed in directly
+- output tensors are allocated by the caller
+- some kernels require explicit shape arguments
+
 ## Requirements
 
-- CUDA Toolkit 13.1+ (Hopper/Blackwell recommended)
-- CMake 3.20+, C++20 compiler
-- GPU: SM 8.0+ (Ampere or newer)
+- CUDA Toolkit 13.1+
+- CMake 3.24+
+- A C++20 compiler
+- An NVIDIA GPU with CUDA support
+- PyTorch with CUDA support for the Python example path
 
-## Project Structure
+## Documentation
 
-```
-hpc-ai-optimization-lab/
-├── src/                    # Kernel implementations
-│   ├── gemm/               # GEMM optimization levels
-│   ├── attention/           # Attention kernels
-│   ├── normalization/       # Norm kernels
-│   ├── elementwise/         # Activation kernels
-│   └── quantization/        # Quantization kernels
-├── include/                # Public headers
-├── tests/                  # Google Test suite
-├── benchmarks/             # Performance benchmarks
-├── docs/                   # Documentation
-└── .github/workflows/      # CI
-```
-
-## Key Topics
-
-- **Memory Hierarchy**: Global → Shared → Register optimization
-- **Tensor Core Programming**: WMMA / MMA for mixed-precision compute
-- **Async Operations**: TMA, async copy, pipeline overlapping
-- **Warp-Level Primitives**: Shuffle, vote, cooperative groups
-- **Kernel Fusion**: Reducing HBM round-trips
-
-## License
-
-MIT License
+- `docs/README.md`
+- `docs/python/index.rst`
+- `docs/01_gemm_optimization.md`
+- `docs/04_flash_attention.md`

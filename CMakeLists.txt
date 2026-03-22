@@ -58,6 +58,7 @@ endif()
 
 # Nanobind (optional, for Python bindings)
 option(BUILD_PYTHON_BINDINGS "Build Python bindings" OFF)
+option(BUILD_EXAMPLES "Build example programs" OFF)
 if(BUILD_PYTHON_BINDINGS)
     find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
     FetchContent_Declare(
@@ -107,6 +108,11 @@ add_subdirectory(src/07_cuda13_features)
 # Python bindings
 if(BUILD_PYTHON_BINDINGS)
     add_subdirectory(python)
+endif()
+
+# Examples
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
 endif()
 
 # Tests
