@@ -7,6 +7,7 @@ The current Python API is intentionally thin:
 - inputs and outputs are CUDA tensors supplied by the caller
 - several kernels require explicit shape arguments
 - the bindings mirror the C++ kernel layout through submodules
+- wrappers perform basic argument validation before launching asynchronous CUDA work
 
 Build and import
 ----------------
@@ -49,10 +50,11 @@ Minimal example
 Notes and current limitations
 -----------------------------
 
-- The bindings currently target CUDA tensors rather than NumPy CPU arrays.
+- The bindings target CUDA tensors rather than NumPy CPU arrays.
 - Output tensors are allocated by the caller.
 - The public Python surface currently includes elementwise, reduction, and GEMM bindings only.
-- Higher-level wrappers such as ``flash_attention`` and device-info helpers are not exposed in the current extension module.
+- Higher-level wrappers such as ``flash_attention`` are not exposed in the current extension module.
+- Argument validation happens in the binding layer, but execution remains asynchronous with respect to the host.
 
 Reference files
 ---------------

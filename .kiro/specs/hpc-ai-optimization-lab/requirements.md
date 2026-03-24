@@ -2,7 +2,7 @@
 
 ## Introduction
 
-HPC-AI-Optimization-Lab 是一本"活的"高性能 CUDA 算子开发教科书，旨在提供从 Naive 实现到极致优化的完整演进路径。项目采用现代 C++20 标准，利用 CUDA 13.1 及 Hopper/Blackwell 架构特性（TMA, WGMMA, FP8），并通过 Python Binding 与 PyTorch 进行实战验证。
+HPC-AI-Optimization-Lab 是一个以教学和实验为导向的高性能 CUDA 算子仓库，旨在提供从 Naive 实现到逐步优化的演进路径。项目采用现代 C++20 标准，核心稳定范围基于 CUDA 12.4+；同时包含面向较新 CUDA / Hopper 特性的实验性示例与 fallback 路径，并通过 Python Binding 与 PyTorch 进行实战验证。
 
 ## Glossary
 
@@ -34,7 +34,7 @@ HPC-AI-Optimization-Lab 是一本"活的"高性能 CUDA 算子开发教科书，
 2. THE Build_System SHALL 使用 FetchContent 自动拉取依赖（fmt, googletest, nanobind, cutlass）
 3. THE Build_System SHALL 自动检测当前显卡架构并设置对应的 -gencode 参数
 4. WHEN 用户执行 cmake && make THEN THE Build_System SHALL 成功编译所有 Kernel
-5. THE Docker_Environment SHALL 基于 CUDA 13.1 镜像提供可复现的开发环境
+5. THE Docker_Environment SHALL 基于项目文档声明的 CUDA 基线镜像提供可复现的开发环境
 6. WHEN Docker 容器启动 THEN THE Docker_Environment SHALL 包含所有必要的编译工具和依赖
 
 ### Requirement 2: 通用工具库
@@ -112,11 +112,11 @@ HPC-AI-Optimization-Lab 是一本"活的"高性能 CUDA 算子开发教科书，
 
 #### Acceptance Criteria
 
-1. THE TMA_Module SHALL 使用 cuda::memcpy_async 或 PTX 指令实现异步数据搬运
-2. THE TMA_Module SHALL 展示如何解放 Register 和 SM，让 Copy Engine 自动搬运数据
-3. THE Cluster_Module SHALL 利用 Hopper 架构的 Thread Block Clusters 特性
-4. THE Cluster_Module SHALL 实现 Block 间的 Shared Memory 直接访问（Distributed Shared Memory）
-5. THE FP8_Module SHALL 使用 e4m3 和 e5m2 数据类型实现 GEMM
+1. THE TMA_Module SHALL 至少提供一个可运行的实验性示例或 fallback 路径，并明确标注与真实 TMA 硬件路径的差异
+2. THE TMA_Module SHALL 在文档中解释真实 TMA 路径的目标能力与当前实现边界
+3. THE Cluster_Module SHALL 至少提供一个可运行的实验性示例或 fallback 路径，并明确标注与真实 Thread Block Clusters 的差异
+4. THE Cluster_Module SHALL 在文档中解释 Distributed Shared Memory 的目标语义与当前实现边界
+5. THE FP8_Module SHALL 至少提供可测试的实验性演示路径，并明确它不等同于真实 Hopper FP8 Tensor Core 实现
 6. THE FP8_Module SHALL 展示 FP8 Scaling 技术
 
 ### Requirement 8: 量化算子
@@ -175,6 +175,6 @@ HPC-AI-Optimization-Lab 是一本"活的"高性能 CUDA 算子开发教科书，
 #### Acceptance Criteria
 
 1. THE Convolution_Module SHALL 实现 Implicit GEMM 卷积
-2. THE Convolution_Module SHALL 实现 Winograd 卷积
+2. THE Convolution_Module SHALL 提供 Winograd 接口；在完整实现缺失时，必须明确标注 fallback 语义并保持结果正确
 3. THE Convolution_Module SHALL 支持常见的卷积参数（stride、padding、dilation）
 4. WHEN 运行优化后的卷积 Kernel THEN THE Kernel SHALL 性能接近 cuDNN
