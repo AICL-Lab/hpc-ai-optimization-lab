@@ -29,7 +29,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### 功能请求 | Feature Requests
 
-1. 检查 [Issues](https://github.com/yourusername/HPC-AI-Optimization-Lab/issues) 确认功能未被请求
+1. 检查 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues) 确认功能未被请求
 2. 使用 Feature Request 模板创建新 Issue
 3. 描述功能的用途和预期行为
 
@@ -38,7 +38,7 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
 3. 编写代码和测试
-4. 确保所有测试通过
+4. 在本地 CUDA 环境中确保相关构建和测试通过
 5. 提交更改 (`git commit -m 'Add amazing feature'`)
 6. 推送到分支 (`git push origin feature/amazing-feature`)
 7. 创建 Pull Request
@@ -49,29 +49,29 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 | 依赖 | 版本要求 |
 |------|----------|
-| CUDA | 12.0+ (推荐 13.1+) |
+| CUDA | 12.4+ |
 | CMake | 3.24+ |
 | C++ 编译器 | GCC 11+ / Clang 14+ |
 | Python | 3.8+ |
+
+说明：
+- 当前 `docker/Dockerfile` 基于 CUDA 12.4.1。
+- `src/07_cuda13_features/` 下的内容目前属于实验性/占位性质。
+- 当前 `flash_attention` 的已实现路径仅正式支持 `float + head_dim == 64`。
 
 ### 本地构建 | Local Build
 
 ```bash
 # 克隆仓库
 git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
-cd HPC-AI-Optimization-Lab
+cd hpc-ai-optimization-lab
 
-# 创建构建目录
-mkdir build && cd build
-
-# 配置
-cmake .. -DCMAKE_BUILD_TYPE=Debug -GNinja
-
-# 编译
-ninja
+# 配置 + 编译
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -GNinja
+cmake --build build
 
 # 运行测试
-ctest --output-on-failure
+ctest --test-dir build --output-on-failure
 ```
 
 ### Docker 环境 | Docker Environment
@@ -79,7 +79,7 @@ ctest --output-on-failure
 ```bash
 cd docker
 docker-compose up -d
-docker exec -it hpc-dev bash
+docker exec -it hpc-ai-lab bash
 ```
 
 ### 安装 pre-commit hooks
@@ -97,26 +97,13 @@ pre-commit install
 - 使用 Modern C++20 特性
 - 使用 RAII 管理资源
 - 使用 Concepts 约束模板参数
-- 所有公开 API 需要 Doxygen 注释
-
-```cpp
-/**
- * @brief ReLU activation function
- * @tparam T Data type (float, __half)
- * @param input Input tensor pointer
- * @param output Output tensor pointer
- * @param n Number of elements
- * @param stream CUDA stream (optional)
- */
-template<typename T>
-void relu(const T* input, T* output, size_t n, cudaStream_t stream = nullptr);
-```
+- 为公开 API 提供清晰注释
 
 ### Python
 
 - 遵循 PEP 8
-- 使用类型提示
-- 使用 docstring 文档
+- 保持接口薄且与底层 C++ 语义一致
+- 在边界处校验输入参数
 
 ### 命名规范 | Naming Conventions
 
@@ -152,30 +139,17 @@ void relu(const T* input, T* output, size_t n, cudaStream_t stream = nullptr);
 - `test`: 测试相关
 - `chore`: 构建/工具相关
 
-### 示例
-
-```
-feat(gemm): add Tensor Core WMMA implementation
-
-- Implement WMMA API for FP16 GEMM
-- Add unit tests for correctness
-- Update documentation
-
-Closes #123
-```
-
 ## Pull Request 流程 | Pull Request Process
 
-1. **确保测试通过**: 所有 CI 检查必须通过
-2. **更新文档**: 如果添加新功能，更新相关文档
-3. **添加测试**: 新功能必须有对应的测试
-4. **代码审查**: 至少需要一位维护者审查
-5. **Squash 合并**: PR 将被 squash 合并到 main 分支
+1. **确保本地验证通过**：默认 CI 目前只覆盖轻量检查，原生 CUDA 构建和测试需要你在本地或 GPU runner 上完成
+2. **更新文档**：如果修改了公开行为、支持矩阵或实验模块定位，请同步更新文档
+3. **添加测试**：修复缺陷或新增行为时补回归测试
+4. **代码审查**：至少需要一位维护者审查
 
 ### PR 检查清单
 
 - [ ] 代码遵循项目风格指南
-- [ ] 所有测试通过
+- [ ] 本地相关构建与测试通过
 - [ ] 添加了必要的测试
 - [ ] 更新了相关文档
 - [ ] Commit message 遵循规范
@@ -186,5 +160,3 @@ Closes #123
 - 查看 [文档](docs/)
 - 搜索 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
 - 创建新 Issue 提问
-
-感谢你的贡献！🚀

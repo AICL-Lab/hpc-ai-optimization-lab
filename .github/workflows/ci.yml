@@ -82,6 +82,16 @@ jobs:
                   raise SystemExit(f"Expected '{expected}' in {file_path}")
           PY
 
+      - name: Verify CI scope is documented
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          readme = Path('README.md').read_text(encoding='utf-8')
+          if 'does **not** currently provide full native CUDA build-and-test coverage' not in readme:
+              raise SystemExit('README.md must describe the current CI scope clearly')
+          PY
+
   docs:
     name: Build Documentation
     runs-on: ubuntu-latest
