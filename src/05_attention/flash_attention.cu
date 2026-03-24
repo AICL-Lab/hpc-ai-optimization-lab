@@ -1,6 +1,8 @@
 #include "flash_attention.cuh"
 #include "../common/cuda_check.cuh"
 #include <cfloat>
+#include <cmath>
+#include <stdexcept>
 
 namespace hpc::attention {
 
@@ -19,7 +21,6 @@ __global__ void flash_attention_kernel(const T* __restrict__ Q,
     float* q_tile = smem;
     float* k_tile = q_tile + BLOCK_SIZE * HEAD_DIM;
     float* v_tile = k_tile + BLOCK_SIZE * HEAD_DIM;
-    float* scores = v_tile + BLOCK_SIZE * HEAD_DIM;
 
     int batch_head = blockIdx.x;
     int b = batch_head / num_heads;
@@ -118,20 +119,27 @@ void flash_attention_forward<float>(const float* Q, const float* K, const float*
                                     cudaStream_t stream) {
     constexpr int BLOCK_SIZE = 64;
     constexpr int HEAD_DIM = 64;
-    
+
+    if (Q == nullptr || K == nullptr || V == nullptr || O == nullptr) {
+        throw std::invalid_argument("flash_attention_forward expects non-null Q, K, V, and O pointers");
+    }
+    if (config.batch_size <= 0 || config.num_heads <= 0 || config.seq_len <= 0 ||
+        config.head_dim <= 0) {
+        throw std::invalid_argument("flash_attention_forward expects positive batch_size, num_heads, seq_len, and head_dim");
+    }
+    if (!std::isfinite(config.scale) || config.scale <= 0.0f) {
+        throw std::invalid_argument("flash_attention_forward expects a finite positive scale");
+    }
+    if (config.head_dim != HEAD_DIM) {
+        throw std::invalid_argument("flash_attention_forward currently supports head_dim == 64 only");
+    }
+
     dim3 grid(config.batch_size * config.num_heads,
               (config.seq_len + BLOCK_SIZE - 1) / BLOCK_SIZE);
     dim3 block(BLOCK_SIZE);
-    
-    size_t smem_size = 3 * BLOCK_SIZE * HEAD_DIM * sizeof(float) + 
+
+    size_t smem_size = 3 * BLOCK_SIZE * HEAD_DIM * sizeof(float) +
                        BLOCK_SIZE * BLOCK_SIZE * sizeof(float);
-    
-    // HEAD_DIM is a compile-time constant; assert config matches
-    if (config.head_dim != HEAD_DIM) {
-        fprintf(stderr, "flash_attention: config.head_dim=%d but compiled HEAD_DIM=%d\n",
-                config.head_dim, HEAD_DIM);
-        return;
-    }
 
     flash_attention_kernel<float, BLOCK_SIZE, HEAD_DIM><<<grid, block, smem_size, stream>>>(
         Q, K, V, O,

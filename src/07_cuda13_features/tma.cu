@@ -1,10 +1,11 @@
 #include "tma.cuh"
 #include "../common/cuda_check.cuh"
+#include <stdexcept>
 
 namespace hpc::cuda13 {
 
-// TMA (Tensor Memory Accelerator) placeholder
-// Requires Hopper architecture (SM90+) and CUDA 12+
+// Experimental fallback for the future TMA path.
+// This currently performs a regular kernel copy so behavior is portable and testable.
 
 template <typename T>
 __global__ void async_copy_kernel(const T* __restrict__ src,
@@ -22,6 +23,13 @@ __global__ void async_copy_kernel(const T* __restrict__ src,
 template <>
 void tma_copy_2d<float>(const float* src, float* dst,
                         int rows, int cols, cudaStream_t stream) {
+    if (src == nullptr || dst == nullptr) {
+        throw std::invalid_argument("tma_copy_2d expects non-null src and dst pointers");
+    }
+    if (rows <= 0 || cols <= 0) {
+        throw std::invalid_argument("tma_copy_2d expects positive rows and cols");
+    }
+
     dim3 block(256);
     dim3 grid((cols + block.x - 1) / block.x, rows);
     async_copy_kernel<float><<<grid, block, 0, stream>>>(src, dst, rows, cols);

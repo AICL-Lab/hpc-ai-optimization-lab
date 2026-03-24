@@ -1,7 +1,21 @@
 #include "gemm.cuh"
 #include "../common/cuda_check.cuh"
+#include <stdexcept>
 
 namespace hpc::gemm {
+
+namespace {
+
+void validate_gemm_args(const void* A, const void* B, const void* C, int M, int N, int K) {
+    if (A == nullptr || B == nullptr || C == nullptr) {
+        throw std::invalid_argument("gemm expects non-null A, B, and C pointers");
+    }
+    if (M <= 0 || N <= 0 || K <= 0) {
+        throw std::invalid_argument("gemm expects positive M, N, and K");
+    }
+}
+
+} // namespace
 
 constexpr int TILE_SIZE = 32;
 
@@ -75,6 +89,7 @@ template <>
 void gemm<float, GemmOpt::Naive>(const float* A, const float* B, float* C,
                                   int M, int N, int K,
                                   float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     dim3 block(16, 16);
     dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
     gemm_naive_kernel<float><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
@@ -85,6 +100,7 @@ template <>
 void gemm<float, GemmOpt::SharedMemTiling>(const float* A, const float* B, float* C,
                                             int M, int N, int K,
                                             float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
     gemm_shared_kernel<float><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
@@ -177,6 +193,7 @@ template <>
 void gemm<float, GemmOpt::DoubleBuffer>(const float* A, const float* B, float* C,
                                          int M, int N, int K,
                                          float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
     gemm_double_buffer_kernel<float><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
@@ -301,6 +318,7 @@ template <>
 void gemm<float, GemmOpt::RegisterTiling>(const float* A, const float* B, float* C,
                                            int M, int N, int K,
                                            float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     constexpr int THREADS_PER_BLOCK = (BLK_M / REG_TILE_M) * (BLK_N / REG_TILE_N);
     dim3 block(THREADS_PER_BLOCK);
     dim3 grid((N + BLK_N - 1) / BLK_N, (M + BLK_M - 1) / BLK_M);
@@ -435,6 +453,10 @@ template <>
 void gemm<__half, GemmOpt::TensorCoreWMMA>(const __half* A, const __half* B, __half* C,
                                             int M, int N, int K,
                                             float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
+    if ((M % 16) != 0 || (N % 16) != 0 || (K % 16) != 0) {
+        throw std::invalid_argument("TensorCoreWMMA requires M, N, and K to be multiples of 16");
+    }
     // Each block has multiple warps
     constexpr int WARPS_PER_BLOCK = (WMMA_BLK_M / WMMA_M) * (WMMA_BLK_N / WMMA_N);
     constexpr int THREADS_PER_BLOCK = WARPS_PER_BLOCK * 32;
@@ -662,6 +684,7 @@ template <>
 void gemm<float, GemmOpt::SoftwarePipeline>(const float* A, const float* B, float* C,
                                              int M, int N, int K,
                                              float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     constexpr int THREADS_PER_BLOCK = 256;
     dim3 block(THREADS_PER_BLOCK);
     dim3 grid((N + PIPE_TILE_N - 1) / PIPE_TILE_N, (M + PIPE_TILE_M - 1) / PIPE_TILE_M);
@@ -733,6 +756,7 @@ template <>
 void gemm<int8_t, GemmOpt::SharedMemTiling>(const int8_t* A, const int8_t* B, int8_t* C,
                                              int M, int N, int K,
                                              float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
     gemm_shared_kernel<int8_t><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
