@@ -5,8 +5,8 @@
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 
-// Feature: hpc-ai-optimization-lab, Property 13: TMA Data Integrity
-RC_GTEST_PROP(TMATest, DataIntegrity, ()) {
+// Property 13: Fallback copy path preserves data integrity.
+RC_GTEST_PROP(TMATest, FallbackCopyPreservesDataIntegrity, ()) {
     auto rows = *rc::gen::inRange<int>(1, 128);
     auto cols = *rc::gen::inRange<int>(1, 128);
     auto input = *rc::gen::container<std::vector<float>>(rows * cols, rc::gen::arbitrary<float>());
@@ -25,7 +25,7 @@ RC_GTEST_PROP(TMATest, DataIntegrity, ()) {
     }
 }
 
-TEST(TMATest, BasicCopy) {
+TEST(TMATest, FallbackCopyMatchesInput) {
     int rows = 64, cols = 64;
     auto input = hpc::test::random_vector<float>(rows * cols);
     

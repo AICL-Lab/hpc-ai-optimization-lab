@@ -6,8 +6,8 @@
 #include "../test_utils.hpp"
 #include <numeric>
 
-// Feature: hpc-ai-optimization-lab, Property 14: Cluster Reduce Correctness
-RC_GTEST_PROP(ClusterTest, ReduceCorrectness, ()) {
+// Property 14: Fallback reduction path remains numerically correct.
+RC_GTEST_PROP(ClusterTest, FallbackReduceCorrectness, ()) {
     auto n = *rc::gen::inRange<size_t>(256, 4096);
     auto input = *rc::gen::container<std::vector<float>>(n,
         rc::gen::map(rc::gen::arbitrary<float>(), [](float x) {
@@ -30,7 +30,7 @@ RC_GTEST_PROP(ClusterTest, ReduceCorrectness, ()) {
     RC_ASSERT(hpc::test::almost_equal(result[0], expected, 1e-2f, 1e-3f));
 }
 
-TEST(ClusterTest, BasicReduce) {
+TEST(ClusterTest, FallbackReduceMatchesReference) {
     size_t n = 1024;
     std::vector<float> input(n, 1.0f);
     
