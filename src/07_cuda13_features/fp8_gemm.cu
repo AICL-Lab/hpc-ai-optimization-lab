@@ -3,9 +3,8 @@
 
 namespace hpc::cuda13 {
 
-// FP8 GEMM placeholder
-// Requires Hopper architecture (SM90+) and CUDA 12+
-// Uses e4m3 and e5m2 data types
+// Experimental FP8-like demo path.
+// This currently scales float inputs in a standard kernel; it is not a true Hopper FP8 implementation.
 
 template <typename T>
 __global__ void fp8_gemm_kernel(const T* __restrict__ A,

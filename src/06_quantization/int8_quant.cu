@@ -2,6 +2,7 @@
 #include "../common/cuda_check.cuh"
 #include "../common/reduce.cuh"
 #include <cfloat>
+#include <stdexcept>
 
 namespace hpc::quantization {
 
@@ -22,7 +23,7 @@ __global__ void compute_scale_kernel(const float* __restrict__ input,
     max_abs = hpc::block_reduce_max(max_abs);
     
     if (threadIdx.x == 0) {
-        scale[row] = max_abs / 127.0f;
+        scale[row] = max_abs > 0.0f ? (max_abs / 127.0f) : 1.0f;
     }
 }
 
@@ -35,7 +36,12 @@ __global__ void quantize_kernel(const float* __restrict__ input,
     
     for (; idx < total; idx += blockDim.x * gridDim.x) {
         int row = idx / cols;
-        float inv_scale = 1.0f / scale[row];
+        float row_scale = scale[row];
+        if (row_scale == 0.0f) {
+            output[idx] = 0;
+            continue;
+        }
+        float inv_scale = 1.0f / row_scale;
         float val = input[idx] * inv_scale;
         val = fminf(fmaxf(val, -127.0f), 127.0f);
         output[idx] = static_cast<int8_t>(roundf(val));
@@ -44,8 +50,16 @@ __global__ void quantize_kernel(const float* __restrict__ input,
 
 void quantize_int8(const float* input, int8_t* output, float* scale,
                    int rows, int cols, cudaStream_t stream) {
+    if (input == nullptr || output == nullptr || scale == nullptr) {
+        throw std::invalid_argument("quantize_int8 expects non-null input, output, and scale pointers");
+    }
+    if (rows <= 0 || cols <= 0) {
+        throw std::invalid_argument("quantize_int8 expects rows and cols to be positive");
+    }
+
     compute_scale_kernel<<<rows, 256, 0, stream>>>(input, scale, rows, cols);
-    
+    CUDA_CHECK_LAST();
+
     int total = rows * cols;
     int block_size = 256;
     int grid_size = (total + block_size - 1) / block_size;
@@ -68,10 +82,17 @@ __global__ void dequantize_int8_kernel(const int8_t* __restrict__ input,
 
 void dequantize_int8(const int8_t* input, const float* scale,
                      float* output, int rows, int cols, cudaStream_t stream) {
+    if (input == nullptr || output == nullptr || scale == nullptr) {
+        throw std::invalid_argument("dequantize_int8 expects non-null input, output, and scale pointers");
+    }
+    if (rows <= 0 || cols <= 0) {
+        throw std::invalid_argument("dequantize_int8 expects rows and cols to be positive");
+    }
+
     int total = rows * cols;
     int block_size = 256;
     int grid_size = (total + block_size - 1) / block_size;
-    
+
     dequantize_int8_kernel<<<grid_size, block_size, 0, stream>>>(
         input, scale, output, rows, cols);
     CUDA_CHECK_LAST();
