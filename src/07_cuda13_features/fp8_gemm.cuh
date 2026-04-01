@@ -1,12 +1,36 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <cuda_fp8.h>
 
 namespace hpc::cuda13 {
 
-void fp8_gemm(const float* A, const float* B, float* C,
+enum class FP8Format {
+    e4m3,
+    e5m2
+};
+
+struct FP8GEMMConfig {
+    int tile_m = 16;
+    int tile_n = 16;
+    int tile_k = 16;
+    FP8Format format_a = FP8Format::e4m3;
+    FP8Format format_b = FP8Format::e4m3;
+    float scale_a = 1.0f;
+    float scale_b = 1.0f;
+    bool use_fp8 = true;
+};
+
+bool is_hopper_architecture();
+
+void fp8_gemm(const __half* A, const __half* B, __half* C,
               int M, int N, int K,
-              float scale_a = 1.0f, float scale_b = 1.0f,
+              const FP8GEMMConfig& config,
               cudaStream_t stream = nullptr);
+
+void fp8_gemm_fallback(const __half* A, const __half* B, __half* C,
+                       int M, int N, int K,
+                       const FP8GEMMConfig& config,
+                       cudaStream_t stream = nullptr);
 
 } // namespace hpc::cuda13
