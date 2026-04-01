@@ -4,10 +4,19 @@
 
 namespace hpc::convolution {
 
-template <typename T>
-void conv2d_winograd(const T* input, const T* weight, T* output,
-                     int batch, int in_channels, int out_channels,
-                     int height, int width,
+struct ConvParams;
+struct WinogradConfig {
+    int tile_size = 4;
+    bool use_winograd = true;
+};
+
+void conv2d_winograd(const float* input, const float* weight, float* output,
+                     const ConvParams& params,
+                     const WinogradConfig& config = {},
                      cudaStream_t stream = nullptr);
+
+void conv2d_winograd_fallback(const float* input, const float* weight, float* output,
+                              const ConvParams& params,
+                              cudaStream_t stream = nullptr);
 
 } // namespace hpc::convolution
