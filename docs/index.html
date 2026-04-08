@@ -3,201 +3,250 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="HPC AI Optimization Lab 文档入口，聚合 CUDA/C++ API、Python API 与核心优化专题。"
-    />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="HPC AI Optimization Lab — CUDA kernel 实验室文档入口，聚合 API 参考、优化专题与学习路线。" />
+    <meta name="theme-color" content="#081120" />
     <link rel="canonical" href="https://lessup.github.io/hpc-ai-optimization-lab/" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="HPC AI Optimization Lab" />
-    <meta
-      property="og:description"
-      content="HPC AI Optimization Lab 文档入口，聚合 CUDA/C++ API、Python API 与核心优化专题。"
-    />
+    <meta property="og:description" content="CUDA kernel 实验室文档入口，聚合 API 参考、优化专题与学习路线。" />
     <meta property="og:url" content="https://lessup.github.io/hpc-ai-optimization-lab/" />
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="HPC AI Optimization Lab" />
-    <meta
-      name="twitter:description"
-      content="HPC AI Optimization Lab 文档入口，聚合 CUDA/C++ API、Python API 与核心优化专题。"
-    />
+    <meta name="twitter:description" content="CUDA kernel 实验室文档入口。" />
     <title>HPC AI Optimization Lab</title>
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #020617;
-        --panel: rgba(15, 23, 42, 0.9);
-        --panel-border: rgba(148, 163, 184, 0.18);
-        --text: #e2e8f0;
-        --muted: #94a3b8;
-        --accent: #38bdf8;
-        --accent-2: #22c55e;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: "JetBrains Mono", "Noto Sans SC", sans-serif;
-        color: var(--text);
-        background:
-          radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 34%),
-          radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.18), transparent 30%),
-          linear-gradient(160deg, #020617 0%, #0f172a 100%);
-      }
-
-      main {
-        width: min(1080px, calc(100% - 32px));
-        margin: 0 auto;
-        padding: 48px 0 64px;
-      }
-
-      .hero {
-        display: grid;
-        gap: 20px;
-        margin-bottom: 32px;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        width: fit-content;
-        padding: 6px 12px;
-        border: 1px solid rgba(56, 189, 248, 0.28);
-        border-radius: 999px;
-        color: var(--accent);
-        background: rgba(14, 165, 233, 0.08);
-        font-size: 13px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      h1 {
-        margin: 0;
-        font-size: clamp(2.4rem, 6vw, 4.5rem);
-        line-height: 1.05;
-      }
-
-      .subtitle {
-        max-width: 760px;
-        margin: 0;
-        color: var(--muted);
-        font-size: 1.06rem;
-        line-height: 1.75;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 16px;
-      }
-
-      .card {
-        display: block;
-        padding: 22px;
-        border: 1px solid var(--panel-border);
-        border-radius: 20px;
-        background: var(--panel);
-        color: inherit;
-        text-decoration: none;
-        transition:
-          transform 0.18s ease,
-          border-color 0.18s ease,
-          background 0.18s ease;
-      }
-
-      .card:hover {
-        transform: translateY(-3px);
-        border-color: rgba(56, 189, 248, 0.34);
-        background: rgba(15, 23, 42, 0.96);
-      }
-
-      .card h2 {
-        margin: 0 0 8px;
-        font-size: 1.1rem;
-      }
-
-      .card p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.65;
-      }
-
-      .meta {
-        margin-top: 14px;
-        color: var(--accent-2);
-        font-size: 0.88rem;
-      }
-
-      .links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 28px;
-      }
-
-      .button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 18px;
-        border-radius: 999px;
-        border: 1px solid rgba(56, 189, 248, 0.24);
-        color: var(--text);
-        text-decoration: none;
-        background: rgba(15, 23, 42, 0.72);
-      }
-
-      .button.primary {
-        color: #020617;
-        background: linear-gradient(135deg, var(--accent), #67e8f9);
-        border-color: transparent;
-        font-weight: 700;
-      }
-    </style>
+    <link rel="stylesheet" href="./assets/site.css" />
   </head>
   <body>
-    <main>
-      <section class="hero">
-        <span class="eyebrow">Docs Portal</span>
-        <h1>HPC AI Optimization Lab</h1>
-        <p class="subtitle">
-          这个入口页聚合了 CUDA/C++ API、Python API 以及核心优化专题，方便在 GitHub Pages
-          上直接浏览项目文档，而不是落到空目录或原始 Markdown 文件列表。
-        </p>
-      </section>
+    <div class="page">
 
-      <section class="grid">
-        <a class="card" href="./README.md">
-          <h2>文档总览</h2>
-          <p>从项目背景、模块结构和学习路线切入，快速了解整个实验室的文档组织方式。</p>
-          <div class="meta">入口文档</div>
-        </a>
-        <a class="card" href="./cpp-api/">
-          <h2>C++ / CUDA API</h2>
-          <p>由 Doxygen 生成的底层 API 文档，适合查看 kernel、工具函数与类接口细节。</p>
-          <div class="meta">Doxygen</div>
-        </a>
-        <a class="card" href="./python-api/">
-          <h2>Python API</h2>
-          <p>由 Sphinx 生成的 Python 指南与接口文档，便于结合实验脚本和教程阅读。</p>
-          <div class="meta">Sphinx</div>
-        </a>
-        <a class="card" href="./01_gemm_optimization.md">
-          <h2>优化专题</h2>
-          <p>直接浏览 GEMM、显存访问、规约优化、FlashAttention 与 CUDA 13 特性专题。</p>
-          <div class="meta">专题笔记</div>
-        </a>
-      </section>
+      <!-- ═══ Nav ═══ -->
+      <header class="site-header">
+        <nav class="nav">
+          <a class="brand" href="./index.html">
+            <span class="brand-mark">HPC</span>
+            <span>HPC AI Optimization Lab</span>
+          </a>
+          <div class="nav-links">
+            <a class="nav-link" href="#overview">概览</a>
+            <a class="nav-link" href="./guides.html">专题中心</a>
+            <a class="nav-link" href="#roadmap">学习路线</a>
+            <a class="nav-link" href="#quickref">速查</a>
+          </div>
+          <div class="nav-actions">
+            <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab">GitHub</a>
+          </div>
+        </nav>
+      </header>
 
-      <div class="links">
-        <a class="button primary" href="./cpp-api/">查看 C++ / CUDA API</a>
-        <a class="button" href="./python-api/">查看 Python API</a>
-        <a class="button" href="https://github.com/LessUp/hpc-ai-optimization-lab">GitHub 仓库</a>
-      </div>
-    </main>
+      <main>
+
+        <!-- ═══ Hero ═══ -->
+        <section class="hero">
+          <div class="hero-grid">
+            <div>
+              <span class="eyebrow">Documentation Portal</span>
+              <h1>HPC AI Optimization Lab</h1>
+              <p class="hero-copy">
+                面向 AI 工作负载的 CUDA kernel 实验室。七个功能模块覆盖 elementwise、归约、GEMM、
+                卷积、attention、量化与 CUDA 13 实验特性，配套 C++/Python API 参考和五篇核心优化专题。
+              </p>
+              <div class="inline-actions" style="margin-top:20px">
+                <a class="button primary" href="./guides.html">浏览优化专题</a>
+                <a class="button secondary" href="./cpp-api/">C++ / CUDA API</a>
+                <a class="button secondary" href="./python-api/">Python API</a>
+              </div>
+            </div>
+            <div class="hero-panel">
+              <h2>快速数据</h2>
+              <div class="stat-grid">
+                <div class="stat"><span class="metric-value">7</span><span class="metric-label">功能模块</span></div>
+                <div class="stat"><span class="metric-value">5</span><span class="metric-label">优化专题</span></div>
+                <div class="stat"><span class="metric-value">2</span><span class="metric-label">API 文档</span></div>
+              </div>
+              <p style="margin:0;color:var(--muted);line-height:1.72">
+                CUDA 12.4+ · CMake 3.24+ · C++20 · nanobind Python 绑定
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ Overview Cards ═══ -->
+        <section class="section" id="overview">
+          <div class="section-head">
+            <span class="eyebrow">Overview</span>
+            <h2 class="section-title">文档入口</h2>
+            <p class="section-copy">选择你想开始的方向。API 参考由构建系统自动生成，专题文档按学习阶段组织。</p>
+          </div>
+          <div class="card-grid">
+            <a class="card" href="./cpp-api/">
+              <h3 class="card-title">C++ / CUDA API</h3>
+              <p class="card-copy">Doxygen 生成的底层 API 文档，查看 kernel 签名、工具函数与类接口。</p>
+              <div class="card-meta">Doxygen · 自动生成</div>
+            </a>
+            <a class="card" href="./python-api/">
+              <h3 class="card-title">Python API</h3>
+              <p class="card-copy">Sphinx 生成的 Python 指南，包含 elementwise / reduction / gemm 接口文档。</p>
+              <div class="card-meta">Sphinx · 自动生成</div>
+            </a>
+            <a class="card" href="./guides.html">
+              <h3 class="card-title">优化专题中心</h3>
+              <p class="card-copy">五篇核心优化专题，按学习阶段重新组织，覆盖访存到 FlashAttention。</p>
+              <div class="card-meta">5 篇专题 · 学习路线</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src">
+              <h3 class="card-title">源码模块</h3>
+              <p class="card-copy">浏览 7 个功能模块的 CUDA 内核实现与公共工具库。</p>
+              <div class="card-meta">GitHub · src/</div>
+            </a>
+          </div>
+        </section>
+
+        <!-- ═══ Modules ═══ -->
+        <section class="section" id="modules">
+          <div class="section-head">
+            <span class="eyebrow">Modules</span>
+            <h2 class="section-title">七个功能模块</h2>
+            <p class="section-copy">每个模块聚焦一类 CUDA 优化场景，从最基本的 elementwise 到前沿的 CUDA 13 实验路径。</p>
+          </div>
+          <div class="card-grid">
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/01_elementwise">
+              <h3 class="card-title">01 · Elementwise</h3>
+              <p class="card-copy">ReLU、Sigmoid、转置等逐元素操作，向量化加载与合并访问入门。</p>
+              <div class="card-meta">src/01_elementwise · 稳定</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/02_reduction">
+              <h3 class="card-title">02 · Reduction</h3>
+              <p class="card-copy">Softmax、LayerNorm、RMSNorm，掌握 warp shuffle 与同步协作。</p>
+              <div class="card-meta">src/02_reduction · 稳定</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/03_gemm">
+              <h3 class="card-title">03 · GEMM</h3>
+              <p class="card-copy">矩阵乘法 7 步优化，从 naive 到 Tensor Core，对标 cuBLAS。</p>
+              <div class="card-meta">src/03_gemm · 稳定</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/04_convolution">
+              <h3 class="card-title">04 · Convolution</h3>
+              <p class="card-copy">Implicit GEMM 卷积实现，Winograd 路径当前 fallback 到 GEMM。</p>
+              <div class="card-meta">src/04_convolution · 稳定</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/05_attention">
+              <h3 class="card-title">05 · Attention</h3>
+              <p class="card-copy">FlashAttention 实现，当前支持 float / head_dim=64。</p>
+              <div class="card-meta">src/05_attention · 稳定</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/06_quantization">
+              <h3 class="card-title">06 · Quantization</h3>
+              <p class="card-copy">量化相关 kernel 与精度控制实验。</p>
+              <div class="card-meta">src/06_quantization · 稳定</div>
+            </a>
+            <a class="card" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/07_cuda13_features">
+              <h3 class="card-title">07 · CUDA 13 Features</h3>
+              <p class="card-copy">TMA、Cluster、FP8 GEMM 等实验性路径，当前使用兼容 fallback。</p>
+              <div class="card-meta">src/07_cuda13_features · 实验性</div>
+            </a>
+          </div>
+        </section>
+
+        <!-- ═══ Learning Roadmap ═══ -->
+        <section class="section" id="roadmap">
+          <div class="section-head">
+            <span class="eyebrow">Roadmap</span>
+            <h2 class="section-title">学习路线</h2>
+            <p class="section-copy">三个阶段，从访存基础到前沿架构特性。</p>
+          </div>
+          <div class="roadmap-grid">
+            <div class="topic-section status-good">
+              <span class="topic-level">初学者 · 1-2 周</span>
+              <h3>打好访存与归约基础</h3>
+              <ul class="topic-list">
+                <li>访存优化 → 合并访问、向量化、shared memory</li>
+                <li>归约优化 → block 级归约、warp shuffle</li>
+                <li>GEMM Step 1-4 → naive 到 shared memory tiling</li>
+              </ul>
+            </div>
+            <div class="topic-section status-good">
+              <span class="topic-level">进阶 · 2-4 周</span>
+              <h3>Tensor Core 与 Attention</h3>
+              <ul class="topic-list">
+                <li>GEMM Step 5-7 → Tensor Core、寄存器阻塞</li>
+                <li>FlashAttention → IO-aware 设计、在线 softmax</li>
+              </ul>
+            </div>
+            <div class="topic-section status-watch">
+              <span class="topic-level">专家 · 持续</span>
+              <h3>前沿与源码深入</h3>
+              <ul class="topic-list">
+                <li>CUDA 13 → TMA、Cluster、FP8（当前实验性）</li>
+                <li>CUTLASS 源码精读</li>
+                <li>跟踪最新论文与工具链变化</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ Quick Reference ═══ -->
+        <section class="section" id="quickref">
+          <div class="section-head">
+            <span class="eyebrow">Quick Reference</span>
+            <h2 class="section-title">常用优化技术速查</h2>
+          </div>
+          <div class="card-grid">
+            <div class="code-card">
+              <h3>优化技术与预期提升</h3>
+              <pre class="code-block">合并访问        所有 Kernel      2-10x
+向量化 (float4)  Elementwise      1.5-2x
+Shared Memory   数据复用          2-5x
+Warp Shuffle    归约操作          5-10x
+Tensor Core     矩阵乘法         10-20x
+TMA             大块数据搬运      1.5-2x</pre>
+            </div>
+            <div class="code-card">
+              <h3>性能分析命令</h3>
+              <pre class="code-block"># Nsight Compute - Kernel 分析
+ncu --set full -o profile ./your_app
+
+# Nsight Systems - 系统级分析
+nsys profile -o timeline ./your_app
+
+# Roofline 模型
+ncu --set roofline -o roofline ./your_app</pre>
+            </div>
+            <div class="code-card">
+              <h3>构建项目</h3>
+              <pre class="code-block"># C++/CUDA
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+ctest --test-dir build --output-on-failure
+
+# Python 绑定
+cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON
+cmake --build build
+export PYTHONPATH="$(pwd)/build/python:$PYTHONPATH"</pre>
+            </div>
+            <div class="code-card">
+              <h3>Python API 示例</h3>
+              <pre class="code-block">import torch
+import hpc_ai_opt
+
+x = torch.randn(1024, 1024, device="cuda")
+y = torch.empty_like(x)
+
+hpc_ai_opt.elementwise.relu(x, y)</pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══ Footer ═══ -->
+        <footer class="footer">
+          <h3 class="footer-title">HPC AI Optimization Lab</h3>
+          <p class="footer-copy">
+            CUDA 12.4+ · CMake 3.24+ · C++20 · nanobind ·
+            <a href="https://github.com/LessUp/hpc-ai-optimization-lab">GitHub 仓库</a> ·
+            <a href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/LICENSE">MIT License</a>
+          </p>
+        </footer>
+
+      </main>
+    </div>
   </body>
 </html>
