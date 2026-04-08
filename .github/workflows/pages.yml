@@ -67,6 +67,8 @@ jobs:
         run: |
           mkdir -p docs/_site
           cp docs/index.html docs/_site/index.html
+          cp docs/guides.html docs/_site/guides.html
+          cp -r docs/assets docs/_site/assets
           cp -r docs/*.md docs/_site/
           # Copy Doxygen output
           if [ -d docs/api/html ]; then

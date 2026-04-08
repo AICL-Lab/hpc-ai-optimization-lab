@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="HPC AI Optimization Lab 优化专题中心。" />
+<meta name="theme-color" content="#081120" />
+<title>Optimization Guides · HPC AI Optimization Lab</title>
+<link rel="stylesheet" href="./assets/site.css" />
+</head>
+<body>
+<div class="page">
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="./index.html">
+        <span class="brand-mark">HPC</span>
+        <span>HPC AI Optimization Lab</span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="./index.html">首页</a>
+        <a class="nav-link" href="#topics">专题</a>
+        <a class="nav-link" href="#cheatsheet">速查</a>
+      </div>
+      <div class="nav-actions">
+        <a class="button secondary" href="./cpp-api/">C++ API</a>
+        <a class="button secondary" href="./python-api/">Python API</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="topic-hero">
+      <span class="eyebrow">Guide Hub</span>
+      <h1>优化专题中心</h1>
+      <p class="hero-copy">
+        按主题和学习阶段重新组织项目里的核心优化内容，不再直接面对零散的 Markdown 文件列表。
+        每个专题卡片说明覆盖范围与推荐阅读顺序，点击进入 GitHub 查看完整笔记。
+      </p>
+      <div class="inline-actions">
+        <a class="button primary" href="#topics">开始浏览</a>
+        <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/docs">GitHub 文档目录</a>
+      </div>
+    </section>
+
+    <!-- Topic Cards -->
+    <section class="section" id="topics">
+      <div class="section-head">
+        <span class="eyebrow">Topics</span>
+        <h2 class="section-title">五个核心专题</h2>
+        <p class="section-copy">从基础访存到前沿 CUDA 特性，覆盖完整的 GPU 优化学习路径。</p>
+      </div>
+
+      <!-- Memory -->
+      <div class="topic-layout" style="margin-bottom:24px">
+        <article class="topic-section status-good">
+          <span class="topic-level">入门推荐 · 第 1 周</span>
+          <h2>访存优化</h2>
+          <p class="topic-copy">
+            帮助你建立对全局内存访问模式、共享内存复用、向量化加载和 cache 行为的基本直觉。
+            对很多 CUDA kernel 来说，访存模式往往比算术本身更早成为瓶颈。
+          </p>
+          <ul class="topic-list">
+            <li>理解为什么合并访问是多数 kernel 的第一优先级</li>
+            <li>掌握 float4 等向量化加载在吞吐上的价值与边界</li>
+            <li>知道何时引入 shared memory 做数据复用、何时会带来 bank conflict</li>
+          </ul>
+          <div class="inline-actions" style="margin-top:16px">
+            <a class="button primary" href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/docs/02_memory_optimization.md">查看完整笔记</a>
+            <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/01_elementwise">相关源码</a>
+          </div>
+        </article>
+        <aside class="topic-side">
+          <div class="surface">
+            <h3>先修建议</h3>
+            <p>对线程块、warp、global memory、shared memory 有基本概念即可。</p>
+          </div>
+          <div class="surface">
+            <h3>读完后去哪里</h3>
+            <p>继续阅读归约优化，再回看 GEMM 中的 tiling 策略会更容易理解。</p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Reduction -->
+      <div class="topic-layout" style="margin-bottom:24px">
+        <article class="topic-section status-good">
+          <span class="topic-level">基础到进阶 · 第 1-2 周</span>
+          <h2>归约优化</h2>
+          <p class="topic-copy">
+            归约是理解 CUDA 并行协作的最佳练习之一，集中暴露线程分工、同步成本、
+            分支发散与共享内存布局等关键问题。
+          </p>
+          <ul class="topic-list">
+            <li>理解 block 内归约与 warp 内归约的职责边界</li>
+            <li>掌握 warp shuffle 降低同步成本的常见路径</li>
+            <li>建立对 occupancy 和实际吞吐之间关系的感觉</li>
+          </ul>
+          <div class="inline-actions" style="margin-top:16px">
+            <a class="button primary" href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/docs/03_reduction_optimization.md">查看完整笔记</a>
+            <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/02_reduction">相关源码</a>
+          </div>
+        </article>
+        <aside class="topic-side">
+          <div class="surface">
+            <h3>为什么值得先学</h3>
+            <p>softmax、layer norm 等常见算子都可以抽象成归约问题，直接影响后续 attention 路径的理解。</p>
+          </div>
+          <div class="surface">
+            <h3>对应 Python API</h3>
+            <p>hpc_ai_opt.reduction 公开 softmax、layer_norm 与 rms_norm 接口。</p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- GEMM -->
+      <div class="topic-layout" style="margin-bottom:24px">
+        <article class="topic-section">
+          <span class="topic-level">核心主线 · 第 2-4 周</span>
+          <h2>GEMM 优化</h2>
+          <p class="topic-copy">
+            GEMM 不只是矩阵乘法，它还是理解卷积、attention、Tensor Core、寄存器阻塞与
+            tile 设计的中枢问题。适合在具备访存与归约基础后深入阅读。
+          </p>
+          <ul class="topic-list">
+            <li>7 步优化路径：naive → shared memory tiling → 寄存器阻塞 → Tensor Core</li>
+            <li>理解 CUTLASS 式 tile 设计思路</li>
+            <li>与 cuBLAS 对标性能分析</li>
+          </ul>
+          <div class="inline-actions" style="margin-top:16px">
+            <a class="button primary" href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/docs/01_gemm_optimization.md">查看完整笔记</a>
+            <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/03_gemm">相关源码</a>
+          </div>
+        </article>
+        <aside class="topic-side">
+          <div class="surface">
+            <h3>难度说明</h3>
+            <p>建议先完成 Step 1-4 (访存+tiling)，再进入 Step 5-7 (Tensor Core)。</p>
+          </div>
+          <div class="surface">
+            <h3>延伸阅读</h3>
+            <p>卷积模块 (src/04_convolution) 的 implicit GEMM 实现直接复用本专题的 tiling 思路。</p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- FlashAttention -->
+      <div class="topic-layout" style="margin-bottom:24px">
+        <article class="topic-section">
+          <span class="topic-level">架构专题 · 进阶</span>
+          <h2>FlashAttention</h2>
+          <p class="topic-copy">
+            聚焦 attention 的 IO-aware 设计与在线 softmax 思路。当前仓库实现支持
+            float / head_dim=64。
+          </p>
+          <ul class="topic-list">
+            <li>理解标准 attention 的访存瓶颈与 FlashAttention 的核心思路</li>
+            <li>在线 softmax 的推导与实现</li>
+            <li>tiling 策略如何将中间矩阵保持在 SRAM</li>
+          </ul>
+          <div class="inline-actions" style="margin-top:16px">
+            <a class="button primary" href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/docs/04_flash_attention.md">查看完整笔记</a>
+            <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/05_attention">相关源码</a>
+          </div>
+        </article>
+        <aside class="topic-side">
+          <div class="surface">
+            <h3>先修建议</h3>
+            <p>需要先理解 GEMM tiling 和归约优化中的在线算法思路。</p>
+          </div>
+          <div class="surface">
+            <h3>当前限制</h3>
+            <p>仓库实现支持 float 精度与 head_dim=64，更高级的变体尚未覆盖。</p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- CUDA 13 -->
+      <div class="topic-layout" style="margin-bottom:24px">
+        <article class="topic-section status-watch">
+          <span class="topic-level">前沿 · 实验性</span>
+          <h2>CUDA 13 与 Hopper 新特性</h2>
+          <p class="topic-copy">
+            探索 TMA、Cluster、FP8 GEMM 等新能力。当前仓库中这些路径使用兼容 fallback，
+            不代表完整的 Hopper/Blackwell 特性覆盖。
+          </p>
+          <ul class="topic-list">
+            <li>TMA：理解硬件异步数据搬运的编程模型</li>
+            <li>Cluster：跨 SM 的线程块协作</li>
+            <li>FP8 GEMM：低精度矩阵乘的实验路径</li>
+          </ul>
+          <div class="inline-actions" style="margin-top:16px">
+            <a class="button primary" href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/docs/05_cuda13_features.md">查看完整笔记</a>
+            <a class="button secondary" href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/src/07_cuda13_features">相关源码</a>
+          </div>
+        </article>
+        <aside class="topic-side">
+          <div class="surface">
+            <h3>实验性说明</h3>
+            <p>tma.cu / cluster.cu / fp8_gemm.cu 当前均使用兼容 fallback 实现，不要求 Hopper 硬件。</p>
+          </div>
+          <div class="surface">
+            <h3>持续学习</h3>
+            <p>建议结合 CUTLASS 源码和 NVIDIA 官方文档持续跟踪新架构特性。</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Cheatsheet -->
+    <section class="section" id="cheatsheet">
+      <div class="section-head">
+        <span class="eyebrow">Cheatsheet</span>
+        <h2 class="section-title">实战速查</h2>
+      </div>
+      <div class="card-grid">
+        <div class="code-card">
+          <h3>推荐学习顺序</h3>
+          <pre class="code-block">Week 1    访存优化 → 归约优化
+Week 2-3  GEMM Step 1-4 → Step 5-7
+Week 3-4  FlashAttention
+持续      CUDA 13 新特性 + CUTLASS 源码</pre>
+        </div>
+        <div class="code-card">
+          <h3>参考资源</h3>
+          <pre class="code-block">CUDA C++ Programming Guide
+  docs.nvidia.com/cuda
+
+FlashAttention 论文
+  arxiv.org/abs/2205.14135
+
+How to Optimize a CUDA Matmul Kernel
+  siboehm.com/articles/22/CUDA-MMM
+
+CUTLASS
+  github.com/NVIDIA/cutlass</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <h3 class="footer-title">HPC AI Optimization Lab</h3>
+      <p class="footer-copy">
+        <a href="./index.html">首页</a> ·
+        <a href="./cpp-api/">C++ API</a> ·
+        <a href="./python-api/">Python API</a> ·
+        <a href="https://github.com/LessUp/hpc-ai-optimization-lab">GitHub</a>
+      </p>
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>
