@@ -1,18 +1,18 @@
-#include "fp8_gemm.cuh"
-#include "../common/cuda_check.cuh"
-#include <mma.h>
 #include <iostream>
+
+#include <mma.h>
+
+#include "../common/cuda_check.cuh"
+#include "fp8_gemm.cuh"
 
 namespace hpc::cuda13 {
 
 using namespace nvcuda;
 
 // Naive GEMM kernel for half precision (fallback)
-__global__ void fp8_gemm_naive_kernel(const __half* __restrict__ A,
-                                       const __half* __restrict__ B,
-                                       __half* __restrict__ C,
-                                       int M, int N, int K,
-                                       float scale_a, float scale_b) {
+__global__ void fp8_gemm_naive_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                      __half* __restrict__ C, int M, int N, int K, float scale_a,
+                                      float scale_b) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -27,11 +27,9 @@ __global__ void fp8_gemm_naive_kernel(const __half* __restrict__ A,
     }
 }
 
-__global__ void fp8_gemm_kernel(const __half* __restrict__ A,
-                                 const __half* __restrict__ B,
-                                 __half* __restrict__ C,
-                                 int M, int N, int K,
-                                 float scale_a, float scale_b) {
+__global__ void fp8_gemm_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                __half* __restrict__ C, int M, int N, int K, float scale_a,
+                                float scale_b) {
     (void)scale_a;  // Used for FP8 scaling in future implementation
     (void)scale_b;
 
@@ -107,10 +105,8 @@ __global__ void fp8_gemm_kernel(const __half* __restrict__ A,
     }
 }
 
-void fp8_gemm(const __half* A, const __half* B, __half* C,
-              int M, int N, int K,
-              const FP8GEMMConfig& config,
-              cudaStream_t stream) {
+void fp8_gemm(const __half* A, const __half* B, __half* C, int M, int N, int K,
+              const FP8GEMMConfig& config, cudaStream_t stream) {
     if (A == nullptr || B == nullptr || C == nullptr) {
         throw std::invalid_argument("fp8_gemm expects non-null A, B, C pointers");
     }
@@ -121,28 +117,26 @@ void fp8_gemm(const __half* A, const __half* B, __half* C,
     if (config.use_fp8 && is_hopper_architecture()) {
         constexpr int BM = 128;
         constexpr int BN = 128;
-        
+
         dim3 block(256, 1, 1);
         dim3 grid((M + BM - 1) / BM, (N + BN - 1) / BN, 1);
-        
-        fp8_gemm_kernel<<<grid, block, 0, stream>>>(
-            A, B, C, M, N, K, config.scale_a, config.scale_b);
+
+        fp8_gemm_kernel<<<grid, block, 0, stream>>>(A, B, C, M, N, K, config.scale_a,
+                                                    config.scale_b);
     } else {
         fp8_gemm_fallback(A, B, C, M, N, K, config, stream);
     }
     CUDA_CHECK_LAST();
 }
 
-void fp8_gemm_fallback(const __half* A, const __half* B, __half* C,
-                       int M, int N, int K,
-                       const FP8GEMMConfig& config,
-                       cudaStream_t stream) {
+void fp8_gemm_fallback(const __half* A, const __half* B, __half* C, int M, int N, int K,
+                       const FP8GEMMConfig& config, cudaStream_t stream) {
     dim3 block(16, 16);
     dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
 
-    fp8_gemm_naive_kernel<<<grid, block, 0, stream>>>(
-        A, B, C, M, N, K, config.scale_a, config.scale_b);
+    fp8_gemm_naive_kernel<<<grid, block, 0, stream>>>(A, B, C, M, N, K, config.scale_a,
+                                                      config.scale_b);
     CUDA_CHECK_LAST();
 }
 
-} // namespace hpc::cuda13
+}  // namespace hpc::cuda13

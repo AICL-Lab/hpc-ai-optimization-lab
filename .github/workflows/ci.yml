@@ -17,6 +17,8 @@ concurrency:
 env:
   PYTHON_VERSION: '3.11'
   CLANG_FORMAT_VERSION: '17'
+  # Opt into Node.js 24 for GitHub Actions (Node.js 20 deprecated)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ============================================
@@ -40,7 +42,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
 
       - name: Install Python linting tools
         run: pip install ruff
@@ -175,6 +176,7 @@ jobs:
               "CONTRIBUTING.md",
               "CODE_OF_CONDUCT.md",
               "CHANGELOG.md",
+              "SECURITY.md",
           ]
 
           missing = []
@@ -190,6 +192,35 @@ jobs:
               sys.exit(1)
 
           print(f"\n✓ All {len(required_configs)} configuration files verified")
+          EOF
+
+      - name: Verify version consistency
+        run: |
+          python3 << 'EOF'
+          import re
+          import sys
+          from pathlib import Path
+
+          print("=== Checking version consistency ===")
+
+          # Check CMakeLists.txt version
+          cmake = Path('CMakeLists.txt').read_text()
+          cmake_match = re.search(r'VERSION\s+(\d+\.\d+\.\d+)', cmake)
+          cmake_version = cmake_match.group(1) if cmake_match else None
+
+          # Check Doxyfile version
+          doxyfile = Path('docs/Doxyfile').read_text()
+          doxy_match = re.search(r'PROJECT_NUMBER\s*=\s*(\d+\.\d+\.\d+)', doxyfile)
+          doxy_version = doxy_match.group(1) if doxy_match else None
+
+          print(f"CMakeLists.txt version: {cmake_version}")
+          print(f"Doxyfile version: {doxy_version}")
+
+          if cmake_version and doxy_version and cmake_version != doxy_version:
+              print(f"❌ Error: Version mismatch!")
+              sys.exit(1)
+
+          print("✓ Versions are consistent")
           EOF
 
   # ============================================
@@ -211,7 +242,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
 
       - name: Install Sphinx and dependencies
         run: |

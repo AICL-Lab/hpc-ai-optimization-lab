@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+
 #include <concepts>
 
 namespace hpc {
@@ -24,12 +25,10 @@ struct LaunchConfig {
         return dim3(BlockSize);
     }
 
-    [[nodiscard]] static constexpr dim3 grid_2d(int rows, int cols,
-                                                 int tile_rows, int tile_cols) noexcept {
-        return dim3(
-            static_cast<unsigned int>((cols + tile_cols - 1) / tile_cols),
-            static_cast<unsigned int>((rows + tile_rows - 1) / tile_rows)
-        );
+    [[nodiscard]] static constexpr dim3 grid_2d(int rows, int cols, int tile_rows,
+                                                int tile_cols) noexcept {
+        return dim3(static_cast<unsigned int>((cols + tile_cols - 1) / tile_cols),
+                    static_cast<unsigned int>((rows + tile_rows - 1) / tile_rows));
     }
 };
 
@@ -55,4 +54,4 @@ inline constexpr int TILE_32 = 32;
 inline constexpr int TILE_64 = 64;
 inline constexpr int TILE_128 = 128;
 
-} // namespace hpc
+}  // namespace hpc

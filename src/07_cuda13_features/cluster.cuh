@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+
 #include "../common/types.cuh"
 
 namespace hpc::cuda13 {
@@ -13,13 +14,11 @@ struct ClusterConfig {
 };
 
 template <typename T>
-void cluster_reduce(const T* input, T* output, size_t n,
-                    const ClusterConfig& config,
+void cluster_reduce(const T* input, T* output, size_t n, const ClusterConfig& config,
                     cudaStream_t stream = nullptr);
 
 template <typename T>
-void cluster_reduce_fallback(const T* input, T* output, size_t n,
-                             const ClusterConfig& config,
+void cluster_reduce_fallback(const T* input, T* output, size_t n, const ClusterConfig& config,
                              cudaStream_t stream = nullptr);
 
-} // namespace hpc::cuda13
+}  // namespace hpc::cuda13

@@ -9,4 +9,4 @@ enum class OptLevel {
     GridStride   // Grid stride loop
 };
 
-} // namespace hpc::elementwise
+}  // namespace hpc::elementwise

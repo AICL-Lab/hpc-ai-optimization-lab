@@ -1,18 +1,19 @@
-#include "softmax.cuh"
-#include "../common/cuda_check.cuh"
-#include "../common/reduce.cuh"
 #include <cfloat>
 #include <cmath>
+
+#include "../common/cuda_check.cuh"
+#include "../common/reduce.cuh"
+#include "softmax.cuh"
 
 namespace hpc::reduction {
 
 // Online softmax kernel (single pass)
 template <typename T>
-__global__ void softmax_online_kernel(const T* __restrict__ input,
-                                       T* __restrict__ output,
-                                       int batch, int seq_len) {
+__global__ void softmax_online_kernel(const T* __restrict__ input, T* __restrict__ output,
+                                      int batch, int seq_len) {
     int row = blockIdx.x;
-    if (row >= batch) return;
+    if (row >= batch)
+        return;
 
     const T* row_input = input + row * seq_len;
     T* row_output = output + row * seq_len;
@@ -32,14 +33,16 @@ __global__ void softmax_online_kernel(const T* __restrict__ input,
     float local_max = max_val;
     max_val = hpc::block_reduce_max(max_val);
     __shared__ float s_max, s_sum;
-    if (threadIdx.x == 0) s_max = max_val;
+    if (threadIdx.x == 0)
+        s_max = max_val;
     __syncthreads();
     max_val = s_max;
 
     // Rescale per-thread sum_exp to the global max (avoids second data pass)
     sum_exp *= expf(local_max - max_val);
     sum_exp = hpc::block_reduce_sum(sum_exp);
-    if (threadIdx.x == 0) s_sum = sum_exp;
+    if (threadIdx.x == 0)
+        s_sum = sum_exp;
     __syncthreads();
     sum_exp = s_sum;
 
@@ -51,19 +54,19 @@ __global__ void softmax_online_kernel(const T* __restrict__ input,
 }
 
 template <>
-void softmax<float, SoftmaxOpt::OnlineSoftmax>(const float* input, float* output,
-                                                int batch, int seq_len, cudaStream_t stream) {
+void softmax<float, SoftmaxOpt::OnlineSoftmax>(const float* input, float* output, int batch,
+                                               int seq_len, cudaStream_t stream) {
     int block_size = 256;
     softmax_online_kernel<float><<<batch, block_size, 0, stream>>>(input, output, batch, seq_len);
     CUDA_CHECK_LAST();
 }
 
 template <>
-void softmax<__half, SoftmaxOpt::OnlineSoftmax>(const __half* input, __half* output,
-                                                 int batch, int seq_len, cudaStream_t stream) {
+void softmax<__half, SoftmaxOpt::OnlineSoftmax>(const __half* input, __half* output, int batch,
+                                                int seq_len, cudaStream_t stream) {
     int block_size = 256;
     softmax_online_kernel<__half><<<batch, block_size, 0, stream>>>(input, output, batch, seq_len);
     CUDA_CHECK_LAST();
 }
 
-} // namespace hpc::reduction
+}  // namespace hpc::reduction

@@ -45,6 +45,8 @@ env:
   NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
   VITEPRESS_BASE: '/hpc-ai-optimization-lab/'
+  # Opt into Node.js 24 for GitHub Actions (Node.js 20 deprecated)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # ═════════════════════════════════════════════════════════════════════════════
@@ -99,7 +101,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
 
       # ─────────────────────────────────────────────────────────────────────────
       # Step 6: Install Python dependencies

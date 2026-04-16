@@ -11,12 +11,10 @@ struct WinogradConfig {
 };
 
 void conv2d_winograd(const float* input, const float* weight, float* output,
-                     const ConvParams& params,
-                     const WinogradConfig& config = {},
+                     const ConvParams& params, const WinogradConfig& config = {},
                      cudaStream_t stream = nullptr);
 
 void conv2d_winograd_fallback(const float* input, const float* weight, float* output,
-                              const ConvParams& params,
-                              cudaStream_t stream = nullptr);
+                              const ConvParams& params, cudaStream_t stream = nullptr);
 
-} // namespace hpc::convolution
+}  // namespace hpc::convolution
