@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
+#include <algorithm>
 #include "02_reduction/rmsnorm.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"

@@ -1,235 +1,268 @@
 # Design Document: 项目质量完善
 
-## Overview
+## 1. Architecture Overview
 
-本设计文档描述如何将 HPC-AI-Optimization-Lab 项目提升到优秀开源项目的标准。主要包括：开源标准文件、CI/CD 自动化、API 文档生成、Python 绑定完善、Benchmark 增强、示例代码和代码质量工具配置。
-
-## Architecture
-
-```mermaid
-graph TB
-    subgraph "开源标准文件"
-        LICENSE[LICENSE]
-        CONTRIB[CONTRIBUTING.md]
-        COC[CODE_OF_CONDUCT.md]
-        CHANGELOG[CHANGELOG.md]
-        ISSUE[.github/ISSUE_TEMPLATE/]
-        PR[.github/PULL_REQUEST_TEMPLATE.md]
-    end
-    
-    subgraph "CI/CD"
-        GHA[GitHub Actions]
-        TEST[自动测试]
-        COV[代码覆盖率]
-        FMT[格式检查]
-    end
-    
-    subgraph "文档系统"
-        DOX[Doxygen C++ API]
-        SPH[Sphinx Python API]
-        PAGES[GitHub Pages]
-    end
-    
-    subgraph "代码质量"
-        CLANG[.clang-format]
-        TIDY[.clang-tidy]
-        PRECOMMIT[pre-commit hooks]
-        EDITOR[.editorconfig]
-    end
-    
-    subgraph "示例与Benchmark"
-        EXAMPLES[examples/]
-        BENCH[benchmark/]
-    end
-    
-    GHA --> TEST & COV & FMT
-    DOX & SPH --> PAGES
-    PRECOMMIT --> CLANG & TIDY
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        GitHub Repository                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐  │
+│  │ Source Code │  │   Tests     │  │      Documentation          │  │
+│  │   src/      │  │   tests/    │  │  docs/, README.md           │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────────┘  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐  │
+│  │  Examples   │  │   Python    │  │      .kiro Specs            │  │
+│  │ examples/   │  │   python/   │  │  requirements, design, tasks │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+           │                   │                    │
+           ▼                   ▼                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        GitHub Actions                                │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                        CI Workflow                            │    │
+│  │  ┌───────────┐  ┌───────────┐  ┌───────────────────────────┐ │    │
+│  │  │  Format   │  │Consistency│  │    Documentation Build    │ │    │
+│  │  │  Check    │  │  Check    │  │    (Doxygen + Sphinx)     │ │    │
+│  │  └───────────┘  └───────────┘  └───────────────────────────┘ │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                      Pages Workflow                           │    │
+│  │  ┌───────────┐  ┌───────────┐  ┌───────────────────────────┐ │    │
+│  │  │  Build    │  │  Combine  │  │    Deploy to              │ │    │
+│  │  │  Docs     │  │  Output   │  │    GitHub Pages           │ │    │
+│  │  └───────────┘  └───────────┘  └───────────────────────────┘ │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        GitHub Pages                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐  │
+│  │   Portal    │  │   C++ API   │  │      Python API             │  │
+│  │ index.html  │  │  (Doxygen)  │  │      (Sphinx)               │  │
+│  │ guides.html │  │             │  │                             │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Components and Interfaces
+---
 
-### 1. 开源标准文件
+## 2. Component Design
 
-#### 1.1 LICENSE (MIT)
-```
-MIT License
+### 2.1 开源标准文件
 
-Copyright (c) 2024 HPC-AI-Optimization-Lab
+| 文件 | 内容模板 | 用途 |
+|------|----------|------|
+| `LICENSE` | Apache 2.0 全文 | 法律许可 |
+| `CONTRIBUTING.md` | 开发流程、代码风格、PR 步骤 | 贡献者指南 |
+| `CODE_OF_CONDUCT.md` | Contributor Covenant | 社区规范 |
+| `CHANGELOG.md` | Keep a Changelog 格式 | 版本追踪 |
+| `.github/ISSUE_TEMPLATE/bug_report.md` | 环境信息、复现步骤 | Bug 报告 |
+| `.github/ISSUE_TEMPLATE/feature_request.md` | 需求描述、用例 | 功能请求 |
+| `.github/PULL_REQUEST_TEMPLATE.md` | 变更类型、测试、检查清单 | PR 规范 |
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-...
-```
+### 2.2 CI Workflow Design
 
-#### 1.2 CONTRIBUTING.md 结构
-- 如何报告 Bug
-- 如何提交功能请求
-- 开发环境设置
-- 代码风格指南
-- 提交 PR 流程
-- 测试要求
-
-#### 1.3 GitHub Templates
-- Bug Report Template
-- Feature Request Template
-- Pull Request Template
-
-### 2. CI/CD 配置
-
-#### 2.1 GitHub Actions Workflow
 ```yaml
-# .github/workflows/ci.yml
+# .github/workflows/ci.yml 结构
 name: CI
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    container:
-      image: nvidia/cuda:12.4.1-devel-ubuntu22.04
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y cmake ninja-build python3-pip
-          pip3 install pytest torch numpy
-      
-      - name: Configure
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-      
-      - name: Build
-        run: cmake --build build
-      
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
+  format-check:
+    - clang-format (C++/CUDA)
+    - ruff (Python)
+
+  consistency-check:
+    - 验证示例文件存在
+    - 验证模块命名一致
+    - 验证 CI 范围文档
+
+  docs:
+    - Doxygen 构建
+    - Sphinx 构建
+
+  ci-success:
+    - 汇总所有 job 状态
 ```
 
-#### 2.2 代码覆盖率配置
+### 2.3 Pages Workflow Design
+
 ```yaml
-# 使用 gcov + codecov
-- name: Generate coverage
-  run: |
-    cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
-    cmake --build build
-    ctest --test-dir build
-    gcov -o build src/**/*.cu
-    
-- name: Upload coverage
-  uses: codecov/codecov-action@v3
+# .github/workflows/pages.yml 结构
+name: Documentation
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build-docs:
+    - 安装 Doxygen
+    - 安装 Sphinx + 依赖
+    - 构建 Doxygen (C++ API)
+    - 构建 Sphinx (Python API)
+    - 合并文档到 _site/
+    - 上传 artifact
+
+  deploy:
+    - 部署到 GitHub Pages
 ```
 
-### 3. 文档系统
+### 2.4 文档门户设计
 
-#### 3.1 Doxygen 配置
 ```
-# Doxyfile
-PROJECT_NAME           = "HPC-AI-Optimization-Lab"
-OUTPUT_DIRECTORY       = docs/api
-GENERATE_HTML          = YES
-GENERATE_LATEX         = NO
-INPUT                  = src
-FILE_PATTERNS          = *.cuh *.cu *.hpp *.cpp
-RECURSIVE              = YES
-EXTRACT_ALL            = YES
-USE_MDFILE_AS_MAINPAGE = README.md
+docs/
+├── index.html          # 文档门户首页
+│   ├── Hero section    # 项目介绍
+│   ├── Module cards    # 7 个功能模块
+│   ├── Learning path   # 学习路线
+│   └── Quick ref       # 速查表
+│
+├── guides.html         # 优化专题中心
+│   ├── Memory opt      # 访存优化
+│   ├── Reduction opt   # 归约优化
+│   ├── GEMM opt        # GEMM 优化
+│   ├── FlashAttention  # 注意力优化
+│   └── CUDA 13         # 新特性
+│
+├── assets/
+│   └── site.css        # 现代深色主题
+│
+├── api/                # Doxygen 输出
+│   └── html/           # C++ API 文档
+│
+└── python/
+    └── _build/html/    # Sphinx 输出
 ```
 
-#### 3.2 Sphinx 配置
+---
+
+## 3. Error Handling Design
+
+### 3.1 CI Error Handling
+
 ```python
-# docs/conf.py
-project = 'HPC-AI-Optimization-Lab'
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx_rtd_theme',
-]
-html_theme = 'sphinx_rtd_theme'
+# 一致性检查示例
+def check_file_exists(path, description):
+    if not Path(path).exists():
+        print(f"Error: {description} not found at {path}")
+        sys.exit(1)
+    print(f"✓ {description} found")
+
+def check_content(path, expected, description):
+    content = Path(path).read_text()
+    if expected not in content:
+        print(f"Error: Expected '{expected}' in {path}")
+        sys.exit(1)
+    print(f"✓ {description} verified")
 ```
 
-### 4. Python 绑定完善
+### 3.2 Pages Workflow Error Handling
 
-#### 4.1 完整绑定结构
-```cpp
-// python/bindings/bindings.cpp
-#include <nanobind/nanobind.h>
-#include <nanobind/tensor.h>
+```bash
+# 文档构建带 fallback
+if [ -f docs/Doxyfile ]; then
+    cd docs && doxygen Doxyfile || {
+        echo "Warning: Doxygen build failed"
+        # Continue without Doxygen output
+    }
+else
+    echo "Info: Doxyfile not found, skipping"
+fi
 
-namespace nb = nanobind;
-
-// Elementwise 模块
-void bind_elementwise(nb::module_& m);
-// Reduction 模块
-void bind_reduction(nb::module_& m);
-// GEMM 模块
-void bind_gemm(nb::module_& m);
-// Attention 模块
-void bind_attention(nb::module_& m);
-
-NB_MODULE(hpc_kernels, m) {
-    m.doc() = "HPC-AI-Optimization-Lab CUDA Kernels";
-    
-    auto elementwise = m.def_submodule("elementwise");
-    bind_elementwise(elementwise);
-    
-    auto reduction = m.def_submodule("reduction");
-    bind_reduction(reduction);
-    
-    auto gemm = m.def_submodule("gemm");
-    bind_gemm(gemm);
-    
-    auto attention = m.def_submodule("attention");
-    bind_attention(attention);
-}
+# 创建 fallback index
+if [ ! -f docs/_site/index.html ]; then
+    cat > docs/_site/index.html << 'EOF'
+    <!DOCTYPE html>
+    <html><body>
+    <h1>Documentation</h1>
+    <p>Build in progress...</p>
+    </body></html>
+    EOF
+fi
 ```
 
-#### 4.2 类型提示 Stub 文件
-```python
-# python/hpc_kernels/__init__.pyi
-from typing import overload
-import torch
+---
 
-class elementwise:
-    @staticmethod
-    def relu(input: torch.Tensor, output: torch.Tensor) -> None: ...
-    
-    @staticmethod
-    def sigmoid(input: torch.Tensor, output: torch.Tensor) -> None: ...
+## 4. Data Flow
+
+### 4.1 PR Validation Flow
+
+```
+PR Created
+    │
+    ├──────────────────────────────────────┐
+    │                                      │
+    ▼                                      ▼
+Format Check                          Consistency Check
+    │                                      │
+    ├─► Fail ──► Block Merge              ├─► Fail ──► Block Merge
+    │                                      │
+    ▼ Pass                                 ▼ Pass
+    │                                      │
+    └──────────────────┬───────────────────┘
+                       │
+                       ▼
+                  Docs Build
+                       │
+                       ├─► Fail ──► Block Merge
+                       │
+                       ▼ Pass
+                       │
+                       ▼
+                 Allow Merge
 ```
 
-### 5. 代码质量工具
+### 4.2 Documentation Deployment Flow
 
-#### 5.1 .clang-format
+```
+Push to main
+    │
+    ▼
+Build Doxygen ──────► docs/api/html/
+    │
+    ▼
+Build Sphinx ───────► docs/python/_build/html/
+    │
+    ▼
+Combine ────────────► docs/_site/
+    │                      │
+    │                      ├── index.html
+    │                      ├── guides.html
+    │                      ├── cpp-api/
+    │                      └── python-api/
+    │
+    ▼
+Deploy ─────────────► GitHub Pages
+```
+
+---
+
+## 5. Configuration Details
+
+### 5.1 clang-format
+
 ```yaml
 BasedOnStyle: Google
 IndentWidth: 4
 ColumnLimit: 100
+Language: Cpp
+Standard: c++20
+AlignAfterOpenBracket: Align
 AllowShortFunctionsOnASingleLine: Empty
-BreakBeforeBraces: Attach
 ```
 
-#### 5.2 pre-commit 配置
+### 5.2 pre-commit
+
 ```yaml
-# .pre-commit-config.yaml
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      
+      - id: check-yaml
+
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v17.0.6
     hooks:
@@ -237,77 +270,37 @@ repos:
         types_or: [c++, cuda]
 ```
 
-## Data Models
+### 5.3 Sphinx
 
-### Benchmark 结果格式
 ```python
-@dataclass
-class BenchmarkResult:
-    kernel_name: str
-    opt_level: str
-    elapsed_ms: float
-    bandwidth_gbps: float  # For memory-bound
-    tflops: float          # For compute-bound
-    efficiency: float      # vs theoretical peak
-    vs_pytorch: float      # Speedup vs PyTorch
-    vs_cublas: float       # Speedup vs cuBLAS (for GEMM)
+# docs/python/conf.py
+project = 'HPC-AI-Optimization-Lab'
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
+    'breathe',
+    'myst_parser',
+    'sphinx_copybutton',
+]
+html_theme = 'sphinx_rtd_theme'
 ```
 
-## Correctness Properties
+---
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+## 6. Verification Matrix
 
-基于 prework 分析，本项目的改进主要涉及配置文件和文档，大多数验证是文件存在性检查（example 类型）。唯一需要属性测试的是 Python 绑定的错误处理：
+| Check | Trigger | Pass Criteria |
+|-------|---------|---------------|
+| clang-format | PR | All files formatted |
+| ruff | PR | No lint errors |
+| File existence | PR | Required files present |
+| Naming consistency | PR | Module names aligned |
+| Doxygen build | PR, Push | HTML generated |
+| Sphinx build | PR, Push | HTML generated |
+| Pages deploy | Push to main | Site accessible |
 
-### Property 1: Python Binding Error Messages
-*For any* invalid input to Python bindings (wrong dtype, wrong device, wrong shape), the binding SHALL raise a descriptive Python exception rather than crashing or returning silently.
+---
 
-**Validates: Requirements 5.5**
+## 7. Status
 
-## Error Handling
-
-### Python 绑定错误处理
-```cpp
-void bind_relu(nb::module_& m) {
-    m.def("relu", [](nb::tensor<float, nb::device::cuda> input,
-                     nb::tensor<float, nb::device::cuda> output) {
-        if (input.size() != output.size()) {
-            throw std::invalid_argument(
-                "Input and output tensors must have the same size");
-        }
-        // ... kernel call
-    });
-}
-```
-
-## Testing Strategy
-
-### 验证方法
-
-由于本项目改进主要涉及配置文件和文档，测试策略以验证文件存在性和配置正确性为主：
-
-1. **文件存在性测试**: 检查所有必需文件是否存在
-2. **CI 配置验证**: 通过 GitHub Actions 运行验证
-3. **文档生成验证**: 运行 Doxygen/Sphinx 检查输出
-4. **Python 绑定测试**: 导入模块并调用函数
-
-### 测试脚本示例
-```python
-# tests/test_project_structure.py
-import os
-import pytest
-
-def test_license_exists():
-    assert os.path.exists("LICENSE")
-
-def test_contributing_exists():
-    assert os.path.exists("CONTRIBUTING.md")
-
-def test_github_templates_exist():
-    assert os.path.exists(".github/ISSUE_TEMPLATE")
-    assert os.path.exists(".github/PULL_REQUEST_TEMPLATE.md")
-
-def test_clang_format_exists():
-    assert os.path.exists(".clang-format")
-```
-
+✅ All design components implemented and verified

@@ -1,4 +1,4 @@
-# Documentation Build and Deploy
+# Documentation Build and Deploy to GitHub Pages
 name: Documentation
 
 on:
@@ -9,10 +9,13 @@ on:
       - 'src/**/*.cuh'
       - 'src/**/*.cu'
       - 'python/**'
+      - 'README.md'
+      - '.github/workflows/pages.yml'
   pull_request:
     branches: [master, main]
     paths:
       - 'docs/**'
+      - 'README.md'
   workflow_dispatch:
 
 permissions:
@@ -24,66 +27,215 @@ concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHON_VERSION: '3.11'
+
 jobs:
+  # ============================================
+  # Job 1: Build Documentation
+  # ============================================
   build-docs:
     name: Build Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            docs
-            src
-            python
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Pages
+      - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Install Doxygen
+      - name: Install Doxygen and Graphviz
         run: |
           sudo apt-get update
           sudo apt-get install -y doxygen graphviz
+          echo "Doxygen version: $(doxygen --version)"
+          echo "Graphviz version: $(dot -V)"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
-      - name: Install Python dependencies
+      - name: Install Sphinx and dependencies
         run: |
-          pip install sphinx sphinx-rtd-theme breathe myst-parser sphinx-copybutton
+          pip install \
+            sphinx \
+            sphinx-rtd-theme \
+            breathe \
+            myst-parser \
+            sphinx-copybutton \
+            pyyaml
+          echo "Sphinx version: $(sphinx-build --version)"
 
       - name: Build Doxygen (C++/CUDA API)
+        id: doxygen
         run: |
-          cd docs
-          doxygen Doxyfile
+          echo "=== Building Doxygen Documentation ==="
 
-      - name: Build Sphinx (Python API & Guides)
-        run: |
-          cd docs/python
-          sphinx-build -b html . _build/html
+          if [ -f docs/Doxyfile ]; then
+            cd docs
+            doxygen Doxyfile 2>&1 | tee doxygen_output.log
 
-      - name: Combine documentation
+            if [ -d api/html ]; then
+              html_count=$(find api/html -name '*.html' | wc -l)
+              echo "✓ Doxygen generated $html_count HTML files"
+              echo "doxygen_success=true" >> $GITHUB_OUTPUT
+            else
+              echo "⚠ Doxygen output directory not found"
+              echo "doxygen_success=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠ docs/Doxyfile not found, skipping Doxygen build"
+            echo "doxygen_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Sphinx (Python API)
+        id: sphinx
         run: |
+          echo "=== Building Sphinx Documentation ==="
+
+          if [ -f docs/python/conf.py ]; then
+            # Ensure templates directory exists
+            mkdir -p docs/python/_templates
+
+            cd docs/python
+            sphinx-build -b html . _build/html 2>&1 | tee sphinx_output.log
+            sphinx_exit=$?
+
+            if [ $sphinx_exit -eq 0 ] && [ -d _build/html ]; then
+              html_count=$(find _build/html -name '*.html' | wc -l)
+              echo "✓ Sphinx generated $html_count HTML files"
+              echo "sphinx_success=true" >> $GITHUB_OUTPUT
+            else
+              echo "⚠ Sphinx build completed with issues (exit code: $sphinx_exit)"
+              echo "sphinx_success=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠ docs/python/conf.py not found, skipping Sphinx build"
+            echo "sphinx_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Combine and prepare documentation
+        run: |
+          echo "=== Combining Documentation ==="
+
+          # Create output directory
           mkdir -p docs/_site
-          cp docs/index.html docs/_site/index.html
-          cp docs/guides.html docs/_site/guides.html
-          cp -r docs/assets docs/_site/assets
-          cp -r docs/*.md docs/_site/
+
+          # Copy portal pages
+          if [ -f docs/index.html ]; then
+            cp docs/index.html docs/_site/index.html
+            echo "✓ Copied index.html"
+          fi
+
+          if [ -f docs/guides.html ]; then
+            cp docs/guides.html docs/_site/guides.html
+            echo "✓ Copied guides.html"
+          fi
+
+          # Copy assets
+          if [ -d docs/assets ]; then
+            cp -r docs/assets docs/_site/assets
+            echo "✓ Copied assets directory"
+          fi
+
+          # Copy markdown documentation
+          if ls docs/*.md 1>/dev/null 2>&1; then
+            cp docs/*.md docs/_site/
+            md_count=$(ls docs/*.md | wc -l)
+            echo "✓ Copied $md_count markdown files"
+          fi
+
           # Copy Doxygen output
           if [ -d docs/api/html ]; then
             cp -r docs/api/html docs/_site/cpp-api
+            echo "✓ Copied Doxygen output to cpp-api/"
+          else
+            echo "⚠ Doxygen output not available"
           fi
+
           # Copy Sphinx output
           if [ -d docs/python/_build/html ]; then
             cp -r docs/python/_build/html docs/_site/python-api
+            echo "✓ Copied Sphinx output to python-api/"
+          else
+            echo "⚠ Sphinx output not available"
           fi
 
-      - name: Upload artifact
+          # Create fallback index if needed
+          if [ ! -f docs/_site/index.html ]; then
+            cat > docs/_site/index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>HPC-AI-Optimization-Lab Documentation</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 40px 20px;
+                line-height: 1.6;
+                color: #333;
+              }
+              h1 { color: #0891b2; }
+              a { color: #0891b2; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              .card {
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 20px 0;
+                background: #f9fafb;
+              }
+              .card h2 { margin-top: 0; color: #1f2937; }
+            </style>
+          </head>
+          <body>
+            <h1>HPC-AI-Optimization-Lab</h1>
+            <p>High-Performance CUDA Kernels for AI/ML Workloads</p>
+
+            <div class="card">
+              <h2>📚 Documentation</h2>
+              <ul>
+                <li><a href="cpp-api/">C++ / CUDA API Reference (Doxygen)</a></li>
+                <li><a href="python-api/">Python API Reference (Sphinx)</a></li>
+                <li><a href="guides.html">Optimization Guides</a></li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h2>🔗 Quick Links</h2>
+              <ul>
+                <li><a href="https://github.com/LessUp/hpc-ai-optimization-lab">GitHub Repository</a></li>
+                <li><a href="https://github.com/LessUp/hpc-ai-optimization-lab/blob/main/README.md">README</a></li>
+                <li><a href="https://github.com/LessUp/hpc-ai-optimization-lab/tree/main/docs">Documentation Source</a></li>
+              </ul>
+            </div>
+          </body>
+          </html>
+          HTMLEOF
+            echo "✓ Created fallback index.html"
+          fi
+
+          # List final contents
+          echo ""
+          echo "=== Documentation Site Contents ==="
+          ls -la docs/_site/
+          echo ""
+          echo "Total size: $(du -sh docs/_site/ | cut -f1)"
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_site
 
+  # ============================================
+  # Job 2: Deploy to GitHub Pages
+  # ============================================
   deploy:
     name: Deploy to GitHub Pages
     needs: build-docs
@@ -96,3 +248,11 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Documentation Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The documentation site is now live!" >> $GITHUB_STEP_SUMMARY

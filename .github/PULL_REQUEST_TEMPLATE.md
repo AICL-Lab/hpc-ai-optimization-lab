@@ -1,74 +1,152 @@
-## Description
+## 📝 Description
 
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context.
+<!-- Provide a clear and concise summary of the changes -->
 
-Fixes # (issue)
+### What does this PR do?
 
-## Type of Change
+<!-- Brief description of the changes made -->
 
-Please delete options that are not relevant.
+### Related Issue
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] 🎨 Code style/formatting
-- [ ] ♻️ Refactoring (no functional changes)
-- [ ] ⚡ Performance improvement
-- [ ] ✅ Test update
+<!-- Link to the issue this PR addresses -->
+Fixes #
 
-## Changes Made
+---
 
-- Change 1
-- Change 2
-- Change 3
+## 🏷️ Type of Change
 
-## Testing
+<!-- Please delete options that are not relevant -->
 
-Please describe the tests that you ran to verify your changes.
+- [ ] 🐛 **Bug fix** - Non-breaking change which fixes an issue
+- [ ] ✨ **New feature** - Non-breaking change which adds functionality
+- [ ] 💥 **Breaking change** - Fix or feature that would cause existing functionality to not work as expected
+- [ ] 📝 **Documentation** - Update to documentation
+- [ ] 🎨 **Code style** - Formatting, no functional changes
+- [ ] ♻️ **Refactoring** - Code restructuring, no functional changes
+- [ ] ⚡ **Performance** - Performance improvement
+- [ ] ✅ **Test** - Adding or updating tests
+- [ ] 🔧 **Build/CI** - Changes to build system or CI configuration
 
-- [ ] Unit tests pass (`ctest --output-on-failure`)
-- [ ] Property-based tests pass
-- [ ] New tests added for new functionality
-- [ ] Manual testing performed
+---
+
+## 📋 Changes Made
+
+<!-- List the specific changes made in this PR -->
+
+- 
+- 
+- 
+
+---
+
+## 🧪 Testing
 
 ### Test Configuration
 
 | Item | Value |
 |------|-------|
+| OS | |
 | CUDA Version | |
 | GPU | |
-| OS | |
+| Compiler | |
 
-## Performance Impact (if applicable)
+### Tests Run
 
-If this PR affects performance, please include benchmark results:
+- [ ] Unit tests pass (`ctest --test-dir build --output-on-failure`)
+- [ ] Property-based tests pass
+- [ ] New tests added for new functionality
+- [ ] Manual testing performed
+- [ ] Python bindings tested (if applicable)
+
+### Test Results
+
+```
+Paste test output here (or link to CI results)
+```
+
+---
+
+## 📊 Performance Impact
+
+<!-- If this PR affects performance, include benchmark results -->
+
+### Benchmark Results
 
 | Kernel | Before | After | Change |
 |--------|--------|-------|--------|
 | | | | |
 
-## Documentation
+### Performance Analysis
+
+<!-- If applicable, describe the performance impact -->
+
+- [ ] No performance impact
+- [ ] Performance improved
+- [ ] Performance degraded (explain why acceptable)
+
+---
+
+## 📖 Documentation
 
 - [ ] I have updated the documentation accordingly
-- [ ] I have added comments to the code where necessary
-- [ ] I have updated the CHANGELOG.md
+- [ ] I have added docstrings/comments to the code
+- [ ] I have updated `CHANGELOG.md`
+- [ ] I have updated `README.md` (if applicable)
+- [ ] I have updated API documentation (if applicable)
 
-## Checklist
+---
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my code
+## ✅ Checklist
+
+### Code Quality
+
+- [ ] My code follows the style guidelines of this project (`.clang-format`)
+- [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
+- [ ] I have run clang-tidy and addressed issues (if applicable)
+
+### Testing
+
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+- [ ] Property-based tests pass for edge cases
 
-## Screenshots (if applicable)
+### Dependencies
 
-Add screenshots to help explain your changes.
+- [ ] Any dependent changes have been merged and published
+- [ ] I have updated CMakeLists.txt if adding new files
 
-## Additional Notes
+### Git
 
-Add any other notes about the PR here.
+- [ ] My commits follow the [Conventional Commits](https://www.conventionalcommits.org/) specification
+- [ ] I have not force-pushed to this branch
+
+---
+
+## 📸 Screenshots (if applicable)
+
+<!-- Add screenshots to help explain your changes -->
+
+---
+
+## 💭 Additional Notes
+
+<!-- Add any other notes or context about the PR here -->
+
+---
+
+## 🔗 Related PRs/Issues
+
+<!-- Link to related PRs or issues -->
+
+- Related to #
+- Depends on #
+
+---
+
+<!-- 
+Thank you for contributing to HPC-AI-Optimization-Lab! 🎉
+
+For contribution guidelines, see: https://github.com/LessUp/hpc-ai-optimization-lab/blob/main/CONTRIBUTING.md
+-->

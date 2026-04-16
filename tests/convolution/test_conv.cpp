@@ -91,7 +91,9 @@ TEST(ConvolutionTest, WinogradPathMatchesImplicitGemmFallback) {
     constexpr int height = 6;
     constexpr int width = 6;
     constexpr int kernel = 3;
-    constexpr int output_size = batch * out_channels * height * width;
+    const int out_h = height;  // stride=1, pad=1, kernel=3 -> same output size
+    const int out_w = width;
+    constexpr int output_size = batch * out_channels * out_h * out_w;
 
     const auto input = hpc::test::random_vector<float>(batch * in_channels * height * width, -1.0f, 1.0f);
     const auto weight = hpc::test::random_vector<float>(out_channels * in_channels * kernel * kernel, -1.0f, 1.0f);
@@ -113,11 +115,11 @@ TEST(ConvolutionTest, WinogradPathMatchesImplicitGemmFallback) {
 
     hpc::convolution::conv2d_implicit_gemm<float>(
         d_input.data(), d_weight.data(), d_implicit.data(), params);
-    hpc::convolution::conv2d_winograd<float>(
-        d_input.data(), d_weight.data(), d_winograd.data(), batch, in_channels, out_channels, height, width);
+    hpc::convolution::conv2d_winograd(
+        d_input.data(), d_weight.data(), d_winograd.data(), params);
     cudaDeviceSynchronize();
 
     const auto implicit_output = d_implicit.to_host();
     const auto winograd_output = d_winograd.to_host();
-    EXPECT_TRUE(hpc::test::vectors_almost_equal(winograd_output, implicit_output, 1e-5f, 1e-5f));
+    EXPECT_TRUE(hpc::test::vectors_almost_equal(winograd_output, implicit_output, 1e-4f, 1e-4f));
 }

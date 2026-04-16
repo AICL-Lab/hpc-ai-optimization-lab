@@ -1,8 +1,21 @@
+# GitHub Issue Template Configuration
+# See: https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository
+
 blank_issues_enabled: false
+
 contact_links:
-  - name: Documentation
+  - name: 📚 Documentation
     url: https://github.com/LessUp/hpc-ai-optimization-lab/tree/main/docs
     about: Check the documentation before opening an issue
-  - name: Discussions
+
+  - name: 💬 Discussions
     url: https://github.com/LessUp/hpc-ai-optimization-lab/discussions
-    about: Ask questions and discuss ideas
+    about: Ask questions and discuss ideas with the community
+
+  - name: 🚀 Quick Start Guide
+    url: https://github.com/LessUp/hpc-ai-optimization-lab#-quick-start
+    about: Get started quickly with setup and build instructions
+
+  - name: 📖 API Reference
+    url: https://github.com/LessUp/hpc-ai-optimization-lab/blob/main/docs/API_REFERENCE.md
+    about: Browse the complete API documentation

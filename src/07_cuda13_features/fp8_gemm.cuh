@@ -2,6 +2,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda_fp8.h>
+#include "../common/types.cuh"
 
 namespace hpc::cuda13 {
 
@@ -20,8 +21,6 @@ struct FP8GEMMConfig {
     float scale_b = 1.0f;
     bool use_fp8 = true;
 };
-
-bool is_hopper_architecture();
 
 void fp8_gemm(const __half* A, const __half* B, __half* C,
               int M, int N, int K,

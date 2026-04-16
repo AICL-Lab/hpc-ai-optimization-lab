@@ -2,6 +2,7 @@
 
 #include <cuda_runtime.h>
 #include <cuda/pipeline>
+#include "../common/types.cuh"
 
 namespace hpc::cuda13 {
 
@@ -11,8 +12,6 @@ struct TMAConfig {
     int pipeline_depth = 2;
     bool use_tma = true;
 };
-
-bool is_hopper_architecture();
 
 template <typename T, int NUM_CHANNELS = 8>
 void tma_copy_2d(const T* src, T* dst,

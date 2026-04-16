@@ -5,13 +5,6 @@
 
 namespace hpc::cuda13 {
 
-bool is_hopper_architecture() {
-    int device = 0;
-    cudaDeviceProp prop;
-    CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
-    return prop.major >= 9;
-}
-
 namespace cg = cooperative_groups;
 
 template <typename T>
