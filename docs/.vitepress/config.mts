@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitepress'
 import { head, nav, sidebar, search } from './configs/index.mts'
+import enConfig from './configs/en.mts'
+import zhCNConfig from './configs/zh-CN.mts'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -27,13 +29,13 @@ export default defineConfig({
       label: 'English',
       lang: 'en-US',
       link: '/en/',
-      ...require('./configs/en.mts').default
+      ...enConfig
     },
     'zh-CN': {
       label: '简体中文',
       lang: 'zh-CN',
       link: '/zh-CN/',
-      ...require('./configs/zh-CN.mts').default
+      ...zhCNConfig
     }
   },
   
@@ -121,10 +123,12 @@ export default defineConfig({
       dark: 'github-dark'
     },
     lineNumbers: true,
-    config: (md) => {
+    config: async (md) => {
       // 自定义 Markdown 插件
-      md.use(require('markdown-it-footnote'))
-      md.use(require('markdown-it-task-lists'))
+      const { default: footnote } = await import('markdown-it-footnote')
+      const { default: taskLists } = await import('markdown-it-task-lists')
+      md.use(footnote)
+      md.use(taskLists)
     }
   },
   
