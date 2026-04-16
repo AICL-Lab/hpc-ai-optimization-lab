@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { head, nav, sidebar, search } from './configs'
+import { head, nav, sidebar, search } from './configs/index.mts'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
