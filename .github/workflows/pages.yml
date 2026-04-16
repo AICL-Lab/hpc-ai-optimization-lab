@@ -252,17 +252,17 @@ jobs:
           fi
           
           # Create _redirects for Netlify compatibility
-          cat > "$SITE_DIR/_redirects" << 'EOF'
-# Redirect rules
-/en/api/cpp    /cpp-api/index.html    200
-/en/api/python /python-api/index.html 200
-/zh-CN/api/cpp    /cpp-api/index.html    200
-/zh-CN/api/python /python-api/index.html 200
-EOF
-          
+          {
+            echo "# Redirect rules"
+            echo "/en/api/cpp    /cpp-api/index.html    200"
+            echo "/en/api/python /python-api/index.html 200"
+            echo "/zh-CN/api/cpp    /cpp-api/index.html    200"
+            echo "/zh-CN/api/python /python-api/index.html 200"
+          } > "$SITE_DIR/_redirects"
+
           # Create 404 page
           cp "$SITE_DIR/404.html" "$SITE_DIR/404.html" 2>/dev/null || echo '<!DOCTYPE html><html><head><title>404</title></head><body><h1>404 - Page Not Found</h1><a href="/hpc-ai-optimization-lab/">Go Home</a></body></html>' > "$SITE_DIR/404.html"
-          
+
           echo ""
           echo "=== Final Site Contents ==="
           ls -la "$SITE_DIR/"
