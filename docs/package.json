@@ -1,0 +1,23 @@
+{
+  "name": "hpc-ai-optimization-lab-docs",
+  "version": "0.3.0",
+  "description": "Documentation site for HPC-AI-Optimization-Lab",
+  "private": true,
+  "scripts": {
+    "docs:dev": "vitepress dev .",
+    "docs:build": "vitepress build .",
+    "docs:preview": "vitepress preview .",
+    "doxygen": "cd .. && doxygen docs/Doxyfile",
+    "sphinx": "cd python && sphinx-build -b html . _build/html",
+    "build:all": "npm run doxygen && npm run sphinx && npm run docs:build"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3",
+    "vue": "^3.4.21",
+    "markdown-it-footnote": "^4.0.0",
+    "markdown-it-task-lists": "^2.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
