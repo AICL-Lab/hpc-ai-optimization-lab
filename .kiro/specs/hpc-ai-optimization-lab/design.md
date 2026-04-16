@@ -1,146 +1,202 @@
 # Design Document: HPC-AI-Optimization-Lab
 
-## Overview
+## 1. System Architecture
 
-HPC-AI-Optimization-Lab 是一个模块化的高性能 CUDA 算子优化教学项目。项目采用分层架构，从底层通用工具库到上层特定算子实现，每个模块独立可测试。核心设计理念是"渐进式优化"——每个算子都提供从 Naive 到极致优化的多个版本，便于学习者理解优化原理。
+### 1.1 High-Level Architecture
 
-## Architecture
-
-```mermaid
-graph TB
-    subgraph "Python Layer"
-        PY[Python Benchmark Scripts]
-        NB[Nanobind Bindings]
-    end
-    
-    subgraph "Kernel Modules"
-        EW[01_elementwise]
-        RD[02_reduction]
-        GM[03_gemm]
-        CV[04_convolution]
-        AT[05_attention]
-        QT[06_quantization]
-        C13[07_cuda13_features]
-    end
-    
-    subgraph "Common Infrastructure"
-        TEN[Tensor<T> RAII]
-        TMR[Timer]
-        CHK[CudaCheck]
-        TYP[Type Traits]
-    end
-    
-    subgraph "Build System"
-        CMAKE[CMake 3.24+]
-        FETCH[FetchContent]
-        DOCKER[Docker CUDA 13.1]
-    end
-    
-    PY --> NB
-    NB --> EW & RD & GM & CV & AT & QT & C13
-    EW & RD & GM & CV & AT & QT & C13 --> TEN & TMR & CHK & TYP
-    CMAKE --> FETCH
-    FETCH --> |googletest, nanobind, cutlass, fmt| CMAKE
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Application Layer                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────┐  │
+│  │  Examples    │  │  Benchmarks  │  │  Python Scripts          │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Python Binding Layer                          │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │  hpc_ai_opt (Nanobind Module)                                 │  │
+│  │  ├── elementwise (relu, sigmoid, transpose)                   │  │
+│  │  ├── reduction (softmax, layer_norm, rms_norm)                │  │
+│  │  └── gemm (matmul)                                            │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Kernel Layer                                  │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐       │
+│  │ 01_EW      │ │ 02_Red     │ │ 03_GEMM    │ │ 04_Conv    │       │
+│  │ ReLU       │ │ Softmax    │ │ Step 1-7   │ │ Implicit   │       │
+│  │ Sigmoid    │ │ LayerNorm  │ │ TensorCore │ │ Winograd   │       │
+│  │ Transpose  │ │ RMSNorm    │ │            │ │            │       │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘       │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐                      │
+│  │ 05_Att     │ │ 06_Quant   │ │ 07_Cuda13  │                      │
+│  │ FlashAttn  │ │ INT8/FP8   │ │ TMA/Clust  │                      │
+│  │ RoPE       │ │ Dequant    │ │ FP8 GEMM   │                      │
+│  │ TopK       │ │            │ │            │                      │
+│  └────────────┘ └────────────┘ └────────────┘                      │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Common Infrastructure                         │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐       │
+│  │ Tensor<T>  │ │ CudaTimer  │ │ CudaCheck  │ │ Types      │       │
+│  │ RAII       │ │ Events     │ │ Macros     │ │ Concepts   │       │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘       │
+│  ┌────────────┐ ┌────────────┐                                       │
+│  │ Reduce     │ │ Launch     │                                       │
+│  │ Primitives │ │ Utilities  │                                       │
+│  └────────────┘ └────────────┘                                       │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Build & Runtime                               │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐       │
+│  │ CMake      │ │ FetchContent│ │ CUDA      │ │ Docker     │       │
+│  │ 3.24+      │ │ Dependencies│ │ 12.4+     │ │ Dev Env    │       │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘       │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Components and Interfaces
+### 1.2 Dependency Graph
 
-### 1. Common Library (`src/common/`)
-
-#### 1.1 CudaCheck (`cuda_check.cuh`)
-```cpp
-#pragma once
-#include <cuda_runtime.h>
-#include <cstdio>
-#include <cstdlib>
-
-#define CUDA_CHECK(call)                                                    \
-    do {                                                                    \
-        cudaError_t err = call;                                             \
-        if (err != cudaSuccess) {                                           \
-            fprintf(stderr, "CUDA error at %s:%d: %s\n",                    \
-                    __FILE__, __LINE__, cudaGetErrorString(err));           \
-            exit(EXIT_FAILURE);                                             \
-        }                                                                   \
-    } while (0)
-
-#define CUDA_CHECK_LAST() CUDA_CHECK(cudaGetLastError())
+```
+                    ┌──────────────┐
+                    │  hpc_common  │
+                    │  (INTERFACE) │
+                    └──────┬───────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
+         ▼                 ▼                 ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│hpc_element  │    │hpc_reduction│    │  hpc_gemm   │
+└─────────────┘    └─────────────┘    └─────────────┘
+         │                 │                 │
+         └─────────────────┼─────────────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
+         ▼                 ▼                 ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│hpc_conv     │    │hpc_attention│    │hpc_quant    │
+└─────────────┘    └─────────────┘    └─────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │ hpc_cuda13  │
+                    └─────────────┘
 ```
 
-#### 1.2 Timer (`timer.cuh`)
+---
+
+## 2. Core Design Patterns
+
+### 2.1 Module Interface Pattern
+
+每个内核模块遵循统一的接口设计：
+
 ```cpp
+// kernel_name.cuh - Public Interface
 #pragma once
 #include <cuda_runtime.h>
-#include "cuda_check.cuh"
+#include <concepts>
 
-namespace hpc {
+namespace hpc::module {
 
-class CudaTimer {
-public:
-    CudaTimer() {
-        CUDA_CHECK(cudaEventCreate(&start_));
-        CUDA_CHECK(cudaEventCreate(&stop_));
-    }
-    
-    ~CudaTimer() {
-        cudaEventDestroy(start_);
-        cudaEventDestroy(stop_);
-    }
-    
-    void start(cudaStream_t stream = nullptr) {
-        CUDA_CHECK(cudaEventRecord(start_, stream));
-    }
-    
-    void stop(cudaStream_t stream = nullptr) {
-        CUDA_CHECK(cudaEventRecord(stop_, stream));
-        CUDA_CHECK(cudaEventSynchronize(stop_));
-    }
-    
-    [[nodiscard]] float elapsed_ms() const {
-        float ms = 0.0f;
-        CUDA_CHECK(cudaEventElapsedTime(&ms, start_, stop_));
-        return ms;
-    }
-
-private:
-    cudaEvent_t start_, stop_;
+// Optimization level enumeration
+enum class OptLevel {
+    Naive,        // Baseline implementation
+    Intermediate, // Basic optimizations
+    Advanced      // Production-ready
 };
 
-} // namespace hpc
+// Template declaration with constraints
+template <typename T, OptLevel Level = OptLevel::Advanced>
+    requires std::is_same_v<T, float> || std::is_same_v<T, __half>
+void kernel_name(const T* input, T* output, size_t n,
+                 cudaStream_t stream = nullptr);
+
+} // namespace hpc::module
 ```
 
-#### 1.3 Tensor RAII (`tensor.cuh`)
+### 2.2 Implementation Pattern
+
 ```cpp
-#pragma once
-#include <cuda_runtime.h>
-#include <vector>
-#include <concepts>
-#include "cuda_check.cuh"
+// kernel_name.cu - Implementation
+#include "kernel_name.cuh"
+#include "../common/cuda_check.cuh"
 
-namespace hpc {
+namespace hpc::module {
 
-template<typename T>
-concept CudaNumeric = std::is_arithmetic_v<T> || 
-                      std::is_same_v<T, __half> || 
-                      std::is_same_v<T, __nv_bfloat16>;
+namespace {  // Private implementations
 
-template<CudaNumeric T>
+template <typename T>
+__global__ void kernel_naive(const T* __restrict__ input,
+                             T* __restrict__ output, size_t n) {
+    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n) {
+        output[idx] = compute(input[idx]);
+    }
+}
+
+template <typename T>
+__global__ void kernel_optimized(const T* __restrict__ input,
+                                  T* __restrict__ output, size_t n) {
+    // Optimized implementation with vectorization, etc.
+}
+
+} // anonymous namespace
+
+// Explicit template specializations
+template <>
+void kernel_name<float, OptLevel::Naive>(const float* input, float* output,
+                                          size_t n, cudaStream_t stream) {
+    int block = 256;
+    int grid = (n + block - 1) / block;
+    kernel_naive<float><<<grid, block, 0, stream>>>(input, output, n);
+    CUDA_CHECK_LAST();
+}
+
+template <>
+void kernel_name<float, OptLevel::Advanced>(const float* input, float* output,
+                                             size_t n, cudaStream_t stream) {
+    // Optimized launch configuration
+    kernel_optimized<float><<<grid, block, 0, stream>>>(input, output, n);
+    CUDA_CHECK_LAST();
+}
+
+} // namespace hpc::module
+```
+
+### 2.3 RAII Resource Management
+
+```cpp
+template <CudaNumeric T>
 class Tensor {
 public:
     explicit Tensor(size_t size) : size_(size), data_(nullptr) {
         CUDA_CHECK(cudaMalloc(&data_, size * sizeof(T)));
     }
-    
+
     ~Tensor() {
-        if (data_) cudaFree(data_);
+        if (data_) {
+            cudaFree(data_);
+        }
     }
-    
+
     // Move semantics
-    Tensor(Tensor&& other) noexcept : size_(other.size_), data_(other.data_) {
+    Tensor(Tensor&& other) noexcept
+        : size_(other.size_), data_(other.data_) {
         other.data_ = nullptr;
         other.size_ = 0;
     }
-    
+
     Tensor& operator=(Tensor&& other) noexcept {
         if (this != &other) {
             if (data_) cudaFree(data_);
@@ -151,767 +207,395 @@ public:
         }
         return *this;
     }
-    
+
     // Delete copy
     Tensor(const Tensor&) = delete;
     Tensor& operator=(const Tensor&) = delete;
-    
-    [[nodiscard]] T* data() noexcept { return data_; }
-    [[nodiscard]] const T* data() const noexcept { return data_; }
-    [[nodiscard]] size_t size() const noexcept { return size_; }
-    [[nodiscard]] size_t bytes() const noexcept { return size_ * sizeof(T); }
-    
-    void copy_from_host(const T* host_data) {
-        CUDA_CHECK(cudaMemcpy(data_, host_data, bytes(), cudaMemcpyHostToDevice));
-    }
-    
-    void copy_to_host(T* host_data) const {
-        CUDA_CHECK(cudaMemcpy(host_data, data_, bytes(), cudaMemcpyDeviceToHost));
-    }
-    
-    void copy_from_host(const std::vector<T>& host_vec) {
-        copy_from_host(host_vec.data());
-    }
-    
-    std::vector<T> to_host() const {
-        std::vector<T> result(size_);
-        copy_to_host(result.data());
-        return result;
-    }
+
+    // Accessors
+    T* data() noexcept { return data_; }
+    const T* data() const noexcept { return data_; }
+    size_t size() const noexcept { return size_; }
+
+    // Host transfers
+    void copy_from_host(const T* host_data);
+    std::vector<T> to_host() const;
 
 private:
     size_t size_;
     T* data_;
 };
-
-} // namespace hpc
 ```
 
+---
 
-#### 1.4 Kernel Launch Utilities (`launch.cuh`)
+## 3. Memory Hierarchy Strategy
+
+### 3.1 Memory Types and Usage
+
+| Memory Type | Latency | Bandwidth | Capacity | Use Case |
+|-------------|---------|-----------|----------|----------|
+| Registers | 1 cycle | N/A | ~256KB/SM | Thread-local accumulators |
+| Shared Memory | ~5 cycles | ~20 TB/s | ~100KB/SM | Block-level data reuse |
+| L1 Cache | ~30 cycles | ~10 TB/s | ~128KB/SM | Auto-managed |
+| L2 Cache | ~200 cycles | ~3 TB/s | ~6MB | Auto-managed |
+| HBM | ~500 cycles | ~1-3 TB/s | 16-80GB | Large datasets |
+
+### 3.2 Optimization Strategy by Memory Type
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Optimization Priority                   │
+├─────────────────────────────────────────────────────────────┤
+│  1. Register Tiling    →  Minimize data movement            │
+│  2. Shared Memory      →  Maximize data reuse               │
+│  3. Coalesced Access   →  Maximize memory bandwidth         │
+│  4. Vectorization      →  Reduce instruction count          │
+│  5. Cache Optimization →  L1/L2 hit rate                    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 3.3 Shared Memory Bank Conflict Avoidance
+
 ```cpp
-#pragma once
-#include <cuda_runtime.h>
-#include <concepts>
+// Bad: Bank conflicts with 32-bit access
+__shared__ float tile[32][32];  // Conflict when accessing tile[x][y]
 
-namespace hpc {
+// Good: Padding to avoid bank conflicts
+__shared__ float tile[32][33];  // Extra column prevents conflicts
 
-template<typename T>
-concept KernelConfig = requires {
-    { T::BLOCK_SIZE } -> std::convertible_to<int>;
-};
+// Best: Use wider types when possible
+__shared__ float4 tile[8][32];  // 128-bit access, fewer banks touched
+```
 
-template<int BlockSize = 256>
-struct LaunchConfig {
-    static constexpr int BLOCK_SIZE = BlockSize;
-    
-    [[nodiscard]] static constexpr dim3 grid_1d(size_t n) noexcept {
-        return dim3((n + BlockSize - 1) / BlockSize);
+---
+
+## 4. GEMM Optimization Deep Dive
+
+### 4.1 Optimization Journey
+
+| Step | Technique | Key Code Pattern | Performance Gain |
+|------|-----------|------------------|------------------|
+| 1 | Naive | `C[row*N+col] += A[row*K+k] * B[k*N+col]` | Baseline |
+| 2 | Shared Mem | `__shared__ float As[TILE][TILE]` | 4x |
+| 3 | Double Buffer | Two shared memory buffers | 1.75x |
+| 4 | Register Tiling | Accumulate in registers | 1.7x |
+| 5 | Tensor Core WMMA | `wmma::mma_sync()` | 8x |
+| 6 | MMA PTX | Inline PTX instructions | 1.2x |
+| 7 | Software Pipeline | Multi-stage overlap | 1.15x |
+
+### 4.2 Tiling Strategy
+
+```
+GEMM: C(M,N) = A(M,K) × B(K,N)
+
+Tiling dimensions:
+  BLOCK_M = 128  // Threads per block in M dimension
+  BLOCK_N = 128  // Threads per block in N dimension
+  BLOCK_K = 32   // K dimension per iteration
+
+Warp tiling:
+  WARP_M = 64    // Elements per warp in M
+  WARP_N = 64    // Elements per warp in N
+
+Thread tiling:
+  THREAD_M = 8   // Elements per thread in M
+  THREAD_N = 8   // Elements per thread in N
+```
+
+### 4.3 Tensor Core Usage
+
+```cpp
+#include <mma.h>
+using namespace nvcuda::wmma;
+
+// Tensor Core GEMM tile
+fragment<matrix_a, 16, 16, 16, half, row_major> a_frag;
+fragment<matrix_b, 16, 16, 16, half, col_major> b_frag;
+fragment<accumulator, 16, 16, 16, float> c_frag;
+
+// Load tiles
+load_matrix_sync(a_frag, A + row * K + k, K);
+load_matrix_sync(b_frag, B + k * N + col, N);
+fill_fragment(c_frag, 0.0f);
+
+// Matrix multiply-accumulate
+mma_sync(c_frag, a_frag, b_frag, c_frag);
+
+// Store result
+store_matrix_sync(C + row * N + col, c_frag, N, mem_row_major);
+```
+
+---
+
+## 5. Performance Analysis Framework
+
+### 5.1 Metrics
+
+| Metric | Formula | Target |
+|--------|---------|--------|
+| TFLOPS | `2 × M × N × K / (time_ms × 1e9)` | GPU peak × 70% |
+| Bandwidth | `bytes_transferred / (time_ms × 1e6)` | HBM bandwidth × 80% |
+| Occupancy | `active_warps / max_warps` | 50%+ (memory-bound) |
+| Efficiency | `achieved / theoretical` | 70%+ |
+
+### 5.2 Roofline Model
+
+```
+AI (Arithmetic Intensity) = FLOPS / Bytes
+
+Memory-bound region:  AI < AI_peak
+  Performance = Bandwidth × AI
+
+Compute-bound region: AI > AI_peak
+  Performance = Peak TFLOPS
+
+AI_peak = Peak TFLOPS / Peak Bandwidth
+```
+
+### 5.3 Profiling Commands
+
+```bash
+# Nsight Compute - Detailed kernel analysis
+ncu --set full -o profile ./your_app
+
+# Roofline analysis
+ncu --set roofline -o roofline ./your_app
+
+# Nsight Systems - Timeline analysis
+nsys profile -o timeline ./your_app
+nsys-ui timeline.nsys-rep
+
+# Memory throughput analysis
+ncu --metrics gpu__dram_throughput.avg.pct_of_peak ./your_app
+```
+
+---
+
+## 6. Python Binding Design
+
+### 6.1 Zero-Copy Architecture
+
+```
+┌──────────────┐      ┌──────────────┐
+│ PyTorch      │      │ CUDA Memory  │
+│ Tensor       │──────│ (GPU)        │
+│ (CUDA)       │      │              │
+└──────────────┘      └──────────────┘
+       │                     │
+       │ data_ptr()          │
+       ▼                     ▼
+┌──────────────────────────────────┐
+│ Nanobind Binding                 │
+│ nb::tensor<T, nb::device::cuda>  │
+│ (Zero-copy, pointer only)        │
+└──────────────────────────────────┘
+       │
+       │ Direct pointer pass
+       ▼
+┌──────────────────────────────────┐
+│ CUDA Kernel                      │
+│ hpc::module::kernel(ptr, ...)    │
+└──────────────────────────────────┘
+```
+
+### 6.2 Binding Implementation
+
+```cpp
+void relu_wrapper(nb::tensor<float, nb::device::cuda>& input,
+                  nb::tensor<float, nb::device::cuda>& output) {
+    // Validation
+    if (input.size() != output.size()) {
+        throw std::invalid_argument("Size mismatch");
     }
-    
-    [[nodiscard]] static constexpr dim3 block_1d() noexcept {
-        return dim3(BlockSize);
-    }
-};
 
-// Compile-time shared memory size calculation
-template<typename T, int TileSize>
-constexpr size_t shared_mem_size() {
-    return TileSize * TileSize * sizeof(T);
+    // Zero-copy direct pointer pass
+    hpc::elementwise::relu<float, hpc::elementwise::OptLevel::GridStride>(
+        input.data(), output.data(), input.size(), nullptr);
 }
 
-} // namespace hpc
+NB_MODULE(hpc_ai_opt, m) {
+    m.doc() = "HPC-AI-Optimization-Lab CUDA Kernels";
+
+    auto elementwise = m.def_submodule("elementwise");
+    elementwise.def("relu", &relu_wrapper, "ReLU activation");
+}
 ```
 
-### 2. Elementwise Module (`src/01_elementwise/`)
+---
 
-#### 2.1 Kernel Interface
-```cpp
-#pragma once
-#include "../common/tensor.cuh"
-#include <concepts>
+## 7. Testing Strategy
 
-namespace hpc::elementwise {
+### 7.1 Test Pyramid
 
-// Concept for elementwise operations
-template<typename F, typename T>
-concept ElementwiseOp = requires(F f, T x) {
-    { f(x) } -> std::convertible_to<T>;
-};
-
-// Version enum for optimization levels
-enum class OptLevel {
-    Naive,           // Basic implementation
-    Vectorized,      // float4 load/store
-    GridStride       // Grid stride loop
-};
-
-template<typename T, OptLevel Level = OptLevel::GridStride>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void relu(const T* input, T* output, size_t n, cudaStream_t stream = nullptr);
-
-template<typename T, OptLevel Level = OptLevel::GridStride>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void sigmoid(const T* input, T* output, size_t n, cudaStream_t stream = nullptr);
-
-template<typename T, OptLevel Level = OptLevel::GridStride>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void vector_add(const T* a, const T* b, T* c, size_t n, cudaStream_t stream = nullptr);
-
-} // namespace hpc::elementwise
+```
+                    ┌─────────┐
+                    │ Property│  RapidCheck
+                    │  Tests  │  Randomized inputs
+                    └────┬────┘
+                         │
+              ┌──────────┴──────────┐
+              │     Unit Tests      │  GoogleTest
+              │   Specific cases    │  Edge cases
+              └──────────┬──────────┘
+                         │
+    ┌────────────────────┴────────────────────┐
+    │              Integration Tests           │  End-to-end
+    │         Python + C++ workflows           │  Performance
+    └─────────────────────────────────────────┘
 ```
 
-#### 2.2 Transpose Interface
-```cpp
-#pragma once
+### 7.2 Property Tests
 
-namespace hpc::elementwise {
+| Property | Description |
+|----------|-------------|
+| Tensor Round Trip | Host → Device → Host preserves data |
+| Elementwise Correctness | All optimization levels produce same result |
+| Transpose Involution | `transpose(transpose(x)) == x` |
+| Softmax Properties | Output in [0,1], rows sum to 1 |
+| GEMM Correctness | Matches cuBLAS within tolerance |
 
-enum class TransposeOpt {
-    Naive,              // Direct read-row write-col
-    SharedMemory,       // Use shared memory
-    SharedMemPadded     // Shared memory with padding to avoid bank conflict
-};
+### 7.3 Tolerance Guidelines
 
-template<typename T, TransposeOpt Opt = TransposeOpt::SharedMemPadded>
-void transpose(const T* input, T* output, int rows, int cols, cudaStream_t stream = nullptr);
+| Operation | FP32 Tolerance | FP16 Tolerance |
+|-----------|----------------|----------------|
+| Elementwise | 1e-5 | 1e-3 |
+| GEMM | 1e-4 | 1e-2 |
+| Softmax | 1e-5 | 1e-3 |
+| FlashAttention | 1e-3 | 1e-2 |
 
-} // namespace hpc::elementwise
-```
+---
 
-### 3. Reduction Module (`src/02_reduction/`)
+## 8. Build System Design
 
-#### 3.1 Softmax Interface
-```cpp
-#pragma once
+### 8.1 CMake Structure
 
-namespace hpc::reduction {
-
-enum class SoftmaxOpt {
-    Naive,          // Two-pass with global atomics
-    WarpShuffle,    // Warp-level reduction
-    OnlineSoftmax,  // Single-pass online algorithm
-    Fused           // Fused with L2 cache persistence
-};
-
-template<typename T, SoftmaxOpt Opt = SoftmaxOpt::OnlineSoftmax>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void softmax(const T* input, T* output, int batch, int seq_len, cudaStream_t stream = nullptr);
-
-} // namespace hpc::reduction
-```
-
-#### 3.2 LayerNorm/RMSNorm Interface
-```cpp
-#pragma once
-
-namespace hpc::reduction {
-
-template<typename T>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void layer_norm(const T* input, const T* gamma, const T* beta,
-                T* output, int batch, int hidden_size, 
-                float eps = 1e-5f, cudaStream_t stream = nullptr);
-
-template<typename T>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void rms_norm(const T* input, const T* gamma,
-              T* output, int batch, int hidden_size,
-              float eps = 1e-5f, cudaStream_t stream = nullptr);
-
-} // namespace hpc::reduction
-```
-
-### 4. GEMM Module (`src/03_gemm/`)
-
-#### 4.1 GEMM Interface
-```cpp
-#pragma once
-
-namespace hpc::gemm {
-
-enum class GemmOpt {
-    Naive,              // Step 1: Global memory only
-    SharedMemTiling,    // Step 2: Shared memory tiling
-    DoubleBuffer,       // Step 3: Double buffering
-    RegisterTiling,     // Step 4: Register tiling
-    TensorCoreWMMA,     // Step 5: WMMA API
-    TensorCoreMMA,      // Step 6: MMA PTX
-    SoftwarePipeline    // Step 7: Software pipelining
-};
-
-// C = alpha * A * B + beta * C
-template<typename T, GemmOpt Opt = GemmOpt::TensorCoreWMMA>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half> || std::is_same_v<T, int8_t>
-void gemm(const T* A, const T* B, T* C,
-          int M, int N, int K,
-          float alpha = 1.0f, float beta = 0.0f,
-          cudaStream_t stream = nullptr);
-
-// CUTLASS comparison wrapper
-template<typename T>
-void gemm_cutlass(const T* A, const T* B, T* C,
-                  int M, int N, int K,
-                  float alpha = 1.0f, float beta = 0.0f,
-                  cudaStream_t stream = nullptr);
-
-} // namespace hpc::gemm
-```
-
-### 5. Attention Module (`src/05_attention/`)
-
-#### 5.1 FlashAttention Interface
-```cpp
-#pragma once
-
-namespace hpc::attention {
-
-struct FlashAttnConfig {
-    int batch_size;
-    int num_heads;
-    int seq_len;
-    int head_dim;
-    float scale;        // 1/sqrt(head_dim)
-    bool causal;        // Causal mask
-};
-
-template<typename T>
-requires std::is_same_v<T, float> || std::is_same_v<T, __half>
-void flash_attention_forward(
-    const T* Q, const T* K, const T* V,
-    T* O,
-    const FlashAttnConfig& config,
-    cudaStream_t stream = nullptr);
-
-// RoPE (Rotary Positional Embedding)
-template<typename T>
-void apply_rope(T* query, T* key,
-                int batch, int num_heads, int seq_len, int head_dim,
-                const float* cos_cache, const float* sin_cache,
-                cudaStream_t stream = nullptr);
-
-} // namespace hpc::attention
-```
-
-### 6. CUDA 13 Features Module (`src/07_cuda13_features/`)
-
-#### 6.1 TMA Interface
-```cpp
-#pragma once
-#include <cuda.h>
-
-namespace hpc::cuda13 {
-
-// TMA descriptor wrapper
-class TmaDescriptor {
-public:
-    TmaDescriptor(void* global_addr, int dim0, int dim1, int elem_size);
-    ~TmaDescriptor();
-    
-    [[nodiscard]] CUtensorMap* get() noexcept { return &desc_; }
-
-private:
-    CUtensorMap desc_;
-};
-
-template<typename T>
-void tma_copy_2d(const T* src, T* dst, 
-                 int rows, int cols,
-                 cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
-#### 6.2 Cluster Interface
-```cpp
-#pragma once
-
-namespace hpc::cuda13 {
-
-struct ClusterConfig {
-    dim3 cluster_dims;  // e.g., {2, 1, 1} for 2-block cluster
-    dim3 grid_dims;
-    dim3 block_dims;
-};
-
-// Distributed shared memory example
-template<typename T>
-void cluster_reduce(const T* input, T* output, size_t n,
-                    const ClusterConfig& config,
-                    cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
-## Data Models
-
-### Tensor Shape Representation
-```cpp
-namespace hpc {
-
-struct Shape {
-    std::array<int64_t, 4> dims;  // NCHW or NHWC
-    int ndim;
-    
-    [[nodiscard]] int64_t numel() const noexcept {
-        int64_t n = 1;
-        for (int i = 0; i < ndim; ++i) n *= dims[i];
-        return n;
-    }
-};
-
-enum class DataType {
-    Float32,
-    Float16,
-    BFloat16,
-    Int8,
-    FP8_E4M3,
-    FP8_E5M2
-};
-
-size_t dtype_size(DataType dtype);
-
-} // namespace hpc
-```
-
-### Benchmark Result
-```cpp
-namespace hpc {
-
-struct BenchmarkResult {
-    std::string kernel_name;
-    std::string opt_level;
-    double elapsed_ms;
-    double bandwidth_gbps;      // For memory-bound kernels
-    double tflops;              // For compute-bound kernels
-    double efficiency_percent;  // vs theoretical peak
-};
-
-} // namespace hpc
-```
-
-
-## Build System Design
-
-### CMakeLists.txt Structure
 ```cmake
 cmake_minimum_required(VERSION 3.24)
 project(HPC-AI-Optimization-Lab LANGUAGES CXX CUDA)
 
-# C++20 and CUDA standards
+# Standards
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
-# Auto-detect GPU architecture
+# GPU Architecture Detection
 include(FindCUDA/select_compute_arch)
-CUDA_DETECT_INSTALLED_GPUS(INSTALLED_GPU_CCS_1)
-string(STRIP "${INSTALLED_GPU_CCS_1}" INSTALLED_GPU_CCS_2)
-string(REPLACE " " ";" INSTALLED_GPU_CCS_3 "${INSTALLED_GPU_CCS_2}")
-set(CMAKE_CUDA_ARCHITECTURES ${INSTALLED_GPU_CCS_3})
+CUDA_DETECT_INSTALLED_GPUS(INSTALLED_GPU_CCS)
+set(CMAKE_CUDA_ARCHITECTURES ${INSTALLED_GPU_CCS})
 
-# FetchContent for dependencies
+# Dependencies (FetchContent)
 include(FetchContent)
+FetchContent_Declare(googletest ...)
+FetchContent_Declare(nanobind ...)
+FetchContent_Declare(fmt ...)
+FetchContent_Declare(cutlass ...)
+FetchContent_MakeAvailable(googletest nanobind fmt cutlass)
 
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG v1.14.0
-)
-
-FetchContent_Declare(
-    nanobind
-    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
-    GIT_TAG v2.0.0
-)
-
-FetchContent_Declare(
-    fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG 10.2.1
-)
-
-FetchContent_MakeAvailable(googletest nanobind fmt)
-
-# CUTLASS (header-only)
-FetchContent_Declare(
-    cutlass
-    GIT_REPOSITORY https://github.com/NVIDIA/cutlass.git
-    GIT_TAG v3.5.0
-)
-FetchContent_MakeAvailable(cutlass)
-
-# Common library
+# Common library (interface)
 add_library(hpc_common INTERFACE)
-target_include_directories(hpc_common INTERFACE ${CMAKE_SOURCE_DIR}/src/common)
 
 # Kernel modules
-add_subdirectory(src/01_elementwise)
-add_subdirectory(src/02_reduction)
-add_subdirectory(src/03_gemm)
-add_subdirectory(src/04_convolution)
-add_subdirectory(src/05_attention)
-add_subdirectory(src/06_quantization)
-add_subdirectory(src/07_cuda13_features)
+add_subdirectory(src/01_elementwise)  # hpc_elementwise
+add_subdirectory(src/02_reduction)    # hpc_reduction
+add_subdirectory(src/03_gemm)         # hpc_gemm
+# ...
 
-# Python bindings
-add_subdirectory(python)
+# Python bindings (optional)
+if(BUILD_PYTHON_BINDINGS)
+    add_subdirectory(python)
+endif()
 
 # Tests
 enable_testing()
 add_subdirectory(tests)
 ```
 
-### Docker Environment
-```dockerfile
-# docker/Dockerfile
-FROM nvcr.io/nvidia/cuda:13.1-devel-ubuntu22.04
+### 8.2 Module CMakeLists.txt Pattern
 
-# Install build tools
-RUN apt-get update && apt-get install -y \
-    cmake \
-    ninja-build \
-    python3-dev \
-    python3-pip \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+```cmake
+# src/03_gemm/CMakeLists.txt
+add_library(hpc_gemm
+    gemm.cu
+)
 
-# Python dependencies
-RUN pip3 install torch numpy pytest
+target_include_directories(hpc_gemm PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+)
 
-# Set working directory
-WORKDIR /workspace
-
-# Default command
-CMD ["/bin/bash"]
+target_link_libraries(hpc_gemm PUBLIC
+    hpc_common
+)
 ```
 
-## Python Binding Design
+---
 
-### Nanobind Module Structure
+## 9. Error Handling Strategy
+
+### 9.1 Error Categories
+
+| Category | Handling | Example |
+|----------|----------|---------|
+| CUDA API | `CUDA_CHECK` macro | `cudaMalloc` failures |
+| Kernel Launch | `CUDA_CHECK_LAST()` | Launch configuration errors |
+| Input Validation | `std::invalid_argument` | Null pointers, size mismatches |
+| Numerical | Tolerance checks | NaN, Inf detection |
+
+### 9.2 Error Handling Code
+
 ```cpp
-// python/bindings.cpp
-#include <nanobind/nanobind.h>
-#include <nanobind/tensor.h>
+// CUDA API wrapper
+#define CUDA_CHECK(call)                                                    \
+    do {                                                                    \
+        cudaError_t err = call;                                             \
+        if (err != cudaSuccess) {                                           \
+            throw std::runtime_error(                                       \
+                fmt::format("CUDA error at {}:{}: {}",                      \
+                           __FILE__, __LINE__, cudaGetErrorString(err)));   \
+        }                                                                   \
+    } while (0)
 
-namespace nb = nanobind;
+// Kernel launch wrapper
+#define CUDA_CHECK_LAST() CUDA_CHECK(cudaGetLastError())
 
-NB_MODULE(hpc_kernels, m) {
-    m.doc() = "HPC-AI-Optimization-Lab CUDA Kernels";
-    
-    // Elementwise submodule
-    auto elementwise = m.def_submodule("elementwise");
-    elementwise.def("relu", &hpc::elementwise::relu_pytorch_wrapper);
-    elementwise.def("sigmoid", &hpc::elementwise::sigmoid_pytorch_wrapper);
-    elementwise.def("transpose", &hpc::elementwise::transpose_pytorch_wrapper);
-    
-    // Reduction submodule
-    auto reduction = m.def_submodule("reduction");
-    reduction.def("softmax", &hpc::reduction::softmax_pytorch_wrapper);
-    reduction.def("layer_norm", &hpc::reduction::layer_norm_pytorch_wrapper);
-    reduction.def("rms_norm", &hpc::reduction::rms_norm_pytorch_wrapper);
-    
-    // GEMM submodule
-    auto gemm = m.def_submodule("gemm");
-    gemm.def("matmul", &hpc::gemm::gemm_pytorch_wrapper);
-    
-    // Attention submodule
-    auto attention = m.def_submodule("attention");
-    attention.def("flash_attention", &hpc::attention::flash_attn_pytorch_wrapper);
-    attention.def("apply_rope", &hpc::attention::rope_pytorch_wrapper);
+// Input validation
+if (input == nullptr || output == nullptr) {
+    throw std::invalid_argument("Null pointer argument");
+}
+if (M <= 0 || N <= 0 || K <= 0) {
+    throw std::invalid_argument("Dimensions must be positive");
 }
 ```
 
-### PyTorch Wrapper Example
-```cpp
-// Zero-copy PyTorch tensor wrapper
-template<typename T>
-void relu_pytorch_wrapper(nb::tensor<T, nb::device::cuda> input,
-                          nb::tensor<T, nb::device::cuda> output) {
-    const T* in_ptr = input.data();
-    T* out_ptr = output.data();
-    size_t n = input.size();
-    
-    hpc::elementwise::relu<T, hpc::elementwise::OptLevel::GridStride>(
-        in_ptr, out_ptr, n, nullptr);
-}
-```
+---
 
-## Benchmark Framework Design
+## 10. Extension Guide
 
-### Python Benchmark Script
-```python
-# python/benchmark.py
-import torch
-from torch.utils.benchmark import Timer
-import hpc_kernels
+### 10.1 Adding a New Kernel
 
-def benchmark_kernel(name: str, hpc_fn, torch_fn, *args, **kwargs):
-    """Compare HPC kernel with PyTorch baseline."""
-    
-    # Warmup
-    for _ in range(10):
-        hpc_fn(*args, **kwargs)
-        torch_fn(*args, **kwargs)
-    
-    torch.cuda.synchronize()
-    
-    # Benchmark HPC kernel
-    hpc_timer = Timer(
-        stmt="hpc_fn(*args, **kwargs)",
-        globals={"hpc_fn": hpc_fn, "args": args, "kwargs": kwargs}
-    )
-    hpc_result = hpc_timer.blocked_autorange(min_run_time=1.0)
-    
-    # Benchmark PyTorch
-    torch_timer = Timer(
-        stmt="torch_fn(*args, **kwargs)",
-        globals={"torch_fn": torch_fn, "args": args, "kwargs": kwargs}
-    )
-    torch_result = torch_timer.blocked_autorange(min_run_time=1.0)
-    
-    return {
-        "kernel": name,
-        "hpc_ms": hpc_result.median * 1000,
-        "torch_ms": torch_result.median * 1000,
-        "speedup": torch_result.median / hpc_result.median
-    }
-```
+1. **Create module directory**: `src/XX_newmodule/`
 
+2. **Define header interface**: `kernel.cuh`
+   ```cpp
+   namespace hpc::newmodule {
+   template<typename T>
+   void kernel(...);
+   }
+   ```
 
-## Correctness Properties
+3. **Implement kernel**: `kernel.cu`
+   ```cpp
+   template<>
+   void kernel<float>(...) { /* specialization */ }
+   ```
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+4. **Add build configuration**: `CMakeLists.txt`
+   ```cmake
+   add_library(hpc_newmodule kernel.cu)
+   target_link_libraries(hpc_newmodule PUBLIC hpc_common)
+   ```
 
-Based on the prework analysis, the following correctness properties have been identified for property-based testing:
+5. **Write tests**: `tests/newmodule/test_kernel.cpp`
 
-### Property 1: Tensor Host-Device Round Trip
-*For any* valid numeric array of type float, half, or bfloat16, copying data from host to device using Tensor class and then back to host SHALL produce an identical array.
+6. **Add Python binding** (optional): `python/bindings/newmodule.cpp`
 
-**Validates: Requirements 2.3, 2.4, 2.5**
-
-### Property 2: Timer Non-Negativity
-*For any* CUDA kernel execution, the CudaTimer SHALL return a non-negative elapsed time in milliseconds.
-
-**Validates: Requirements 2.2**
-
-### Property 3: Elementwise Operation Correctness
-*For any* input array of floats or halfs, the elementwise operations (ReLU, Sigmoid, Vector Add) across all optimization levels (Naive, Vectorized, GridStride) SHALL produce results within floating-point tolerance of the CPU reference implementation.
-
-**Validates: Requirements 3.1, 3.2, 3.3**
-
-### Property 4: Transpose Correctness
-*For any* matrix of size M×N, transposing it SHALL produce a matrix of size N×M where element (i,j) in the output equals element (j,i) in the input. This property holds for all optimization levels (Naive, SharedMemory, SharedMemPadded).
-
-**Validates: Requirements 3.4, 3.5**
-
-### Property 5: Transpose Involution
-*For any* matrix, transposing twice SHALL produce the original matrix (transpose is its own inverse).
-
-**Validates: Requirements 3.4, 3.5**
-
-### Property 6: Softmax Output Properties
-*For any* input tensor, the softmax output SHALL satisfy:
-1. All output values are in range [0, 1]
-2. Each row sums to 1.0 (within floating-point tolerance)
-3. Output preserves relative ordering of inputs within each row
-
-This property holds for all optimization levels (Naive, WarpShuffle, OnlineSoftmax, Fused).
-
-**Validates: Requirements 4.1, 4.4, 4.5**
-
-### Property 7: LayerNorm/RMSNorm Output Properties
-*For any* input tensor with batch and hidden dimensions:
-1. LayerNorm output SHALL have mean ≈ beta and variance ≈ gamma² per sample
-2. RMSNorm output SHALL have RMS ≈ 1.0 per sample (before gamma scaling)
-
-**Validates: Requirements 4.2**
-
-### Property 8: GEMM Correctness
-*For any* matrices A (M×K) and B (K×N), the GEMM result C = A × B SHALL match the reference implementation (cuBLAS or CPU) within floating-point tolerance. This property holds for all optimization levels and data types (float, half, int8).
-
-**Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8**
-
-### Property 9: GEMM Associativity Approximation
-*For any* compatible matrices A, B, C, the GEMM operation SHALL approximately satisfy (A × B) × C ≈ A × (B × C) within accumulated floating-point tolerance.
-
-**Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8**
-
-### Property 10: FlashAttention Correctness
-*For any* Q, K, V tensors with valid attention dimensions, FlashAttention output SHALL match the standard attention computation (softmax(QK^T / sqrt(d)) × V) within floating-point tolerance.
-
-**Validates: Requirements 6.1**
-
-### Property 11: RoPE Rotation Properties
-*For any* query/key tensor and position, applying RoPE SHALL:
-1. Preserve the L2 norm of each head vector
-2. Be reversible (applying inverse rotation recovers original)
-
-**Validates: Requirements 6.5**
-
-### Property 12: TopK Correctness
-*For any* input array and k value, the TopK operation SHALL return exactly k elements that are the k largest values in the input, in descending order.
-
-**Validates: Requirements 6.7, 6.8**
-
-### Property 13: TMA Data Integrity
-*For any* 2D tensor, TMA copy operation SHALL produce an exact copy of the source data at the destination.
-
-**Validates: Requirements 7.1**
-
-### Property 14: Cluster Reduce Correctness
-*For any* input array, cluster-based reduction SHALL produce the same result as sequential reduction.
-
-**Validates: Requirements 7.3, 7.4**
-
-### Property 15: FP8 GEMM Bounded Error
-*For any* matrices A and B, FP8 GEMM result SHALL be within a bounded relative error of the FP32 reference result (accounting for FP8 precision loss).
-
-**Validates: Requirements 7.5, 7.6**
-
-### Property 16: Quantization Round Trip
-*For any* FP32 tensor, quantizing to INT8/FP8 and dequantizing back SHALL produce a result within the expected quantization error bound.
-
-**Validates: Requirements 8.1, 8.2, 8.3, 8.4**
-
-### Property 17: Convolution Correctness
-*For any* input tensor and filter with valid convolution parameters (stride, padding, dilation), the convolution output SHALL match the reference implementation (cuDNN or im2col+GEMM) within floating-point tolerance.
-
-**Validates: Requirements 12.1, 12.2, 12.3**
-
-### Property 18: Python Binding Zero-Copy
-*For any* PyTorch CUDA tensor passed to the binding, the underlying data pointer SHALL remain unchanged (no copy occurs).
-
-**Validates: Requirements 10.1**
-
-## Error Handling
-
-### CUDA Error Handling Strategy
-```cpp
-// All CUDA API calls wrapped with CUDA_CHECK macro
-// Kernel launches followed by CUDA_CHECK_LAST()
-// Async operations use cudaStreamSynchronize before error check
-
-namespace hpc {
-
-class CudaException : public std::runtime_error {
-public:
-    CudaException(cudaError_t err, const char* file, int line)
-        : std::runtime_error(format_error(err, file, line)), error_(err) {}
-    
-    [[nodiscard]] cudaError_t error() const noexcept { return error_; }
-
-private:
-    static std::string format_error(cudaError_t err, const char* file, int line) {
-        return fmt::format("CUDA error {} at {}:{}: {}", 
-                          static_cast<int>(err), file, line, 
-                          cudaGetErrorString(err));
-    }
-    cudaError_t error_;
-};
-
-} // namespace hpc
-```
-
-### Input Validation
-- Tensor dimensions checked before kernel launch
-- Alignment requirements verified for vectorized operations
-- Shared memory size validated against hardware limits
-- Grid/block dimensions validated against CUDA limits
-
-### Numerical Stability
-- Softmax uses max-subtraction for numerical stability
-- GEMM accumulation in higher precision when needed
-- FP8 operations include scaling factors to prevent overflow/underflow
-
-## Testing Strategy
-
-### Dual Testing Approach
-
-This project employs both unit tests and property-based tests for comprehensive coverage:
-
-1. **Unit Tests (GoogleTest)**: Verify specific examples, edge cases, and error conditions
-2. **Property-Based Tests (RapidCheck)**: Verify universal properties across randomly generated inputs
-
-### Property-Based Testing Configuration
-
-- **Library**: RapidCheck (C++ property-based testing library)
-- **Minimum iterations**: 100 per property test
-- **Tag format**: `Feature: hpc-ai-optimization-lab, Property {number}: {property_text}`
-
-### Test Organization
-
-```
-tests/
-├── common/
-│   ├── test_tensor.cpp          # Property 1, 2
-│   └── test_timer.cpp
-├── elementwise/
-│   ├── test_relu.cpp            # Property 3
-│   ├── test_sigmoid.cpp         # Property 3
-│   ├── test_vector_add.cpp      # Property 3
-│   └── test_transpose.cpp       # Property 4, 5
-├── reduction/
-│   ├── test_softmax.cpp         # Property 6
-│   └── test_layernorm.cpp       # Property 7
-├── gemm/
-│   └── test_gemm.cpp            # Property 8, 9
-├── attention/
-│   ├── test_flash_attention.cpp # Property 10
-│   ├── test_rope.cpp            # Property 11
-│   └── test_topk.cpp            # Property 12
-├── cuda13/
-│   ├── test_tma.cpp             # Property 13
-│   ├── test_cluster.cpp         # Property 14
-│   └── test_fp8.cpp             # Property 15
-├── quantization/
-│   └── test_quantize.cpp        # Property 16
-├── convolution/
-│   └── test_conv.cpp            # Property 17
-└── python/
-    └── test_bindings.py         # Property 18
-```
-
-### Example Property Test (RapidCheck)
-```cpp
-#include <rapidcheck.h>
-#include "hpc/elementwise/relu.cuh"
-
-// Feature: hpc-ai-optimization-lab, Property 3: Elementwise Operation Correctness
-RC_GTEST_PROP(Elementwise, ReluCorrectness, (std::vector<float> input)) {
-    RC_PRE(input.size() > 0 && input.size() <= 1024 * 1024);
-    
-    // CPU reference
-    std::vector<float> expected(input.size());
-    for (size_t i = 0; i < input.size(); ++i) {
-        expected[i] = std::max(0.0f, input[i]);
-    }
-    
-    // GPU implementation
-    hpc::Tensor<float> d_input(input.size());
-    hpc::Tensor<float> d_output(input.size());
-    d_input.copy_from_host(input);
-    
-    hpc::elementwise::relu<float, hpc::elementwise::OptLevel::GridStride>(
-        d_input.data(), d_output.data(), input.size());
-    
-    auto result = d_output.to_host();
-    
-    // Verify
-    for (size_t i = 0; i < input.size(); ++i) {
-        RC_ASSERT(std::abs(result[i] - expected[i]) < 1e-5f);
-    }
-}
-```
-
-### Tolerance Guidelines
-
-| Operation Type | Relative Tolerance | Absolute Tolerance |
-|---------------|-------------------|-------------------|
-| FP32 Elementwise | 1e-5 | 1e-6 |
-| FP16 Elementwise | 1e-3 | 1e-4 |
-| FP32 GEMM | 1e-4 | 1e-5 |
-| FP16 GEMM | 1e-2 | 1e-3 |
-| FP8 GEMM | 1e-1 | 1e-2 |
-| INT8 Quantization | N/A | 1 (integer) |
+7. **Update documentation**: API_REFERENCE.md, README.md

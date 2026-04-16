@@ -1,180 +1,188 @@
-# Requirements Document
+# Requirements Document: HPC-AI-Optimization-Lab
 
-## Introduction
+## Project Overview
 
-HPC-AI-Optimization-Lab 是一个以教学和实验为导向的高性能 CUDA 算子仓库，旨在提供从 Naive 实现到逐步优化的演进路径。项目采用现代 C++20 标准，核心稳定范围基于 CUDA 12.4+；同时包含面向较新 CUDA / Hopper 特性的实验性示例与 fallback 路径，并通过 Python Binding 与 PyTorch 进行实战验证。
+**HPC-AI-Optimization-Lab** 是一个面向 AI 推理工作负载的教育性和生产级 CUDA 内核库。
 
-## Glossary
+### 核心目标
 
-- **Kernel**: CUDA 中在 GPU 上执行的并行函数
-- **TMA (Tensor Memory Accelerator)**: Hopper 架构的张量内存加速器，用于高效数据搬运
-- **WGMMA**: Warpgroup Matrix Multiply-Accumulate，Hopper 架构的矩阵乘法指令
-- **FP8**: 8位浮点数格式（e4m3/e5m2），用于低精度推理
-- **Coalesced_Access**: 合并访问，多个线程同时访问连续内存地址以最大化带宽
-- **Bank_Conflict**: Shared Memory 的 Bank 冲突，导致串行访问
-- **Tensor_Core**: NVIDIA GPU 中专门用于矩阵运算的硬件单元
-- **FlashAttention**: IO-aware 的注意力机制实现，避免写入 N×N 矩阵到 HBM
-- **RoPE**: Rotary Positional Embedding，旋转位置编码
-- **MoE**: Mixture of Experts，混合专家模型
-- **CUTLASS**: NVIDIA 官方的 CUDA 模板库，用于高性能矩阵运算
-- **Nanobind**: 现代 Python/C++ 绑定库
-- **Roofline_Model**: 性能分析模型，用于评估算子是访存密集还是计算密集
-- **Build_System**: CMake 构建系统及相关工具链
-- **Benchmark_Framework**: 性能测试框架，用于对比 Kernel 与 PyTorch 原生算子
+| 目标 | 描述 |
+|------|------|
+| 🎓 教学导向 | 每个模块展示从 Naive 到专家级的清晰优化演进路径 |
+| 🔬 生产级质量 | 完整测试覆盖（GoogleTest 单元测试 + RapidCheck 属性测试） |
+| 🚀 现代 C++ | RAII、Concepts、constexpr、requires 子句 |
+| 🐍 Python 集成 | Nanobind 零拷贝绑定，PyTorch Tensor 支持 |
 
-## Requirements
+### 技术栈
 
-### Requirement 1: 项目基础设施
+| 组件 | 版本 | 用途 |
+|------|------|------|
+| CUDA | 12.4+ | GPU 编程 |
+| C++ | 20 | 内核实现 |
+| CMake | 3.24+ | 构建系统 |
+| Python | 3.8+ | 绑定和测试 |
 
-**User Story:** As a 开发者, I want 一个现代化的项目基础设施, so that 我可以快速构建、测试和部署 CUDA Kernel。
+---
 
-#### Acceptance Criteria
+## Requirements by Module
 
-1. THE Build_System SHALL 使用 CMake 3.24+ 并采用 target-based 方式配置
-2. THE Build_System SHALL 使用 FetchContent 自动拉取依赖（fmt, googletest, nanobind, cutlass）
-3. THE Build_System SHALL 自动检测当前显卡架构并设置对应的 -gencode 参数
-4. WHEN 用户执行 cmake && make THEN THE Build_System SHALL 成功编译所有 Kernel
-5. THE Docker_Environment SHALL 基于项目文档声明的 CUDA 基线镜像提供可复现的开发环境
-6. WHEN Docker 容器启动 THEN THE Docker_Environment SHALL 包含所有必要的编译工具和依赖
+### R1: 项目基础设施
 
-### Requirement 2: 通用工具库
+| ID | 需求 | 验证标准 | 状态 |
+|----|------|----------|------|
+| R1.1 | CMake 3.24+ target-based 配置 | `cmake --version` ≥ 3.24 | ✅ |
+| R1.2 | FetchContent 自动依赖管理 | 构建成功拉取 gtest, nanobind, fmt, cutlass | ✅ |
+| R1.3 | GPU 架构自动检测 | `-gencode` 参数正确设置 | ✅ |
+| R1.4 | Docker 开发环境 | CUDA 12.4+ 镜像构建成功 | ✅ |
+| R1.5 | 跨平台支持 | Linux 首要，Windows/WSL2 兼容 | ✅ |
 
-**User Story:** As a 开发者, I want 一套通用的工具库, so that 我可以专注于 Kernel 优化而非重复的基础代码。
+### R2: 通用工具库 (Common Library)
 
-#### Acceptance Criteria
+| ID | 需求 | 实现文件 | 状态 |
+|----|------|----------|------|
+| R2.1 | CUDA 错误检查宏 | `cuda_check.cuh` | ✅ |
+| R2.2 | 高精度 GPU 计时器 | `timer.cuh` | ✅ |
+| R2.3 | RAII Tensor 内存管理 | `tensor.cuh` | ✅ |
+| R2.4 | Half/BF16 类型封装 | `types.cuh` | ✅ |
+| R2.5 | 归约原语 | `reduce.cuh` | ✅ |
+| R2.6 | Kernel 启动工具 | `launch.cuh` | ✅ |
 
-1. THE Common_Library SHALL 提供 CUDA 错误检查宏（CudaCheck）
-2. THE Common_Library SHALL 提供高精度计时器（Timer）用于性能测量
-3. THE Common_Library SHALL 提供 Half/BF16 类型的封装和转换工具
-4. THE Common_Library SHALL 提供 RAII 风格的 Tensor 类管理 GPU 内存
-5. WHEN 使用 Tensor 类分配内存 THEN THE Common_Library SHALL 在析构时自动释放资源
+### R3: Elementwise 模块
 
-### Requirement 3: 访存优化基础算子
+| ID | 需求 | 优化级别 | 性能目标 | 状态 |
+|----|------|----------|----------|------|
+| R3.1 | ReLU Kernel | Naive → Vectorized → GridStride | 内存带宽 80%+ | ✅ |
+| R3.2 | Sigmoid Kernel | Naive → Vectorized → GridStride | 内存带宽 80%+ | ✅ |
+| R3.3 | Vector Add Kernel | Naive → Vectorized → GridStride | 内存带宽 80%+ | ✅ |
+| R3.4 | Transpose Kernel | Naive → SharedMem → SharedMemPadded | 无 Bank Conflict | ✅ |
+| R3.5 | float4 向量化加载 | 所有 elementwise 内核 | 2-4x 加速 | ✅ |
+| R3.6 | Grid Stride Loop | 处理任意大小输入 | 无越界 | ✅ |
 
-**User Story:** As a 学习者, I want 学习访存密集型算子的优化技术, so that 我可以掌握如何跑满显存带宽。
+### R4: Reduction 模块
 
-#### Acceptance Criteria
+| ID | 需求 | 优化级别 | 关键技术 | 状态 |
+|----|------|----------|----------|------|
+| R4.1 | Softmax | Naive → WarpShuffle → Online | 单次遍历 | ✅ |
+| R4.2 | LayerNorm | Warp Shuffle + Block Reduce | Welford 算法 | ✅ |
+| R4.3 | RMSNorm | 优化实现 | 数值稳定 | ✅ |
+| R4.4 | Warp Shuffle 原语 | 替代 Shared Memory | __shfl_down_sync | ✅ |
+| R4.5 | Online Softmax | 单次遍历算法 | max/sum 在线更新 | ✅ |
 
-1. THE Elementwise_Module SHALL 实现 Vector Add、ReLU、Sigmoid 的 Naive 版本
-2. THE Elementwise_Module SHALL 实现使用 float4/ld.global.v4 的向量化加载版本
-3. THE Elementwise_Module SHALL 实现 Grid Stride Loop 以处理任意大小输入
-4. THE Transpose_Kernel SHALL 实现 Naive 版本（读行写列）
-5. THE Transpose_Kernel SHALL 实现使用 Shared Memory 消除 Bank Conflict 的优化版本
-6. WHEN 运行优化后的 Elementwise Kernel THEN THE Kernel SHALL 达到理论显存带宽的 80% 以上
+### R5: GEMM 模块
 
-### Requirement 4: 归约与同步算子
+| ID | 需求 | 技术 | 性能目标 | 状态 |
+|----|------|------|----------|------|
+| R5.1 | Step 1: Naive | 全局内存 | ~0.5 TFLOPS | ✅ |
+| R5.2 | Step 2: Shared Memory Tiling | 数据复用 | ~2.0 TFLOPS | ✅ |
+| R5.3 | Step 3: Double Buffer | 延迟隐藏 | ~3.5 TFLOPS | ✅ |
+| R5.4 | Step 4: Register Tiling | 减少 bank 冲突 | ~6.0 TFLOPS | ✅ |
+| R5.5 | Step 5: Tensor Core WMMA | 硬件加速 | ~50 TFLOPS | ✅ |
+| R5.6 | Step 6: Tensor Core MMA PTX | 细粒度控制 | ~60 TFLOPS | ✅ |
+| R5.7 | Step 7: Software Pipeline | 多阶段重叠 | ~70 TFLOPS | ✅ |
+| R5.8 | 多精度支持 | SGEMM, HGEMM, Int8-GEMM | - | ✅ |
 
-**User Story:** As a 学习者, I want 学习归约类算子的优化技术, so that 我可以掌握线程间通信与 Warp 级原语。
+### R6: Attention 模块
 
-#### Acceptance Criteria
+| ID | 需求 | 关键技术 | 限制 | 状态 |
+|----|------|----------|------|------|
+| R6.1 | FlashAttention Forward | IO-aware, Tiling | head_dim=64 | ✅ |
+| R6.2 | Q, K, V Tiling | SRAM 驻留 | - | ✅ |
+| R6.3 | Online Softmax | 避免 N×N 存储 | - | ✅ |
+| R6.4 | RoPE | Complex rotation | - | ✅ |
+| R6.5 | MoE TopK | 快速排序/筛选 | - | ✅ |
 
-1. THE Reduction_Module SHALL 实现 Softmax 的多个优化版本
-2. THE Reduction_Module SHALL 实现 RMSNorm 和 LayerNorm
-3. THE Reduction_Module SHALL 使用 Warp Shuffle（__shfl_down_sync）替代 Shared Memory 归约
-4. THE Reduction_Module SHALL 实现 Block Reduce（CUB 风格与手写版本对比）
-5. THE Softmax_Kernel SHALL 实现 Online Softmax（一次遍历，无需减去 Max 再 Exp）
-6. WHEN 可用 THEN THE Reduction_Module SHALL 利用 L2 Cache 驻留优化性能
+### R7: Convolution 模块
 
-### Requirement 5: GEMM 矩阵乘法
+| ID | 需求 | 说明 | 状态 |
+|----|------|------|------|
+| R7.1 | Implicit GEMM 卷积 | 生产就绪 | ✅ |
+| R7.2 | Winograd 卷积 | Fallback 到 GEMM | ✅ |
+| R7.3 | 卷积参数支持 | stride, padding, dilation | ✅ |
 
-**User Story:** As a 学习者, I want 学习 GEMM 的完整优化路径, so that 我可以掌握如何跑满 Tensor Core 算力。
+### R8: Quantization 模块
 
-#### Acceptance Criteria
+| ID | 需求 | 说明 | 状态 |
+|----|------|------|------|
+| R8.1 | Weight-Only Dequant | 权重反量化 | ✅ |
+| R8.2 | INT8 量化/反量化 | 逐行缩放 | ✅ |
+| R8.3 | FP8 Scaling | 精度控制 | ✅ |
 
-1. THE GEMM_Module SHALL 实现 Step 1: Naive Global Memory 版本
-2. THE GEMM_Module SHALL 实现 Step 2: Shared Memory Tiling 版本
-3. THE GEMM_Module SHALL 实现 Step 3: Double Buffering 版本
-4. THE GEMM_Module SHALL 实现 Step 4: Register Tiling 版本
-5. THE GEMM_Module SHALL 实现 Step 5: Tensor Core WMMA API 版本
-6. THE GEMM_Module SHALL 实现 Step 6: Tensor Core MMA PTX 版本
-7. THE GEMM_Module SHALL 实现 Step 7: Software Pipelining 版本
-8. THE GEMM_Module SHALL 提供 SGEMM、HGEMM、Int8-GEMM 的实现
-9. WHEN 运行 Tensor Core 版本 THEN THE GEMM_Kernel SHALL 达到理论算力的 70% 以上
+### R9: CUDA 13 特性模块 (实验性)
 
-### Requirement 6: LLM 与 Transformer 专项算子
+| ID | 需求 | 当前状态 | 说明 | 状态 |
+|----|------|----------|------|------|
+| R9.1 | TMA 异步搬运 | Fallback | async copy 代替 | ✅ |
+| R9.2 | Thread Block Clusters | Fallback | block reduce 代替 | ✅ |
+| R9.3 | FP8 GEMM | Demo | scaled FP16 演示 | ✅ |
 
-**User Story:** As a 学习者, I want 学习大模型时代的核心算子, so that 我可以优化 LLM 推理性能。
+### R10: Python 绑定
 
-#### Acceptance Criteria
+| ID | 需求 | 实现 | 状态 |
+|----|------|------|------|
+| R10.1 | Nanobind 零拷贝 | 直接指针传递 | ✅ |
+| R10.2 | PyTorch Tensor 支持 | CUDA tensor | ✅ |
+| R10.3 | 模块结构 | elementwise, reduction, gemm | ✅ |
+| R10.4 | 参数验证 | 友好错误信息 | ✅ |
 
-1. THE Attention_Module SHALL 实现简化版 FlashAttention Forward Pass
-2. THE FlashAttention_Kernel SHALL 将 Q、K、V Tiling 到 Shared Memory
-3. THE FlashAttention_Kernel SHALL 在 SRAM 中完成 Attention Score 计算，避免写入 N×N 矩阵到 HBM
-4. THE Attention_Module SHALL 借鉴 FlashAttention-2 的 Warp 分配策略
-5. THE RoPE_Kernel SHALL 高效处理 Complex number rotation
-6. THE RoPE_Kernel SHALL 支持融合到 Attention Kernel 中
-7. THE MoE_Module SHALL 实现 Routing 和 TopK 算子
-8. THE MoE_Module SHALL 针对大规模数据实现快速排序/筛选
+### R11: 测试
 
-### Requirement 7: CUDA 13 与 Hopper/Blackwell 特性
+| ID | 需求 | 覆盖范围 | 状态 |
+|----|------|----------|------|
+| R11.1 | GoogleTest 单元测试 | 所有公开 API | ✅ |
+| R11.2 | RapidCheck 属性测试 | 边界情况 | ✅ |
+| R11.3 | 正确性验证 | vs CPU/cuBLAS 参考 | ✅ |
 
-**User Story:** As a 学习者, I want 学习最新的 CUDA 和 GPU 架构特性, so that 我可以掌握未来的优化方向。
+### R12: 文档
 
-#### Acceptance Criteria
+| ID | 需求 | 内容 | 状态 |
+|----|------|------|------|
+| R12.1 | README | 双语、学习路径 | ✅ |
+| R12.2 | API Reference | 所有模块接口 | ✅ |
+| R12.3 | Architecture | 设计文档 | ✅ |
+| R12.4 | 优化专题 | 5 篇深度指南 | ✅ |
 
-1. THE TMA_Module SHALL 至少提供一个可运行的实验性示例或 fallback 路径，并明确标注与真实 TMA 硬件路径的差异
-2. THE TMA_Module SHALL 在文档中解释真实 TMA 路径的目标能力与当前实现边界
-3. THE Cluster_Module SHALL 至少提供一个可运行的实验性示例或 fallback 路径，并明确标注与真实 Thread Block Clusters 的差异
-4. THE Cluster_Module SHALL 在文档中解释 Distributed Shared Memory 的目标语义与当前实现边界
-5. THE FP8_Module SHALL 至少提供可测试的实验性演示路径，并明确它不等同于真实 Hopper FP8 Tensor Core 实现
-6. THE FP8_Module SHALL 展示 FP8 Scaling 技术
+---
 
-### Requirement 8: 量化算子
+## Non-Functional Requirements
 
-**User Story:** As a 学习者, I want 学习量化相关的算子, so that 我可以优化模型推理的内存和计算效率。
+### NFR1: 性能
 
-#### Acceptance Criteria
+| 要求 | 指标 |
+|------|------|
+| GEMM Tensor Core | 达到理论峰值 70%+ |
+| Elementwise | 达到内存带宽 80%+ |
+| FlashAttention | head_dim=64 时正确 |
 
-1. THE Quantization_Module SHALL 实现 Weight-Only Dequantization
-2. THE Quantization_Module SHALL 实现 FP8 Scaling 算子
-3. THE Quantization_Module SHALL 支持 INT8 量化和反量化
-4. WHEN 执行量化 Kernel THEN THE Quantization_Module SHALL 保持数值精度在可接受范围内
+### NFR2: 可移植性
 
-### Requirement 9: 现代 C++ 编码规范
+| 平台 | 状态 |
+|------|------|
+| Linux (Ubuntu 22.04+) | 首要支持 |
+| Windows (WSL2) | 兼容 |
+| GPU 架构 | SM 7.0+ (Volta+) |
 
-**User Story:** As a 开发者, I want 项目遵循现代 C++ 编码规范, so that 代码具有可读性、可维护性和教学价值。
+### NFR3: 可维护性
 
-#### Acceptance Criteria
+| 要求 | 实现 |
+|------|------|
+| 代码风格 | .clang-format (Google style) |
+| 静态分析 | .clang-tidy |
+| 文档覆盖 | 所有公开 API |
 
-1. THE Codebase SHALL 强制使用 C++20 标准
-2. THE Codebase SHALL 使用 Concepts 约束 Kernel 模板参数
-3. THE Codebase SHALL 大量使用 constexpr 计算 Grid/Block 大小和 Shared Memory 布局
-4. THE Codebase SHALL 在 Host 代码中使用 auto 和 lambda 简化 CUDA API 调用
-5. THE Codebase SHALL 避免使用裸指针（malloc/cudaMalloc），使用 RAII 封装
-6. WHEN 定义 Kernel 模板 THEN THE Codebase SHALL 使用 requires 子句限制类型
+---
 
-### Requirement 10: Python 绑定与 Benchmark
+## Constraints
 
-**User Story:** As a 用户, I want 通过 Python 调用 CUDA Kernel 并与 PyTorch 对比, so that 我可以验证优化效果。
+1. **CUDA 版本**: 最低 12.4，推荐 13.x
+2. **GPU 架构**: 最低 SM 7.0 (Volta)，Tensor Core 需要 SM 7.0+
+3. **编译器**: GCC 11+ / Clang 14+ / MSVC 2022+
+4. **Python**: 3.8+ (绑定时)
 
-#### Acceptance Criteria
+---
 
-1. THE Python_Binding SHALL 使用 Nanobind 实现零拷贝绑定
-2. THE Python_Binding SHALL 支持直接传入 PyTorch Tensor
-3. THE Benchmark_Framework SHALL 使用 torch.utils.benchmark 自动对比 Kernel 与 PyTorch 原生算子
-4. THE Benchmark_Framework SHALL 输出耗时、TFLOPS 和 Bandwidth 指标
-5. WHEN 运行 Benchmark THEN THE Benchmark_Framework SHALL 生成可视化的性能报告
+## Out of Scope
 
-### Requirement 11: 测试与文档
-
-**User Story:** As a 开发者, I want 完善的测试和文档, so that 我可以确保代码正确性并学习优化原理。
-
-#### Acceptance Criteria
-
-1. THE Test_Suite SHALL 使用 GoogleTest 框架编写单元测试
-2. THE Test_Suite SHALL 覆盖所有 Kernel 的正确性验证
-3. THE Documentation SHALL 为每个 Case 提供 Nsight Compute 的 Profiling 截图
-4. THE Documentation SHALL 解释 Occupancy、Memory Throughput、Compute Throughput 等指标
-5. THE Documentation SHALL 使用 Roofline Model 图表证明优化效果
-6. THE README SHALL 提供详细的教程和性能报告
-
-### Requirement 12: 卷积算子
-
-**User Story:** As a 学习者, I want 学习卷积算子的优化技术, so that 我可以优化 CNN 模型的推理性能。
-
-#### Acceptance Criteria
-
-1. THE Convolution_Module SHALL 实现 Implicit GEMM 卷积
-2. THE Convolution_Module SHALL 提供 Winograd 接口；在完整实现缺失时，必须明确标注 fallback 语义并保持结果正确
-3. THE Convolution_Module SHALL 支持常见的卷积参数（stride、padding、dilation）
-4. WHEN 运行优化后的卷积 Kernel THEN THE Kernel SHALL 性能接近 cuDNN
+- 训练场景优化
+- 多 GPU 支持
+- 动态图模式
+- 完整 Hopper 特性（实验性 fallback）

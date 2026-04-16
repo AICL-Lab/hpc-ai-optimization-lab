@@ -2,6 +2,7 @@
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
 #include <stdexcept>
+#include <algorithm>
 #include "03_gemm/gemm.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"

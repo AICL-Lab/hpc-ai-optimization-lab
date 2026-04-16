@@ -96,3 +96,15 @@ constexpr size_t dtype_size(DataType dtype) {
 }
 
 } // namespace hpc
+
+namespace hpc::cuda13 {
+
+// Check if current device is Hopper architecture or newer (compute capability >= 9.0)
+inline bool is_hopper_architecture() {
+    int device = 0;
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, device);
+    return prop.major >= 9;
+}
+
+} // namespace hpc::cuda13

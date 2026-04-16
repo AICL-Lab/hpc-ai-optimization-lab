@@ -1,80 +1,85 @@
-# 贡献指南 | Contributing Guide
+# Contributing Guide | 贡献指南
 
-感谢你对 HPC-AI-Optimization-Lab 的关注！我们欢迎各种形式的贡献。
+Thank you for your interest in contributing to HPC-AI-Optimization-Lab! This document provides guidelines and instructions for contributing.
 
-Thank you for your interest in HPC-AI-Optimization-Lab! We welcome contributions of all kinds.
+感谢您对 HPC-AI-Optimization-Lab 的关注！本文档提供贡献指南和说明。
 
-## 目录 | Table of Contents
+---
 
-- [行为准则](#行为准则--code-of-conduct)
-- [如何贡献](#如何贡献--how-to-contribute)
-- [开发环境设置](#开发环境设置--development-setup)
-- [代码风格](#代码风格--code-style)
-- [提交规范](#提交规范--commit-guidelines)
-- [Pull Request 流程](#pull-request-流程--pull-request-process)
+## Table of Contents | 目录
 
-## 行为准则 | Code of Conduct
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Setup](#development-setup)
+- [Code Style](#code-style)
+- [Testing Guidelines](#testing-guidelines)
+- [Commit Guidelines](#commit-guidelines)
+- [Pull Request Process](#pull-request-process)
 
-请阅读并遵守我们的 [行为准则](CODE_OF_CONDUCT.md)。
+---
 
-Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+## Code of Conduct
 
-## 如何贡献 | How to Contribute
+This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the project maintainers.
 
-### 报告 Bug | Reporting Bugs
+---
 
-1. 检查 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues) 确认 Bug 未被报告
-2. 使用 Bug Report 模板创建新 Issue
-3. 提供详细的复现步骤、环境信息和错误日志
+## Getting Started
 
-### 功能请求 | Feature Requests
+### Ways to Contribute
 
-1. 检查 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues) 确认功能未被请求
-2. 使用 Feature Request 模板创建新 Issue
-3. 描述功能的用途和预期行为
+| Type | Description |
+|------|-------------|
+| 🐛 Bug Reports | Submit issues with reproducible examples |
+| 💡 Feature Requests | Propose new kernels or optimizations |
+| 📝 Documentation | Improve guides, add examples |
+| 🔧 Code | Implement features, fix bugs |
+| 🧪 Tests | Add test coverage, improve test quality |
 
-### 代码贡献 | Code Contributions
+### Before You Start
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 编写代码和测试
-4. 在本地 CUDA 环境中确保相关构建和测试通过
-5. 提交更改 (`git commit -m 'Add amazing feature'`)
-6. 推送到分支 (`git push origin feature/amazing-feature`)
-7. 创建 Pull Request
+1. Check [existing issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues) to avoid duplicates
+2. For major changes, open a discussion issue first
+3. Ensure you have a CUDA-capable GPU and development environment
 
-## 开发环境设置 | Development Setup
+---
 
-### 系统要求 | Requirements
+## Development Setup
 
-| 依赖 | 版本要求 |
-|------|----------|
-| CUDA | 12.4+ |
-| CMake | 3.24+ |
-| C++ 编译器 | GCC 11+ / Clang 14+ |
-| Python | 3.8+ |
+### System Requirements
 
-说明：
-- 当前 `docker/Dockerfile` 基于 CUDA 12.4.1。
-- `src/07_cuda13_features/` 下的内容目前属于实验性/占位性质。
-- 当前 `flash_attention` 的已实现路径仅正式支持 `float + head_dim == 64`。
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| CUDA Toolkit | 12.4 | 12.4+ |
+| CMake | 3.24 | 3.28+ |
+| C++ Compiler | GCC 11 / Clang 14 | GCC 12+ / Clang 15+ |
+| GPU | SM 7.0 (Volta) | SM 8.0+ (Ampere) |
+| Python (optional) | 3.8 | 3.10+ |
 
-### 本地构建 | Local Build
+### Initial Setup
 
 ```bash
-# 克隆仓库
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+# Fork and clone
+git clone https://github.com/YOUR_USERNAME/hpc-ai-optimization-lab.git
 cd hpc-ai-optimization-lab
 
-# 配置 + 编译
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -GNinja
-cmake --build build
+# Create development branch
+git checkout -b feature/your-feature
 
-# 运行测试
+# Configure with debug symbols
+cmake -S . -B build \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DBUILD_EXAMPLES=ON \
+    -DBUILD_PYTHON_BINDINGS=ON
+
+# Build
+cmake --build build -j$(nproc)
+
+# Run tests
 ctest --test-dir build --output-on-failure
 ```
 
-### Docker 环境 | Docker Environment
+### Docker Development
 
 ```bash
 cd docker
@@ -82,43 +87,268 @@ docker-compose up -d
 docker exec -it hpc-ai-lab bash
 ```
 
-### 安装 pre-commit hooks
+### Pre-commit Hooks
 
 ```bash
 pip install pre-commit
 pre-commit install
 ```
 
-## 代码风格 | Code Style
+This runs automatic checks before each commit:
+- Code formatting (clang-format)
+- Static analysis (clang-tidy)
+- Trailing whitespace, file endings
 
-### C++/CUDA
+---
 
-- 遵循 `.clang-format` 配置
-- 使用 Modern C++20 特性
-- 使用 RAII 管理资源
-- 使用 Concepts 约束模板参数
-- 为公开 API 提供清晰注释
+## Code Style
 
-### Python
+### C++/CUDA Guidelines
 
-- 遵循 PEP 8
-- 保持接口薄且与底层 C++ 语义一致
-- 在边界处校验输入参数
+#### Naming Conventions
 
-### 命名规范 | Naming Conventions
+| Type | Convention | Example |
+|------|------------|---------|
+| Namespaces | `snake_case` | `hpc::elementwise` |
+| Classes/Structs | `PascalCase` | `Tensor`, `CudaTimer` |
+| Functions | `snake_case` | `copy_from_host`, `relu` |
+| Variables | `snake_case` | `block_size`, `num_threads` |
+| Constants | `UPPER_SNAKE_CASE` | `TILE_SIZE`, `WARP_SIZE` |
+| Macros | `UPPER_SNAKE_CASE` | `CUDA_CHECK` |
+| Template Parameters | `PascalCase` | `typename T`, `int BlockSize` |
 
-| 类型 | 规范 | 示例 |
-|------|------|------|
-| 类/结构体 | PascalCase | `Tensor`, `CudaTimer` |
-| 函数 | snake_case | `copy_from_host`, `relu` |
-| 变量 | snake_case | `block_size`, `num_threads` |
-| 常量 | UPPER_SNAKE_CASE | `TILE_SIZE`, `BLOCK_DIM` |
-| 宏 | UPPER_SNAKE_CASE | `CUDA_CHECK` |
-| 命名空间 | snake_case | `hpc::elementwise` |
+#### File Organization
 
-## 提交规范 | Commit Guidelines
+```cpp
+// kernel_name.cuh - Header file
+#pragma once
 
-使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+#include <cuda_runtime.h>
+#include <concepts>
+
+namespace hpc::module {
+
+// Public interface only
+template <typename T, OptLevel Level = OptLevel::Default>
+void kernel_name(const T* input, T* output, size_t n,
+                 cudaStream_t stream = nullptr);
+
+} // namespace hpc::module
+```
+
+```cpp
+// kernel_name.cu - Implementation file
+#include "kernel_name.cuh"
+#include "../common/cuda_check.cuh"
+
+namespace hpc::module {
+
+// Anonymous namespace for private kernels
+namespace {
+
+template <typename T>
+__global__ void kernel_impl(const T* __restrict__ input,
+                             T* __restrict__ output, size_t n) {
+    // Implementation
+}
+
+} // anonymous namespace
+
+// Explicit specializations
+template <>
+void kernel_name<float, OptLevel::Default>(...) {
+    kernel_impl<float><<<grid, block, 0, stream>>>(...);
+    CUDA_CHECK_LAST();
+}
+
+} // namespace hpc::module
+```
+
+#### CUDA Best Practices
+
+```cpp
+// ✓ Good: Use restrict qualifier
+__global__ void kernel(const float* __restrict__ input,
+                        float* __restrict__ output) { }
+
+// ✓ Good: Use constexpr for compile-time constants
+constexpr int TILE_SIZE = 32;
+
+// ✓ Good: Use __forceinline__ for small device functions
+__device__ __forceinline__ float warp_reduce_sum(float val) { }
+
+// ✓ Good: Use appropriate memory spaces
+__shared__ float tile[TILE_SIZE][TILE_SIZE];  // Block-level sharing
+__constant__ float params[256];                 // Read-only, broadcast
+
+// ✗ Bad: Mutable global state
+__device__ int global_counter;  // Avoid if possible
+```
+
+#### Modern C++ Features
+
+```cpp
+// Use concepts for template constraints
+template <typename T>
+    requires std::is_same_v<T, float> || std::is_same_v<T, __half>
+void kernel_function(const T* input, T* output);
+
+// Use RAII for resource management
+hpc::Tensor<float> data(n);  // Automatic cleanup
+
+// Use [[nodiscard]] for important return values
+[[nodiscard]] bool almost_equal(float a, float b);
+
+// Use constexpr where possible
+constexpr size_t calculate_tile_size(int smem_per_block) {
+    return smem_per_block / sizeof(float);
+}
+```
+
+### Python Style
+
+Follow [PEP 8](https://peps.python.org/pep-0008/) with these additions:
+
+```python
+# Keep bindings thin - just validation and CUDA calls
+def relu(input: torch.Tensor, output: torch.Tensor) -> None:
+    """
+    Apply ReLU activation.
+    
+    Args:
+        input: Input tensor (CUDA, float32)
+        output: Output tensor (CUDA, float32, same shape as input)
+    
+    Raises:
+        ValueError: If tensors are not CUDA tensors or shapes mismatch
+    """
+    if not input.is_cuda or not output.is_cuda:
+        raise ValueError("Tensors must be on CUDA device")
+    if input.shape != output.shape:
+        raise ValueError("Input and output shapes must match")
+    
+    _cuda_relu(input, output)  # Call C++ binding
+```
+
+---
+
+## Testing Guidelines
+
+### Test Structure
+
+```
+tests/
+├── test_utils.hpp          # Shared test utilities
+├── module_name/
+│   └── test_kernel.cpp     # Kernel-specific tests
+```
+
+### Unit Tests
+
+```cpp
+#include <gtest/gtest.h>
+#include "01_elementwise/relu.cuh"
+#include "common/tensor.cuh"
+#include "../test_utils.hpp"
+
+TEST(ReluTest, BasicCorrectness) {
+    // Arrange
+    std::vector<float> input = {-1.0f, 0.0f, 1.0f, 2.0f};
+    std::vector<float> expected = {0.0f, 0.0f, 1.0f, 2.0f};
+    
+    hpc::Tensor<float> d_input(input.size());
+    hpc::Tensor<float> d_output(input.size());
+    d_input.copy_from_host(input);
+    
+    // Act
+    hpc::elementwise::relu<float>(d_input.data(), d_output.data(), input.size());
+    cudaDeviceSynchronize();
+    
+    // Assert
+    auto result = d_output.to_host();
+    EXPECT_TRUE(hpc::test::vectors_almost_equal(result, expected));
+}
+
+TEST(ReluTest, HandlesEmptyInput) {
+    hpc::Tensor<float> d_input(0);
+    hpc::Tensor<float> d_output(0);
+    
+    EXPECT_NO_THROW(
+        hpc::elementwise::relu<float>(d_input.data(), d_output.data(), 0)
+    );
+}
+```
+
+### Property-Based Tests
+
+```cpp
+#include <rapidcheck/gtest.h>
+
+RC_GTEST_PROP(ReluTest, Idempotent, ()) {
+    // Property: relu(relu(x)) == relu(x)
+    auto size = *rc::gen::inRange<size_t>(1, 1024);
+    auto input = *rc::gen::container<std::vector<float>>(size, 
+        rc::gen::map(rc::gen::arbitrary<float>(), [](float x) {
+            return std::clamp(x, -10.0f, 10.0f);
+        }));
+    
+    hpc::Tensor<float> d_input(size);
+    hpc::Tensor<float> d_output1(size);
+    hpc::Tensor<float> d_output2(size);
+    
+    d_input.copy_from_host(input);
+    
+    hpc::elementwise::relu<float>(d_input.data(), d_output1.data(), size);
+    hpc::elementwise::relu<float>(d_output1.data(), d_output2.data(), size);
+    cudaDeviceSynchronize();
+    
+    auto result1 = d_output1.to_host();
+    auto result2 = d_output2.to_host();
+    
+    RC_ASSERT(result1 == result2);
+}
+```
+
+### Performance Benchmarks
+
+```cpp
+TEST(GemmTest, PerformanceBenchmark) {
+    constexpr int M = 1024, N = 1024, K = 1024;
+    
+    hpc::Tensor<float> A(M * K), B(K * N), C(M * N);
+    
+    hpc::CudaTimer timer;
+    constexpr int WARMUP = 10;
+    constexpr int ITERATIONS = 100;
+    
+    // Warmup
+    for (int i = 0; i < WARMUP; ++i) {
+        hpc::gemm::gemm<float>(A.data(), B.data(), C.data(), M, N, K);
+    }
+    cudaDeviceSynchronize();
+    
+    // Benchmark
+    timer.start();
+    for (int i = 0; i < ITERATIONS; ++i) {
+        hpc::gemm::gemm<float>(A.data(), B.data(), C.data(), M, N, K);
+    }
+    timer.stop();
+    
+    float avg_time_ms = timer.elapsed_ms() / ITERATIONS;
+    float tflops = 2.0 * M * N * K / (avg_time_ms * 1e9);
+    
+    std::cout << "Average time: " << avg_time_ms << " ms\n";
+    std::cout << "Performance: " << tflops << " TFLOPS\n";
+}
+```
+
+---
+
+## Commit Guidelines
+
+### Conventional Commits
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 <type>(<scope>): <description>
@@ -128,35 +358,93 @@ pre-commit install
 [optional footer]
 ```
 
-### Type
+### Types
 
-- `feat`: 新功能
-- `fix`: Bug 修复
-- `docs`: 文档更新
-- `style`: 代码格式（不影响功能）
-- `refactor`: 重构
-- `perf`: 性能优化
-- `test`: 测试相关
-- `chore`: 构建/工具相关
+| Type | Description | Example |
+|------|-------------|---------|
+| `feat` | New feature | `feat(gemm): add FP8 support` |
+| `fix` | Bug fix | `fix(softmax): handle empty input` |
+| `docs` | Documentation | `docs: update README installation steps` |
+| `style` | Formatting | `style: fix clang-format issues` |
+| `refactor` | Code restructuring | `refactor(tensor): use RAII pattern` |
+| `perf` | Performance | `perf(gemm): optimize register usage` |
+| `test` | Tests | `test(attention): add property-based tests` |
+| `chore` | Build/tooling | `chore: update CUDA version in Docker` |
 
-## Pull Request 流程 | Pull Request Process
+### Examples
 
-1. **确保本地验证通过**：默认 CI 目前只覆盖轻量检查，原生 CUDA 构建和测试需要你在本地或 GPU runner 上完成
-2. **更新文档**：如果修改了公开行为、支持矩阵或实验模块定位，请同步更新文档
-3. **添加测试**：修复缺陷或新增行为时补回归测试
-4. **代码审查**：至少需要一位维护者审查
+```bash
+# Good commits
+git commit -m "feat(gemm): add Tensor Core WMMA implementation"
+git commit -m "fix(softmax): resolve numerical overflow for large inputs"
+git commit -m "docs: add FlashAttention optimization guide"
 
-### PR 检查清单
+# With body
+git commit -m "perf(gemm): implement double buffering" << 'EOF'
+- Add double buffer shared memory
+- Overlap memory load with computation
+- 1.75x speedup on A100
 
-- [ ] 代码遵循项目风格指南
-- [ ] 本地相关构建与测试通过
-- [ ] 添加了必要的测试
-- [ ] 更新了相关文档
-- [ ] Commit message 遵循规范
+Benchmarks: M=N=K=4096, time reduced from 2.0ms to 1.14ms
+EOF
+```
 
-## 问题？| Questions?
+---
 
-如有任何问题，请：
-- 查看 [文档](docs/)
-- 搜索 [Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
-- 创建新 Issue 提问
+## Pull Request Process
+
+### Before Submitting
+
+- [ ] Code compiles without warnings
+- [ ] All tests pass locally (`ctest --test-dir build --output-on-failure`)
+- [ ] New code has test coverage
+- [ ] Documentation updated if needed
+- [ ] Commit messages follow conventional commits
+- [ ] Branch is up to date with main
+
+### PR Template
+
+```markdown
+## Description
+Brief description of changes.
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Refactoring
+
+## Testing
+Describe tests added/modified.
+
+## Checklist
+- [ ] Tests pass locally
+- [ ] Documentation updated
+- [ ] No compiler warnings
+```
+
+### Review Process
+
+1. **Automated Checks**: CI runs formatting, linting, documentation builds
+2. **Code Review**: At least one maintainer reviews
+3. **Testing**: Reviewer verifies functionality on GPU machine if needed
+4. **Approval**: Maintainer approves and merges
+
+### After Merge
+
+- Delete your feature branch
+- Update your local main branch
+- Look for your contribution in the next release notes
+
+---
+
+## Questions?
+
+- Open a [Discussion](https://github.com/LessUp/hpc-ai-optimization-lab/discussions) for questions
+- Check [existing issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues) before creating new ones
+- Review [documentation](docs/) for technical details
+
+---
+
+Thank you for contributing! 🎉

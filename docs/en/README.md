@@ -1,6 +1,12 @@
-# 📚 HPC-AI-Optimization-Lab Documentation Center
+# 📚 HPC-AI-Optimization-Lab Documentation
 
-Welcome to the comprehensive documentation for HPC-AI-Optimization-Lab!
+Welcome to the comprehensive documentation for HPC-AI-Optimization-Lab! This documentation provides in-depth guides for CUDA kernel optimization techniques used in AI workloads.
+
+---
+
+## 🌍 Language / 语言
+
+**English** | [简体中文](../zh-CN/README.md)
 
 ---
 
@@ -10,20 +16,20 @@ Welcome to the comprehensive documentation for HPC-AI-Optimization-Lab!
 
 | Resource | Description |
 |----------|-------------|
-| [Main README](../README.md) | Project overview, build instructions, quick start |
-| [Examples Guide](../examples/README.md) | Runnable code examples |
-| [Contributing Guide](../CONTRIBUTING.md) | How to contribute to the project |
-| [Changelog](../CHANGELOG.md) | Version history and changes |
+| [Main README](../../README.md) | Project overview, build instructions, quick start |
+| [Architecture Overview](ARCHITECTURE.md) | Design patterns, module organization |
+| [API Reference](API_REFERENCE.md) | Complete API documentation |
+| [Examples](../../examples/README.md) | Runnable code examples |
 
-### Technical Documentation
+### Technical Guides
 
-| Document | Topic | Difficulty | Estimated Time |
-|----------|-------|------------|----------------|
-| [Memory Optimization](01_gemm_optimization.md) | Coalescing, vectorization, shared memory | ⭐⭐ | 2-3 hours |
-| [GEMM Optimization](01_gemm_optimization.md) | 7-step matrix multiplication optimization | ⭐⭐⭐⭐ | 4-6 hours |
-| [Reduction Optimization](03_reduction_optimization.md) | Warp shuffle, online softmax, LayerNorm | ⭐⭐⭐ | 3-4 hours |
-| [FlashAttention](04_flash_attention.md) | IO-aware attention, tiling, online softmax | ⭐⭐⭐⭐ | 4-5 hours |
-| [CUDA 13 Features](05_cuda13_features.md) | Hopper architecture: TMA, Clusters, FP8 | ⭐⭐⭐⭐⭐ | 5-6 hours |
+| Document | Topic | Difficulty | Est. Time |
+|----------|-------|------------|-----------|
+| [Memory Optimization](02_memory_optimization.md) | Coalesced access, vectorization, shared memory | ⭐⭐ | 2-3 hrs |
+| [GEMM Optimization](01_gemm_optimization.md) | 7-step matrix multiplication optimization | ⭐⭐⭐⭐ | 4-6 hrs |
+| [Reduction Optimization](03_reduction_optimization.md) | Warp shuffle, online softmax, LayerNorm | ⭐⭐⭐ | 3-4 hrs |
+| [FlashAttention](04_flash_attention.md) | IO-aware attention, tiling, online softmax | ⭐⭐⭐⭐ | 4-5 hrs |
+| [CUDA 13 Features](05_cuda13_features.md) | Hopper architecture: TMA, Clusters, FP8 | ⭐⭐⭐⭐⭐ | 5-6 hrs |
 
 ---
 
@@ -46,7 +52,7 @@ Step 2: Reduction Operations
         
 Step 3: GEMM Basics
         └── Naive implementation
-        └── Shared memory tiling (Step 1-2)
+        └── Shared memory tiling (Steps 1-2)
 ```
 
 **Recommended Reading Order**:
@@ -86,7 +92,6 @@ Step 1: Hopper Architecture
         
 Step 2: Advanced Topics
         └── CUTLASS source code analysis
-        └── Latest research papers
         └── Custom kernel development
 ```
 
@@ -97,20 +102,20 @@ Step 2: Advanced Topics
 
 ---
 
-## 🛠️ Reference Quick Links
+## 🛠️ Quick Reference
 
 ### Optimization Techniques Summary
 
-| Technique | Use Case | Expected Speedup | Where to Learn |
-|-----------|----------|------------------|----------------|
-| Coalesced Access | All kernels | 2-10× | Memory Optimization |
-| Vectorization (float4) | Elementwise | 1.5-2× | Memory Optimization |
-| Grid Stride Loop | Large inputs | 1.2-1.5× | Memory Optimization |
-| Shared Memory | Data reuse | 2-5× | GEMM Optimization |
-| Warp Shuffle | Reductions | 5-10× | Reduction Optimization |
-| Tensor Core | Matrix ops | 10-20× | GEMM Optimization |
-| TMA | Large copies | 1.5-2× | CUDA 13 Features |
-| Online Softmax | Attention | 3-5× | FlashAttention |
+| Technique | Use Case | Expected Speedup | Documentation |
+|-----------|----------|------------------|---------------|
+| Coalesced Access | All kernels | 2-10× | [Memory Optimization](02_memory_optimization.md) |
+| Vectorization (float4) | Elementwise | 1.5-2× | [Memory Optimization](02_memory_optimization.md) |
+| Grid Stride Loop | Large inputs | 1.2-1.5× | [Memory Optimization](02_memory_optimization.md) |
+| Shared Memory | Data reuse | 2-5× | [GEMM Optimization](01_gemm_optimization.md) |
+| Warp Shuffle | Reductions | 5-10× | [Reduction Optimization](03_reduction_optimization.md) |
+| Tensor Core | Matrix ops | 10-20× | [GEMM Optimization](01_gemm_optimization.md) |
+| TMA | Large copies | 1.5-2× | [CUDA 13 Features](05_cuda13_features.md) |
+| Online Softmax | Attention | 3-5× | [FlashAttention](04_flash_attention.md) |
 
 ### Performance Profiling Commands
 
@@ -134,10 +139,10 @@ ncu --metrics gpu__time_duration.sum,dram__throughput.avg.pct_of_peak_sustained_
 | Issue | Cause | Solution | Reference |
 |-------|-------|----------|-----------|
 | Low occupancy | Too many registers | Reduce register usage, use shared memory | Memory Opt §4 |
-| Bank conflicts | Shared memory access pattern | Add padding to shared memory arrays | Memory Opt §4 |
-| Poor bandwidth | Non-coalesced access | Restructure memory access patterns | Memory Opt §1 |
-| Low Tensor Core utilization | Non-multiple-of-16 dimensions | Pad matrices to multiples of 16 | GEMM Opt §5 |
-| Numerical instability | Floating point precision | Use Welford's algorithm | Reduction Opt §5 |
+| Bank conflicts | Shared memory access pattern | Add padding | Memory Opt §4 |
+| Poor bandwidth | Non-coalesced access | Restructure memory access | Memory Opt §1 |
+| Low Tensor Core util | Dimensions not multiple of 16 | Pad matrices | GEMM Opt §5 |
+| Numerical instability | FP precision issues | Use Welford's algorithm | Reduction Opt §5 |
 
 ---
 
@@ -157,24 +162,23 @@ pip install sphinx sphinx-rtd-theme breathe myst-parser sphinx-copybutton
 
 ```bash
 # C++/CUDA API documentation
-cd docs
 doxygen Doxyfile
 # Output: docs/api/html/
 
 # Python API documentation
-cd docs/python
+cd python
 sphinx-build -b html . _build/html
-# Output: docs/python/_build/html/
+# Output: python/_build/html/
 ```
 
 ### Preview Locally
 
 ```bash
 # C++ API docs
-python -m http.server 8000 -d docs/api/html
+python -m http.server 8000 -d api/html
 
 # Python API docs  
-python -m http.server 8001 -d docs/python/_build/html
+python -m http.server 8001 -d python/_build/html
 ```
 
 ---
@@ -199,8 +203,8 @@ python -m http.server 8001 -d docs/python/_build/html
 ### Recommended Blogs & Tutorials
 
 - [How to Optimize a CUDA Matmul Kernel](https://siboehm.com/articles/22/CUDA-MMM) - Step-by-step GEMM optimization
-- [NVIDIA Developer Blog](https://developer.nvidia.com/blog/) - Official tutorials and case studies
-- [Mark Harris' Optimizing CUDA](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf) - Classic reduction optimization
+- [NVIDIA Developer Blog](https://developer.nvidia.com/blog/) - Official tutorials
+- [Mark Harris' Optimizing CUDA](https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf) - Classic reduction
 
 ---
 
@@ -228,7 +232,6 @@ Brief introduction paragraph.
 // Always include necessary headers
 #include "03_gemm/gemm.cuh"
 
-// Use descriptive variable names
 int matrix_size = 1024;  // Use meaningful names
 ```
 
@@ -255,5 +258,9 @@ int matrix_size = 1024;  // Use meaningful names
 **Happy Learning! 🚀**
 
 If you find this documentation helpful, please consider ⭐ starring the repository!
+
+[Documentation Portal](https://lessup.github.io/hpc-ai-optimization-lab) · 
+[Report Bug](https://github.com/LessUp/hpc-ai-optimization-lab/issues) · 
+[Request Feature](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
 
 </div>

@@ -2,43 +2,38 @@
 #include "../common/cuda_check.cuh"
 #include <stdexcept>
 #include <cooperative_groups.h>
+#include <cooperative_groups/memcpy_async.h>
 
 namespace hpc::cuda13 {
 
-bool is_hopper_architecture() {
-    int device = 0;
-    cudaDeviceProp prop;
-    CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
-    return prop.major >= 9;
-}
-
 namespace cg = cooperative_groups;
 
+// Simplified async copy kernel using cuda::memcpy_async (available in CUDA 11+)
 template <typename T, int NUM_CHANNELS>
 __global__ void tma_copy_kernel(const T* __restrict__ src,
                                  T* __restrict__ dst,
                                  int rows, int cols) {
-    extern __shared__ char smem[];
-    using TMA_LOAD = cuda::pipeline::async_load_factory<NUM_CHANNELS, T>;
-    using TMA_STORE = cuda::pipeline::async_store_factory<NUM_CHANNELS, T>;
-    
-    __shared__ TMA_LOAD tma_load;
-    __shared__ TMA_STORE tma_store;
-    
-    cg::thread_block tile = cg::this_thread_block();
-    cuda::pipeline::prologue consume = cuda::pipeline::make_prologue();
-    
     int row = blockIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    if (row < rows && col < cols) {
-        cuda::memcpy_async(dst + row * cols + col, 
-                          src + row * cols + col,
-                          sizeof(T) * NUM_CHANNELS, consume);
+    int col_start = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (row < rows) {
+        cg::thread_block block = cg::this_thread_block();
+
+        // Use cooperative groups memcpy_async for efficient async copy
+        for (int col = col_start; col < cols; col += blockDim.x * gridDim.x) {
+            if (col + NUM_CHANNELS <= cols) {
+                cg::memcpy_async(block, dst + row * cols + col,
+                                       src + row * cols + col,
+                                       sizeof(T) * NUM_CHANNELS);
+            } else {
+                // Handle remaining elements
+                for (int i = col; i < cols; ++i) {
+                    dst[row * cols + i] = src[row * cols + i];
+                }
+            }
+        }
+        cg::wait(block);
     }
-    
-    cuda::pipeline::commit consume;
-    consume.wait();
 }
 
 template <typename T>
@@ -47,7 +42,7 @@ __global__ void async_copy_kernel(const T* __restrict__ src,
                                    int rows, int cols) {
     int row = blockIdx.y;
     int col_start = blockIdx.x * blockDim.x + threadIdx.x;
-    
+
     if (row < rows && col_start < cols) {
         dst[row * cols + col_start] = src[row * cols + col_start];
     }

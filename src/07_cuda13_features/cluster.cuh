@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include "../common/types.cuh"
 
 namespace hpc::cuda13 {
 
@@ -10,8 +11,6 @@ struct ClusterConfig {
     dim3 block_dims;
     bool use_cluster = true;
 };
-
-bool is_hopper_architecture();
 
 template <typename T>
 void cluster_reduce(const T* input, T* output, size_t n,

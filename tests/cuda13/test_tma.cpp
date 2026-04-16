@@ -15,7 +15,7 @@ RC_GTEST_PROP(TMATest, FallbackCopyPreservesDataIntegrity, ()) {
     hpc::Tensor<float> d_dst(rows * cols);
     d_src.copy_from_host(input);
     
-    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols);
+    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols, hpc::cuda13::TMAConfig{});
     cudaDeviceSynchronize();
     
     auto result = d_dst.to_host();
@@ -33,7 +33,7 @@ TEST(TMATest, FallbackCopyMatchesInput) {
     hpc::Tensor<float> d_dst(rows * cols);
     d_src.copy_from_host(input);
     
-    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols);
+    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols, hpc::cuda13::TMAConfig{});
     cudaDeviceSynchronize();
     
     auto result = d_dst.to_host();
