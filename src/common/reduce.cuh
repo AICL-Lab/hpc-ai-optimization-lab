@@ -28,7 +28,8 @@ __device__ __forceinline__ float block_reduce_sum(float val) {
 
     val = warp_reduce_sum(val);
 
-    if (lane == 0) shared[wid] = val;
+    if (lane == 0)
+        shared[wid] = val;
     __syncthreads();
 
     // Only first warp does final reduction
@@ -46,7 +47,8 @@ __device__ __forceinline__ float block_reduce_max(float val) {
 
     val = warp_reduce_max(val);
 
-    if (lane == 0) shared[wid] = val;
+    if (lane == 0)
+        shared[wid] = val;
     __syncthreads();
 
     val = (threadIdx.x < blockDim.x / 32) ? shared[lane] : -FLT_MAX;
@@ -56,4 +58,4 @@ __device__ __forceinline__ float block_reduce_max(float val) {
     return val;
 }
 
-} // namespace hpc
+}  // namespace hpc

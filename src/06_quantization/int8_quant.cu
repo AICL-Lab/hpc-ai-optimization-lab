@@ -1,39 +1,38 @@
-#include "int8_quant.cuh"
-#include "../common/cuda_check.cuh"
-#include "../common/reduce.cuh"
 #include <cfloat>
 #include <stdexcept>
 
+#include "../common/cuda_check.cuh"
+#include "../common/reduce.cuh"
+#include "int8_quant.cuh"
+
 namespace hpc::quantization {
 
-__global__ void compute_scale_kernel(const float* __restrict__ input,
-                                      float* __restrict__ scale,
-                                      int rows, int cols) {
+__global__ void compute_scale_kernel(const float* __restrict__ input, float* __restrict__ scale,
+                                     int rows, int cols) {
     int row = blockIdx.x;
-    if (row >= rows) return;
-    
+    if (row >= rows)
+        return;
+
     const float* row_input = input + row * cols;
     float max_abs = 0.0f;
-    
+
     for (int i = threadIdx.x; i < cols; i += blockDim.x) {
         max_abs = fmaxf(max_abs, fabsf(row_input[i]));
     }
-    
+
     // Block-level reduction for correct results with >32 threads
     max_abs = hpc::block_reduce_max(max_abs);
-    
+
     if (threadIdx.x == 0) {
         scale[row] = max_abs > 0.0f ? (max_abs / 127.0f) : 1.0f;
     }
 }
 
-__global__ void quantize_kernel(const float* __restrict__ input,
-                                 int8_t* __restrict__ output,
-                                 const float* __restrict__ scale,
-                                 int rows, int cols) {
+__global__ void quantize_kernel(const float* __restrict__ input, int8_t* __restrict__ output,
+                                const float* __restrict__ scale, int rows, int cols) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int total = rows * cols;
-    
+
     for (; idx < total; idx += blockDim.x * gridDim.x) {
         int row = idx / cols;
         float row_scale = scale[row];
@@ -48,10 +47,11 @@ __global__ void quantize_kernel(const float* __restrict__ input,
     }
 }
 
-void quantize_int8(const float* input, int8_t* output, float* scale,
-                   int rows, int cols, cudaStream_t stream) {
+void quantize_int8(const float* input, int8_t* output, float* scale, int rows, int cols,
+                   cudaStream_t stream) {
     if (input == nullptr || output == nullptr || scale == nullptr) {
-        throw std::invalid_argument("quantize_int8 expects non-null input, output, and scale pointers");
+        throw std::invalid_argument(
+            "quantize_int8 expects non-null input, output, and scale pointers");
     }
     if (rows <= 0 || cols <= 0) {
         throw std::invalid_argument("quantize_int8 expects rows and cols to be positive");
@@ -68,22 +68,22 @@ void quantize_int8(const float* input, int8_t* output, float* scale,
 }
 
 __global__ void dequantize_int8_kernel(const int8_t* __restrict__ input,
-                                        const float* __restrict__ scale,
-                                        float* __restrict__ output,
-                                        int rows, int cols) {
+                                       const float* __restrict__ scale, float* __restrict__ output,
+                                       int rows, int cols) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int total = rows * cols;
-    
+
     if (idx < total) {
         int row = idx / cols;
         output[idx] = static_cast<float>(input[idx]) * scale[row];
     }
 }
 
-void dequantize_int8(const int8_t* input, const float* scale,
-                     float* output, int rows, int cols, cudaStream_t stream) {
+void dequantize_int8(const int8_t* input, const float* scale, float* output, int rows, int cols,
+                     cudaStream_t stream) {
     if (input == nullptr || output == nullptr || scale == nullptr) {
-        throw std::invalid_argument("dequantize_int8 expects non-null input, output, and scale pointers");
+        throw std::invalid_argument(
+            "dequantize_int8 expects non-null input, output, and scale pointers");
     }
     if (rows <= 0 || cols <= 0) {
         throw std::invalid_argument("dequantize_int8 expects rows and cols to be positive");
@@ -93,9 +93,8 @@ void dequantize_int8(const int8_t* input, const float* scale,
     int block_size = 256;
     int grid_size = (total + block_size - 1) / block_size;
 
-    dequantize_int8_kernel<<<grid_size, block_size, 0, stream>>>(
-        input, scale, output, rows, cols);
+    dequantize_int8_kernel<<<grid_size, block_size, 0, stream>>>(input, scale, output, rows, cols);
     CUDA_CHECK_LAST();
 }
 
-} // namespace hpc::quantization
+}  // namespace hpc::quantization

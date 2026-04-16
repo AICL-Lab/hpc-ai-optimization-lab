@@ -1,20 +1,21 @@
 #pragma once
 
-#include <cuda_runtime.h>
-#include <cuda_fp16.h>
 #include <cuda_bf16.h>
-#include <vector>
+#include <cuda_fp16.h>
+#include <cuda_runtime.h>
+
 #include <concepts>
 #include <cstring>
+#include <vector>
+
 #include "cuda_check.cuh"
 
 namespace hpc {
 
 // Concept for CUDA-compatible numeric types
 template <typename T>
-concept CudaNumeric = std::is_arithmetic_v<T> ||
-                      std::is_same_v<T, __half> ||
-                      std::is_same_v<T, __nv_bfloat16>;
+concept CudaNumeric =
+    std::is_arithmetic_v<T> || std::is_same_v<T, __half> || std::is_same_v<T, __nv_bfloat16>;
 
 // RAII wrapper for GPU memory
 template <CudaNumeric T>
@@ -33,15 +34,15 @@ public:
     }
 
     // Move semantics
-    Tensor(Tensor&& other) noexcept
-        : size_(other.size_), data_(other.data_) {
+    Tensor(Tensor&& other) noexcept : size_(other.size_), data_(other.data_) {
         other.data_ = nullptr;
         other.size_ = 0;
     }
 
     Tensor& operator=(Tensor&& other) noexcept {
         if (this != &other) {
-            if (data_) cudaFree(data_);
+            if (data_)
+                cudaFree(data_);
             data_ = other.data_;
             size_ = other.size_;
             other.data_ = nullptr;
@@ -55,11 +56,21 @@ public:
     Tensor& operator=(const Tensor&) = delete;
 
     // Accessors
-    [[nodiscard]] T* data() noexcept { return data_; }
-    [[nodiscard]] const T* data() const noexcept { return data_; }
-    [[nodiscard]] size_t size() const noexcept { return size_; }
-    [[nodiscard]] size_t bytes() const noexcept { return size_ * sizeof(T); }
-    [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
+    [[nodiscard]] T* data() noexcept {
+        return data_;
+    }
+    [[nodiscard]] const T* data() const noexcept {
+        return data_;
+    }
+    [[nodiscard]] size_t size() const noexcept {
+        return size_;
+    }
+    [[nodiscard]] size_t bytes() const noexcept {
+        return size_ * sizeof(T);
+    }
+    [[nodiscard]] bool empty() const noexcept {
+        return size_ == 0;
+    }
 
     // Host-device transfers
     void copy_from_host(const T* host_data) {
@@ -87,13 +98,11 @@ public:
 
     // Async versions
     void copy_from_host_async(const T* host_data, cudaStream_t stream) {
-        CUDA_CHECK(cudaMemcpyAsync(data_, host_data, bytes(),
-                                   cudaMemcpyHostToDevice, stream));
+        CUDA_CHECK(cudaMemcpyAsync(data_, host_data, bytes(), cudaMemcpyHostToDevice, stream));
     }
 
     void copy_to_host_async(T* host_data, cudaStream_t stream) const {
-        CUDA_CHECK(cudaMemcpyAsync(host_data, data_, bytes(),
-                                   cudaMemcpyDeviceToHost, stream));
+        CUDA_CHECK(cudaMemcpyAsync(host_data, data_, bytes(), cudaMemcpyDeviceToHost, stream));
     }
 
 private:
@@ -101,4 +110,4 @@ private:
     T* data_;
 };
 
-} // namespace hpc
+}  // namespace hpc

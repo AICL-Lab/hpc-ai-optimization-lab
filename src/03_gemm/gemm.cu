@@ -1,6 +1,7 @@
-#include "gemm.cuh"
-#include "../common/cuda_check.cuh"
 #include <stdexcept>
+
+#include "../common/cuda_check.cuh"
+#include "gemm.cuh"
 
 namespace hpc::gemm {
 
@@ -15,17 +16,14 @@ void validate_gemm_args(const void* A, const void* B, const void* C, int M, int 
     }
 }
 
-} // namespace
+}  // namespace
 
 constexpr int TILE_SIZE = 32;
 
 // Naive GEMM: each thread computes one element
 template <typename T>
-__global__ void gemm_naive_kernel(const T* __restrict__ A,
-                                   const T* __restrict__ B,
-                                   T* __restrict__ C,
-                                   int M, int N, int K,
-                                   float alpha, float beta) {
+__global__ void gemm_naive_kernel(const T* __restrict__ A, const T* __restrict__ B,
+                                  T* __restrict__ C, int M, int N, int K, float alpha, float beta) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -34,17 +32,16 @@ __global__ void gemm_naive_kernel(const T* __restrict__ A,
         for (int k = 0; k < K; ++k) {
             sum += static_cast<float>(A[row * K + k]) * static_cast<float>(B[k * N + col]);
         }
-        C[row * N + col] = static_cast<T>(alpha * sum + beta * static_cast<float>(C[row * N + col]));
+        C[row * N + col] =
+            static_cast<T>(alpha * sum + beta * static_cast<float>(C[row * N + col]));
     }
 }
 
 // Shared memory tiling GEMM
 template <typename T>
-__global__ void gemm_shared_kernel(const T* __restrict__ A,
-                                    const T* __restrict__ B,
-                                    T* __restrict__ C,
-                                    int M, int N, int K,
-                                    float alpha, float beta) {
+__global__ void gemm_shared_kernel(const T* __restrict__ A, const T* __restrict__ B,
+                                   T* __restrict__ C, int M, int N, int K, float alpha,
+                                   float beta) {
     __shared__ float As[TILE_SIZE][TILE_SIZE];
     __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
@@ -81,14 +78,14 @@ __global__ void gemm_shared_kernel(const T* __restrict__ A,
     }
 
     if (row < M && col < N) {
-        C[row * N + col] = static_cast<T>(alpha * sum + beta * static_cast<float>(C[row * N + col]));
+        C[row * N + col] =
+            static_cast<T>(alpha * sum + beta * static_cast<float>(C[row * N + col]));
     }
 }
 
 template <>
-void gemm<float, GemmOpt::Naive>(const float* A, const float* B, float* C,
-                                  int M, int N, int K,
-                                  float alpha, float beta, cudaStream_t stream) {
+void gemm<float, GemmOpt::Naive>(const float* A, const float* B, float* C, int M, int N, int K,
+                                 float alpha, float beta, cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     dim3 block(16, 16);
     dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
@@ -97,9 +94,8 @@ void gemm<float, GemmOpt::Naive>(const float* A, const float* B, float* C,
 }
 
 template <>
-void gemm<float, GemmOpt::SharedMemTiling>(const float* A, const float* B, float* C,
-                                            int M, int N, int K,
-                                            float alpha, float beta, cudaStream_t stream) {
+void gemm<float, GemmOpt::SharedMemTiling>(const float* A, const float* B, float* C, int M, int N,
+                                           int K, float alpha, float beta, cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
@@ -108,9 +104,10 @@ void gemm<float, GemmOpt::SharedMemTiling>(const float* A, const float* B, float
 }
 
 template <>
-void gemm<__half, GemmOpt::SharedMemTiling>(const __half* A, const __half* B, __half* C,
-                                             int M, int N, int K,
-                                             float alpha, float beta, cudaStream_t stream) {
+void gemm<__half, GemmOpt::SharedMemTiling>(const __half* A, const __half* B, __half* C, int M,
+                                            int N, int K, float alpha, float beta,
+                                            cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
     gemm_shared_kernel<__half><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
@@ -119,11 +116,9 @@ void gemm<__half, GemmOpt::SharedMemTiling>(const __half* A, const __half* B, __
 
 // Double buffering GEMM: overlap computation with memory loading
 template <typename T>
-__global__ void gemm_double_buffer_kernel(const T* __restrict__ A,
-                                           const T* __restrict__ B,
-                                           T* __restrict__ C,
-                                           int M, int N, int K,
-                                           float alpha, float beta) {
+__global__ void gemm_double_buffer_kernel(const T* __restrict__ A, const T* __restrict__ B,
+                                          T* __restrict__ C, int M, int N, int K, float alpha,
+                                          float beta) {
     // Double buffer: two sets of shared memory tiles
     __shared__ float As[2][TILE_SIZE][TILE_SIZE];
     __shared__ float Bs[2][TILE_SIZE][TILE_SIZE];
@@ -175,8 +170,8 @@ __global__ void gemm_double_buffer_kernel(const T* __restrict__ A,
             }
         }
 
-        // Compute using current tile
-        #pragma unroll
+// Compute using current tile
+#pragma unroll
         for (int k = 0; k < TILE_SIZE; ++k) {
             sum += As[read_stage][threadIdx.y][k] * Bs[read_stage][k][threadIdx.x];
         }
@@ -185,14 +180,14 @@ __global__ void gemm_double_buffer_kernel(const T* __restrict__ A,
     }
 
     if (row < M && col < N) {
-        C[row * N + col] = static_cast<T>(alpha * sum + beta * static_cast<float>(C[row * N + col]));
+        C[row * N + col] =
+            static_cast<T>(alpha * sum + beta * static_cast<float>(C[row * N + col]));
     }
 }
 
 template <>
-void gemm<float, GemmOpt::DoubleBuffer>(const float* A, const float* B, float* C,
-                                         int M, int N, int K,
-                                         float alpha, float beta, cudaStream_t stream) {
+void gemm<float, GemmOpt::DoubleBuffer>(const float* A, const float* B, float* C, int M, int N,
+                                        int K, float alpha, float beta, cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
@@ -201,9 +196,9 @@ void gemm<float, GemmOpt::DoubleBuffer>(const float* A, const float* B, float* C
 }
 
 template <>
-void gemm<__half, GemmOpt::DoubleBuffer>(const __half* A, const __half* B, __half* C,
-                                          int M, int N, int K,
-                                          float alpha, float beta, cudaStream_t stream) {
+void gemm<__half, GemmOpt::DoubleBuffer>(const __half* A, const __half* B, __half* C, int M, int N,
+                                         int K, float alpha, float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
     gemm_double_buffer_kernel<__half><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
@@ -213,16 +208,14 @@ void gemm<__half, GemmOpt::DoubleBuffer>(const __half* A, const __half* B, __hal
 // Register tiling GEMM: each thread computes a small tile in registers
 constexpr int REG_TILE_M = 8;  // Each thread computes 8x8 output elements
 constexpr int REG_TILE_N = 8;
-constexpr int BLK_M = 128;     // Block tile size
+constexpr int BLK_M = 128;  // Block tile size
 constexpr int BLK_N = 128;
 constexpr int BLK_K = 8;
 
 template <typename T>
-__global__ void gemm_register_tiling_kernel(const T* __restrict__ A,
-                                             const T* __restrict__ B,
-                                             T* __restrict__ C,
-                                             int M, int N, int K,
-                                             float alpha, float beta) {
+__global__ void gemm_register_tiling_kernel(const T* __restrict__ A, const T* __restrict__ B,
+                                            T* __restrict__ C, int M, int N, int K, float alpha,
+                                            float beta) {
     // Thread block computes BLK_M x BLK_N output tile
     // Each thread computes REG_TILE_M x REG_TILE_N elements
     constexpr int THREADS_M = BLK_M / REG_TILE_M;  // 16 threads in M
@@ -269,27 +262,27 @@ __global__ void gemm_register_tiling_kernel(const T* __restrict__ A,
 
         __syncthreads();
 
-        // Compute using register tiling
-        #pragma unroll
+// Compute using register tiling
+#pragma unroll
         for (int k = 0; k < BLK_K; ++k) {
             // Load A fragment into registers
             float reg_a[REG_TILE_M];
-            #pragma unroll
+#pragma unroll
             for (int m = 0; m < REG_TILE_M; ++m) {
                 reg_a[m] = As[k][thread_m * REG_TILE_M + m];
             }
 
             // Load B fragment into registers
             float reg_b[REG_TILE_N];
-            #pragma unroll
+#pragma unroll
             for (int n = 0; n < REG_TILE_N; ++n) {
                 reg_b[n] = Bs[k][thread_n * REG_TILE_N + n];
             }
 
-            // Outer product
-            #pragma unroll
+// Outer product
+#pragma unroll
             for (int m = 0; m < REG_TILE_M; ++m) {
-                #pragma unroll
+#pragma unroll
                 for (int n = 0; n < REG_TILE_N; ++n) {
                     reg_c[m][n] += reg_a[m] * reg_b[n];
                 }
@@ -299,10 +292,10 @@ __global__ void gemm_register_tiling_kernel(const T* __restrict__ A,
         __syncthreads();
     }
 
-    // Write results to global memory
-    #pragma unroll
+// Write results to global memory
+#pragma unroll
     for (int m = 0; m < REG_TILE_M; ++m) {
-        #pragma unroll
+#pragma unroll
         for (int n = 0; n < REG_TILE_N; ++n) {
             int global_m = block_row + thread_m * REG_TILE_M + m;
             int global_n = block_col + thread_n * REG_TILE_N + n;
@@ -315,9 +308,8 @@ __global__ void gemm_register_tiling_kernel(const T* __restrict__ A,
 }
 
 template <>
-void gemm<float, GemmOpt::RegisterTiling>(const float* A, const float* B, float* C,
-                                           int M, int N, int K,
-                                           float alpha, float beta, cudaStream_t stream) {
+void gemm<float, GemmOpt::RegisterTiling>(const float* A, const float* B, float* C, int M, int N,
+                                          int K, float alpha, float beta, cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     constexpr int THREADS_PER_BLOCK = (BLK_M / REG_TILE_M) * (BLK_N / REG_TILE_N);
     dim3 block(THREADS_PER_BLOCK);
@@ -327,16 +319,16 @@ void gemm<float, GemmOpt::RegisterTiling>(const float* A, const float* B, float*
 }
 
 template <>
-void gemm<__half, GemmOpt::RegisterTiling>(const __half* A, const __half* B, __half* C,
-                                            int M, int N, int K,
-                                            float alpha, float beta, cudaStream_t stream) {
+void gemm<__half, GemmOpt::RegisterTiling>(const __half* A, const __half* B, __half* C, int M,
+                                           int N, int K, float alpha, float beta,
+                                           cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     constexpr int THREADS_PER_BLOCK = (BLK_M / REG_TILE_M) * (BLK_N / REG_TILE_N);
     dim3 block(THREADS_PER_BLOCK);
     dim3 grid((N + BLK_N - 1) / BLK_N, (M + BLK_M - 1) / BLK_M);
     gemm_register_tiling_kernel<__half><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
     CUDA_CHECK_LAST();
 }
-
 
 // Tensor Core GEMM using WMMA API
 #include <mma.h>
@@ -352,11 +344,9 @@ constexpr int WMMA_BLK_M = 64;
 constexpr int WMMA_BLK_N = 64;
 constexpr int WMMA_BLK_K = 16;
 
-__global__ void gemm_wmma_kernel(const __half* __restrict__ A,
-                                  const __half* __restrict__ B,
-                                  float* __restrict__ C,
-                                  int M, int N, int K,
-                                  float alpha, float beta) {
+__global__ void gemm_wmma_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                 float* __restrict__ C, int M, int N, int K, float alpha,
+                                 float beta) {
     // Warp-level matrix fragments
     wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, __half, wmma::row_major> a_frag;
     wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, __half, wmma::row_major> b_frag;
@@ -412,11 +402,9 @@ __global__ void gemm_wmma_kernel(const __half* __restrict__ A,
 }
 
 // WMMA kernel for half precision output
-__global__ void gemm_wmma_half_kernel(const __half* __restrict__ A,
-                                       const __half* __restrict__ B,
-                                       __half* __restrict__ C,
-                                       int M, int N, int K,
-                                       float alpha, float beta) {
+__global__ void gemm_wmma_half_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                      __half* __restrict__ C, int M, int N, int K, float alpha,
+                                      float beta) {
     wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, __half, wmma::row_major> a_frag;
     wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, __half, wmma::row_major> b_frag;
     wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, __half> c_frag;
@@ -450,9 +438,9 @@ __global__ void gemm_wmma_half_kernel(const __half* __restrict__ A,
 }
 
 template <>
-void gemm<__half, GemmOpt::TensorCoreWMMA>(const __half* A, const __half* B, __half* C,
-                                            int M, int N, int K,
-                                            float alpha, float beta, cudaStream_t stream) {
+void gemm<__half, GemmOpt::TensorCoreWMMA>(const __half* A, const __half* B, __half* C, int M,
+                                           int N, int K, float alpha, float beta,
+                                           cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     if ((M % 16) != 0 || (N % 16) != 0 || (K % 16) != 0) {
         throw std::invalid_argument("TensorCoreWMMA requires M, N, and K to be multiples of 16");
@@ -468,13 +456,12 @@ void gemm<__half, GemmOpt::TensorCoreWMMA>(const __half* A, const __half* B, __h
     CUDA_CHECK_LAST();
 }
 
-
 // Tensor Core GEMM using MMA PTX instructions (more low-level control)
 // This provides finer control over Tensor Core operations
 
 // MMA PTX m16n8k16 for FP16
-__device__ __forceinline__ void mma_m16n8k16_fp16(
-    uint32_t* d, const uint32_t* a, const uint32_t* b, const uint32_t* c) {
+__device__ __forceinline__ void mma_m16n8k16_fp16(uint32_t* d, const uint32_t* a, const uint32_t* b,
+                                                  const uint32_t* c) {
     asm volatile(
         "mma.sync.aligned.m16n8k16.row.col.f16.f16.f16.f16 "
         "{%0, %1}, "
@@ -482,20 +469,15 @@ __device__ __forceinline__ void mma_m16n8k16_fp16(
         "{%6, %7}, "
         "{%8, %9};\n"
         : "=r"(d[0]), "=r"(d[1])
-        : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]),
-          "r"(b[0]), "r"(b[1]),
-          "r"(c[0]), "r"(c[1])
-    );
+        : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b[0]), "r"(b[1]), "r"(c[0]), "r"(c[1]));
 }
 
 // Simplified MMA PTX kernel (demonstration)
-__global__ void gemm_mma_ptx_kernel(const __half* __restrict__ A,
-                                     const __half* __restrict__ B,
-                                     __half* __restrict__ C,
-                                     int M, int N, int K) {
+__global__ void gemm_mma_ptx_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                    __half* __restrict__ C, int M, int N, int K) {
     // This is a simplified demonstration of MMA PTX usage
     // Full implementation would require careful register management
-    
+
     constexpr int MMA_M = 16;
     constexpr int MMA_N = 8;
     constexpr int MMA_K = 16;
@@ -521,7 +503,7 @@ __global__ void gemm_mma_ptx_kernel(const __half* __restrict__ A,
 
         // In a real implementation, we would load data here
         // For demonstration, we use WMMA as fallback
-        
+
         // Perform MMA
         // mma_m16n8k16_fp16(c_regs, a_regs, b_regs, c_regs);
     }
@@ -531,14 +513,12 @@ __global__ void gemm_mma_ptx_kernel(const __half* __restrict__ A,
 }
 
 template <>
-void gemm<__half, GemmOpt::TensorCoreMMA>(const __half* A, const __half* B, __half* C,
-                                           int M, int N, int K,
-                                           float alpha, float beta, cudaStream_t stream) {
+void gemm<__half, GemmOpt::TensorCoreMMA>(const __half* A, const __half* B, __half* C, int M, int N,
+                                          int K, float alpha, float beta, cudaStream_t stream) {
     // For now, fall back to WMMA implementation
     // Full MMA PTX implementation requires extensive register management
     gemm<__half, GemmOpt::TensorCoreWMMA>(A, B, C, M, N, K, alpha, beta, stream);
 }
-
 
 // Software Pipelining GEMM: hide memory latency with multi-stage pipeline
 constexpr int PIPE_STAGES = 3;
@@ -547,13 +527,12 @@ constexpr int PIPE_TILE_N = 64;
 constexpr int PIPE_TILE_K = 8;
 
 template <typename T>
-__global__ void gemm_software_pipeline_kernel(const T* __restrict__ A,
-                                               const T* __restrict__ B,
-                                               T* __restrict__ C,
-                                               int M, int N, int K,
-                                               float alpha, float beta) {
+__global__ void gemm_software_pipeline_kernel(const T* __restrict__ A, const T* __restrict__ B,
+                                              T* __restrict__ C, int M, int N, int K, float alpha,
+                                              float beta) {
     // Multi-stage shared memory buffers
-    __shared__ float As[PIPE_STAGES][PIPE_TILE_K][PIPE_TILE_M + 1];  // +1 for bank conflict avoidance
+    __shared__ float As[PIPE_STAGES][PIPE_TILE_K]
+                       [PIPE_TILE_M + 1];  // +1 for bank conflict avoidance
     __shared__ float Bs[PIPE_STAGES][PIPE_TILE_K][PIPE_TILE_N + 1];
 
     int block_row = blockIdx.y * PIPE_TILE_M;
@@ -567,8 +546,8 @@ __global__ void gemm_software_pipeline_kernel(const T* __restrict__ A,
 
     int num_k_tiles = (K + PIPE_TILE_K - 1) / PIPE_TILE_K;
 
-    // Prologue: fill pipeline stages
-    #pragma unroll
+// Prologue: fill pipeline stages
+#pragma unroll
     for (int stage = 0; stage < PIPE_STAGES - 1 && stage < num_k_tiles; ++stage) {
         int k_offset = stage * PIPE_TILE_K;
 
@@ -636,26 +615,26 @@ __global__ void gemm_software_pipeline_kernel(const T* __restrict__ A,
             }
         }
 
-        // Compute using current stage
-        #pragma unroll
+// Compute using current stage
+#pragma unroll
         for (int k = 0; k < PIPE_TILE_K; ++k) {
             float a_val[4], b_val[4];
 
-            #pragma unroll
+#pragma unroll
             for (int m = 0; m < 4; ++m) {
                 int m_idx = thread_row * 4 + m;
                 a_val[m] = As[compute_stage][k][m_idx];
             }
 
-            #pragma unroll
+#pragma unroll
             for (int n = 0; n < 4; ++n) {
                 int n_idx = thread_col * 4 + n;
                 b_val[n] = Bs[compute_stage][k][n_idx];
             }
 
-            #pragma unroll
+#pragma unroll
             for (int m = 0; m < 4; ++m) {
-                #pragma unroll
+#pragma unroll
                 for (int n = 0; n < 4; ++n) {
                     reg_c[m][n] += a_val[m] * b_val[n];
                 }
@@ -665,10 +644,10 @@ __global__ void gemm_software_pipeline_kernel(const T* __restrict__ A,
         __syncthreads();
     }
 
-    // Write results
-    #pragma unroll
+// Write results
+#pragma unroll
     for (int m = 0; m < 4; ++m) {
-        #pragma unroll
+#pragma unroll
         for (int n = 0; n < 4; ++n) {
             int global_m = block_row + thread_row * 4 + m;
             int global_n = block_col + thread_col * 4 + n;
@@ -681,9 +660,8 @@ __global__ void gemm_software_pipeline_kernel(const T* __restrict__ A,
 }
 
 template <>
-void gemm<float, GemmOpt::SoftwarePipeline>(const float* A, const float* B, float* C,
-                                             int M, int N, int K,
-                                             float alpha, float beta, cudaStream_t stream) {
+void gemm<float, GemmOpt::SoftwarePipeline>(const float* A, const float* B, float* C, int M, int N,
+                                            int K, float alpha, float beta, cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     constexpr int THREADS_PER_BLOCK = 256;
     dim3 block(THREADS_PER_BLOCK);
@@ -693,24 +671,23 @@ void gemm<float, GemmOpt::SoftwarePipeline>(const float* A, const float* B, floa
 }
 
 template <>
-void gemm<__half, GemmOpt::SoftwarePipeline>(const __half* A, const __half* B, __half* C,
-                                              int M, int N, int K,
-                                              float alpha, float beta, cudaStream_t stream) {
+void gemm<__half, GemmOpt::SoftwarePipeline>(const __half* A, const __half* B, __half* C, int M,
+                                             int N, int K, float alpha, float beta,
+                                             cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
     constexpr int THREADS_PER_BLOCK = 256;
     dim3 block(THREADS_PER_BLOCK);
     dim3 grid((N + PIPE_TILE_N - 1) / PIPE_TILE_N, (M + PIPE_TILE_M - 1) / PIPE_TILE_M);
-    gemm_software_pipeline_kernel<__half><<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
+    gemm_software_pipeline_kernel<__half>
+        <<<grid, block, 0, stream>>>(A, B, C, M, N, K, alpha, beta);
     CUDA_CHECK_LAST();
 }
-
 
 // Int8 GEMM implementation
 template <>
 __global__ void gemm_shared_kernel<int8_t>(const int8_t* __restrict__ A,
-                                            const int8_t* __restrict__ B,
-                                            int8_t* __restrict__ C,
-                                            int M, int N, int K,
-                                            float alpha, float beta) {
+                                           const int8_t* __restrict__ B, int8_t* __restrict__ C,
+                                           int M, int N, int K, float alpha, float beta) {
     __shared__ int As[TILE_SIZE][TILE_SIZE];
     __shared__ int Bs[TILE_SIZE][TILE_SIZE];
 
@@ -745,7 +722,8 @@ __global__ void gemm_shared_kernel<int8_t>(const int8_t* __restrict__ A,
     }
 
     if (row < M && col < N) {
-        float result = alpha * static_cast<float>(sum) + beta * static_cast<float>(C[row * N + col]);
+        float result =
+            alpha * static_cast<float>(sum) + beta * static_cast<float>(C[row * N + col]);
         // Clamp to int8 range
         result = fmaxf(-128.0f, fminf(127.0f, result));
         C[row * N + col] = static_cast<int8_t>(result);
@@ -753,9 +731,9 @@ __global__ void gemm_shared_kernel<int8_t>(const int8_t* __restrict__ A,
 }
 
 template <>
-void gemm<int8_t, GemmOpt::SharedMemTiling>(const int8_t* A, const int8_t* B, int8_t* C,
-                                             int M, int N, int K,
-                                             float alpha, float beta, cudaStream_t stream) {
+void gemm<int8_t, GemmOpt::SharedMemTiling>(const int8_t* A, const int8_t* B, int8_t* C, int M,
+                                            int N, int K, float alpha, float beta,
+                                            cudaStream_t stream) {
     validate_gemm_args(A, B, C, M, N, K);
     dim3 block(TILE_SIZE, TILE_SIZE);
     dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE, (M + TILE_SIZE - 1) / TILE_SIZE);
@@ -765,17 +743,15 @@ void gemm<int8_t, GemmOpt::SharedMemTiling>(const int8_t* A, const int8_t* B, in
 
 // Default implementations for other int8 optimization levels
 template <>
-void gemm<int8_t, GemmOpt::Naive>(const int8_t* A, const int8_t* B, int8_t* C,
-                                   int M, int N, int K,
-                                   float alpha, float beta, cudaStream_t stream) {
+void gemm<int8_t, GemmOpt::Naive>(const int8_t* A, const int8_t* B, int8_t* C, int M, int N, int K,
+                                  float alpha, float beta, cudaStream_t stream) {
     gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
 }
 
 template <>
-void gemm<int8_t, GemmOpt::DoubleBuffer>(const int8_t* A, const int8_t* B, int8_t* C,
-                                          int M, int N, int K,
-                                          float alpha, float beta, cudaStream_t stream) {
+void gemm<int8_t, GemmOpt::DoubleBuffer>(const int8_t* A, const int8_t* B, int8_t* C, int M, int N,
+                                         int K, float alpha, float beta, cudaStream_t stream) {
     gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
 }
 
-} // namespace hpc::gemm
+}  // namespace hpc::gemm

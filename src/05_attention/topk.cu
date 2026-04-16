@@ -1,14 +1,12 @@
-#include "topk.cuh"
 #include "../common/cuda_check.cuh"
+#include "topk.cuh"
 
 namespace hpc::attention {
 
 // Simple bitonic sort based TopK for small k
 template <typename T>
-__global__ void topk_kernel(const T* __restrict__ input,
-                            T* __restrict__ output,
-                            int* __restrict__ indices,
-                            int n, int k) {
+__global__ void topk_kernel(const T* __restrict__ input, T* __restrict__ output,
+                            int* __restrict__ indices, int n, int k) {
     int batch_idx = blockIdx.x;
     const T* batch_input = input + batch_idx * n;
     T* batch_output = output + batch_idx * k;
@@ -61,13 +59,12 @@ __global__ void topk_kernel(const T* __restrict__ input,
 }
 
 template <>
-void topk<float>(const float* input, float* output, int* indices,
-                 int batch, int n, int k, cudaStream_t stream) {
+void topk<float>(const float* input, float* output, int* indices, int batch, int n, int k,
+                 cudaStream_t stream) {
     int block_size = min(n, 1024);
     size_t smem_size = block_size * (sizeof(float) + sizeof(int));
-    topk_kernel<float><<<batch, block_size, smem_size, stream>>>(
-        input, output, indices, n, k);
+    topk_kernel<float><<<batch, block_size, smem_size, stream>>>(input, output, indices, n, k);
     CUDA_CHECK_LAST();
 }
 
-} // namespace hpc::attention
+}  // namespace hpc::attention

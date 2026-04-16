@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+
 #include "cuda_check.cuh"
 
 namespace hpc {
@@ -22,16 +23,17 @@ public:
     CudaTimer& operator=(const CudaTimer&) = delete;
 
     // Movable
-    CudaTimer(CudaTimer&& other) noexcept
-        : start_(other.start_), stop_(other.stop_) {
+    CudaTimer(CudaTimer&& other) noexcept : start_(other.start_), stop_(other.stop_) {
         other.start_ = nullptr;
         other.stop_ = nullptr;
     }
 
     CudaTimer& operator=(CudaTimer&& other) noexcept {
         if (this != &other) {
-            if (start_) cudaEventDestroy(start_);
-            if (stop_) cudaEventDestroy(stop_);
+            if (start_)
+                cudaEventDestroy(start_);
+            if (stop_)
+                cudaEventDestroy(stop_);
             start_ = other.start_;
             stop_ = other.stop_;
             other.start_ = nullptr;
@@ -60,4 +62,4 @@ private:
     cudaEvent_t stop_ = nullptr;
 };
 
-} // namespace hpc
+}  // namespace hpc

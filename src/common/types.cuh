@@ -1,10 +1,11 @@
 #pragma once
 
-#include <cuda_runtime.h>
-#include <cuda_fp16.h>
 #include <cuda_bf16.h>
-#include <type_traits>
+#include <cuda_fp16.h>
+#include <cuda_runtime.h>
+
 #include <concepts>
+#include <type_traits>
 
 namespace hpc {
 
@@ -29,9 +30,7 @@ inline constexpr bool is_bfloat16_v = is_bfloat16<T>::value;
 
 // Concept for floating point types (including CUDA types)
 template <typename T>
-concept FloatingPoint = std::is_floating_point_v<T> ||
-                        is_half_v<T> ||
-                        is_bfloat16_v<T>;
+concept FloatingPoint = std::is_floating_point_v<T> || is_half_v<T> || is_bfloat16_v<T>;
 
 // Type conversion utilities
 template <typename To, typename From>
@@ -71,31 +70,31 @@ template <typename T>
 using accumulator_t = typename AccumulatorType<T>::type;
 
 // Data type enumeration
-enum class DataType {
-    Float32,
-    Float16,
-    BFloat16,
-    Int8,
-    Int32,
-    FP8_E4M3,
-    FP8_E5M2
-};
+enum class DataType { Float32, Float16, BFloat16, Int8, Int32, FP8_E4M3, FP8_E5M2 };
 
 // Get size of data type
 constexpr size_t dtype_size(DataType dtype) {
     switch (dtype) {
-        case DataType::Float32: return 4;
-        case DataType::Float16: return 2;
-        case DataType::BFloat16: return 2;
-        case DataType::Int8: return 1;
-        case DataType::Int32: return 4;
-        case DataType::FP8_E4M3: return 1;
-        case DataType::FP8_E5M2: return 1;
-        default: return 0;
+        case DataType::Float32:
+            return 4;
+        case DataType::Float16:
+            return 2;
+        case DataType::BFloat16:
+            return 2;
+        case DataType::Int8:
+            return 1;
+        case DataType::Int32:
+            return 4;
+        case DataType::FP8_E4M3:
+            return 1;
+        case DataType::FP8_E5M2:
+            return 1;
+        default:
+            return 0;
     }
 }
 
-} // namespace hpc
+}  // namespace hpc
 
 namespace hpc::cuda13 {
 
@@ -107,4 +106,4 @@ inline bool is_hopper_architecture() {
     return prop.major >= 9;
 }
 
-} // namespace hpc::cuda13
+}  // namespace hpc::cuda13

@@ -1,8 +1,10 @@
-#include "tma.cuh"
-#include "../common/cuda_check.cuh"
 #include <stdexcept>
+
 #include <cooperative_groups.h>
 #include <cooperative_groups/memcpy_async.h>
+
+#include "../common/cuda_check.cuh"
+#include "tma.cuh"
 
 namespace hpc::cuda13 {
 
@@ -10,9 +12,8 @@ namespace cg = cooperative_groups;
 
 // Simplified async copy kernel using cuda::memcpy_async (available in CUDA 11+)
 template <typename T, int NUM_CHANNELS>
-__global__ void tma_copy_kernel(const T* __restrict__ src,
-                                 T* __restrict__ dst,
-                                 int rows, int cols) {
+__global__ void tma_copy_kernel(const T* __restrict__ src, T* __restrict__ dst, int rows,
+                                int cols) {
     int row = blockIdx.y;
     int col_start = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -22,9 +23,8 @@ __global__ void tma_copy_kernel(const T* __restrict__ src,
         // Use cooperative groups memcpy_async for efficient async copy
         for (int col = col_start; col < cols; col += blockDim.x * gridDim.x) {
             if (col + NUM_CHANNELS <= cols) {
-                cg::memcpy_async(block, dst + row * cols + col,
-                                       src + row * cols + col,
-                                       sizeof(T) * NUM_CHANNELS);
+                cg::memcpy_async(block, dst + row * cols + col, src + row * cols + col,
+                                 sizeof(T) * NUM_CHANNELS);
             } else {
                 // Handle remaining elements
                 for (int i = col; i < cols; ++i) {
@@ -37,9 +37,8 @@ __global__ void tma_copy_kernel(const T* __restrict__ src,
 }
 
 template <typename T>
-__global__ void async_copy_kernel(const T* __restrict__ src,
-                                   T* __restrict__ dst,
-                                   int rows, int cols) {
+__global__ void async_copy_kernel(const T* __restrict__ src, T* __restrict__ dst, int rows,
+                                  int cols) {
     int row = blockIdx.y;
     int col_start = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -49,10 +48,8 @@ __global__ void async_copy_kernel(const T* __restrict__ src,
 }
 
 template <>
-void tma_copy_2d<float, 8>(const float* src, float* dst,
-                           int rows, int cols,
-                           const TMAConfig& config,
-                           cudaStream_t stream) {
+void tma_copy_2d<float, 8>(const float* src, float* dst, int rows, int cols,
+                           const TMAConfig& config, cudaStream_t stream) {
     if (src == nullptr || dst == nullptr) {
         throw std::invalid_argument("tma_copy_2d expects non-null src and dst pointers");
     }
@@ -65,9 +62,9 @@ void tma_copy_2d<float, 8>(const float* src, float* dst,
         dim3 block(128);
         dim3 grid((cols + NUM_CHANNELS - 1) / NUM_CHANNELS, rows);
         size_t smem_size = sizeof(float) * NUM_CHANNELS * 2;
-        
-        tma_copy_kernel<float, NUM_CHANNELS><<<grid, block, smem_size, stream>>>(
-            src, dst, rows, cols);
+
+        tma_copy_kernel<float, NUM_CHANNELS>
+            <<<grid, block, smem_size, stream>>>(src, dst, rows, cols);
     } else {
         tma_copy_2d_fallback(src, dst, rows, cols, stream);
     }
@@ -75,21 +72,18 @@ void tma_copy_2d<float, 8>(const float* src, float* dst,
 }
 
 template <>
-void tma_copy_2d<float>(const float* src, float* dst,
-                        int rows, int cols,
-                        const TMAConfig& config,
+void tma_copy_2d<float>(const float* src, float* dst, int rows, int cols, const TMAConfig& config,
                         cudaStream_t stream) {
     tma_copy_2d<float, 8>(src, dst, rows, cols, config, stream);
 }
 
 template <>
-void tma_copy_2d_fallback<float>(const float* src, float* dst,
-                                  int rows, int cols,
-                                  cudaStream_t stream) {
+void tma_copy_2d_fallback<float>(const float* src, float* dst, int rows, int cols,
+                                 cudaStream_t stream) {
     dim3 block(256);
     dim3 grid((cols + block.x - 1) / block.x, rows);
     async_copy_kernel<float><<<grid, block, 0, stream>>>(src, dst, rows, cols);
     CUDA_CHECK_LAST();
 }
 
-} // namespace hpc::cuda13
+}  // namespace hpc::cuda13
