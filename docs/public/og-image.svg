@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f172a"/>
+  <circle cx="600" cy="250" r="150" fill="#22d3ee"/>
+  <text x="600" y="450" font-family="Arial" font-size="72" fill="#22d3ee" text-anchor="middle" font-weight="bold">HPC-AI Optimization Lab</text>
+  <text x="600" y="530" font-family="Arial" font-size="36" fill="#94a3b8" text-anchor="middle">CUDA Kernel Optimization for AI Workloads</text>
+</svg>
