@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "05_attention/flash_attention.cuh"
+#include "attention/flash_attention.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

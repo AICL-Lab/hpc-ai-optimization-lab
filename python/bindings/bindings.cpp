@@ -10,13 +10,13 @@
 
 #include <cuda_runtime.h>
 
-#include "01_elementwise/relu.cuh"
-#include "01_elementwise/sigmoid.cuh"
-#include "01_elementwise/transpose.cuh"
-#include "02_reduction/layernorm.cuh"
-#include "02_reduction/rmsnorm.cuh"
-#include "02_reduction/softmax.cuh"
-#include "03_gemm/gemm.cuh"
+#include "elementwise/relu.cuh"
+#include "elementwise/sigmoid.cuh"
+#include "elementwise/transpose.cuh"
+#include "reduction/layernorm.cuh"
+#include "reduction/rmsnorm.cuh"
+#include "reduction/softmax.cuh"
+#include "gemm/gemm.cuh"
 
 namespace nb = nanobind;
 

@@ -2,7 +2,7 @@
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
 #include <algorithm>
-#include "01_elementwise/sigmoid.cuh"
+#include "elementwise/sigmoid.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 #include <cmath>

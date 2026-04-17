@@ -13,7 +13,7 @@
 #include <random>
 #include <vector>
 
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 #include "common/cuda_check.cuh"
 #include "common/tensor.cuh"
 

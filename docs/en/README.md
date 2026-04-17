@@ -230,7 +230,7 @@ Brief introduction paragraph.
 
 ```cpp
 // Always include necessary headers
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 int matrix_size = 1024;  // Use meaningful names
 ```

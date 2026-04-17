@@ -1,7 +1,7 @@
 # CUDA 13 & Hopper Architecture Features
 
 This document provides an overview of CUDA / Hopper related concepts and background knowledge.
-Note: The `src/07_cuda13_features/` directory in this repository currently consists mainly of experimental examples and compatibility fallbacks. Thus, the hardware capabilities described in this document should not be directly assumed to be fully implemented in the current code.
+Note: The `src/cuda13/` directory in this repository currently consists mainly of experimental examples and compatibility fallbacks. Thus, the hardware capabilities described in this document should not be directly assumed to be fully implemented in the current code.
 
 ## 1. Hopper Architecture Overview
 

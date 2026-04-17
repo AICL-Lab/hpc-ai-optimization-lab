@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
-#include "07_cuda13_features/tma.cuh"
+#include "cuda13/tma.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

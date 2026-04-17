@@ -107,18 +107,18 @@ This release focuses on making the documentation accessible to both English and 
   - `tensor.cuh`: RAII Tensor class with C++20 Concepts
   - `types.cuh`: Half/BF16 type wrappers and utilities
 
-- **Elementwise Module** (`src/01_elementwise/`)
+- **Elementwise Module** (`src/elementwise/`)
   - ReLU: Naive → Vectorized (float4) → Grid Stride Loop
   - Sigmoid: Three optimization levels
   - Vector Add: Three optimization levels
   - Transpose: Naive → Shared Memory → Shared Memory + Padding
 
-- **Reduction Module** (`src/02_reduction/`)
+- **Reduction Module** (`src/reduction/`)
   - Softmax: Naive → Warp Shuffle → Online Softmax → Fused
   - LayerNorm: Warp Shuffle + Block Reduce
   - RMSNorm: Optimized implementation with Welford's algorithm
 
-- **GEMM Module** (`src/03_gemm/`) - 7-Step Optimization Journey
+- **GEMM Module** (`src/gemm/`) - 7-Step Optimization Journey
   - Step 1: Naive Global Memory (~0.5 TFLOPS)
   - Step 2: Shared Memory Tiling (~2.0 TFLOPS)
   - Step 3: Double Buffering (~3.5 TFLOPS)
@@ -128,21 +128,21 @@ This release focuses on making the documentation accessible to both English and 
   - Step 7: Software Pipelining (~70+ TFLOPS)
   - Multi-precision support: SGEMM, HGEMM, Int8-GEMM
 
-- **Convolution Module** (`src/04_convolution/`)
+- **Convolution Module** (`src/convolution/`)
   - Implicit GEMM convolution (production-ready)
   - Winograd convolution (3×3 kernels, with fallback)
 
-- **Attention Module** (`src/05_attention/`)
+- **Attention Module** (`src/attention/`)
   - FlashAttention Forward Pass with online softmax
   - RoPE (Rotary Positional Embedding)
   - MoE TopK routing
 
-- **Quantization Module** (`src/06_quantization/`)
+- **Quantization Module** (`src/quantization/`)
   - Weight-Only Dequantization
   - INT8 per-row quantization/dequantization
   - FP8 scaling utilities
 
-- **CUDA 13 Features** (`src/07_cuda13_features/`) - Experimental
+- **CUDA 13 Features** (`src/cuda13/`) - Experimental
   - TMA (Tensor Memory Accelerator) - fallback implementation
   - Thread Block Clusters - fallback implementation
   - FP8 GEMM (e4m3/e5m2) - demonstration implementation

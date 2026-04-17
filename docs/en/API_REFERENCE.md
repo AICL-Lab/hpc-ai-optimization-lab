@@ -166,10 +166,10 @@ CUDA_CHECK_LAST();
 
 Rectified Linear Unit activation function.
 
-**Header**: `01_elementwise/relu.cuh`
+**Header**: `elementwise/relu.cuh`
 
 ```cpp
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 
 namespace hpc::elementwise {
 
@@ -190,7 +190,7 @@ void relu(const T* input, T* output, size_t n,
 **Example**:
 
 ```cpp
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 #include "common/tensor.cuh"
 
 // Using default optimization (GridStride)
@@ -210,10 +210,10 @@ hpc::elementwise::relu<float, hpc::elementwise::OptLevel::Vectorized>(
 
 Sigmoid activation function.
 
-**Header**: `01_elementwise/sigmoid.cuh`
+**Header**: `elementwise/sigmoid.cuh`
 
 ```cpp
-#include "01_elementwise/sigmoid.cuh"
+#include "elementwise/sigmoid.cuh"
 
 namespace hpc::elementwise {
 
@@ -231,10 +231,10 @@ void sigmoid(const T* input, T* output, size_t n,
 
 Elementwise vector addition.
 
-**Header**: `01_elementwise/vector_add.cuh`
+**Header**: `elementwise/vector_add.cuh`
 
 ```cpp
-#include "01_elementwise/vector_add.cuh"
+#include "elementwise/vector_add.cuh"
 
 namespace hpc::elementwise {
 
@@ -252,10 +252,10 @@ void vector_add(const T* a, const T* b, T* c, size_t n,
 
 Matrix transpose with optimization options.
 
-**Header**: `01_elementwise/transpose.cuh`
+**Header**: `elementwise/transpose.cuh`
 
 ```cpp
-#include "01_elementwise/transpose.cuh"
+#include "elementwise/transpose.cuh"
 
 namespace hpc::elementwise {
 
@@ -281,10 +281,10 @@ void transpose(const T* input, T* output, int rows, int cols,
 
 Numerically stable softmax with online algorithm.
 
-**Header**: `02_reduction/softmax.cuh`
+**Header**: `reduction/softmax.cuh`
 
 ```cpp
-#include "02_reduction/softmax.cuh"
+#include "reduction/softmax.cuh"
 
 namespace hpc::reduction {
 
@@ -306,7 +306,7 @@ void softmax(const T* input, T* output, int batch, int seq_len,
 **Example**:
 
 ```cpp
-#include "02_reduction/softmax.cuh"
+#include "reduction/softmax.cuh"
 
 int batch = 32, seq_len = 128;
 hpc::Tensor<float> input(batch * seq_len);
@@ -322,10 +322,10 @@ hpc::reduction::softmax<float>(
 
 Layer normalization.
 
-**Header**: `02_reduction/layernorm.cuh`
+**Header**: `reduction/layernorm.cuh`
 
 ```cpp
-#include "02_reduction/layernorm.cuh"
+#include "reduction/layernorm.cuh"
 
 namespace hpc::reduction {
 
@@ -344,10 +344,10 @@ void layer_norm(const T* input, const T* gamma, const T* beta,
 
 Root Mean Square Layer Normalization.
 
-**Header**: `02_reduction/rmsnorm.cuh`
+**Header**: `reduction/rmsnorm.cuh`
 
 ```cpp
-#include "02_reduction/rmsnorm.cuh"
+#include "reduction/rmsnorm.cuh"
 
 namespace hpc::reduction {
 
@@ -368,10 +368,10 @@ void rms_norm(const T* input, const T* gamma, T* output,
 
 7-step optimization progression.
 
-**Header**: `03_gemm/gemm.cuh`
+**Header**: `gemm/gemm.cuh`
 
 ```cpp
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 namespace hpc::gemm {
 
@@ -400,7 +400,7 @@ void gemm(const T* A, const T* B, T* C,
 **Example**:
 
 ```cpp
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 int M = 1024, N = 1024, K = 1024;
 
@@ -429,10 +429,10 @@ hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
 
 Production-ready convolution implementation.
 
-**Header**: `04_convolution/conv_implicit_gemm.cuh`
+**Header**: `convolution/conv_implicit_gemm.cuh`
 
 ```cpp
-#include "04_convolution/conv_implicit_gemm.cuh"
+#include "convolution/conv_implicit_gemm.cuh"
 
 namespace hpc::convolution {
 
@@ -466,10 +466,10 @@ void conv2d_implicit_gemm(const T* input, const T* weight, T* output,
 
 Optimized 3×3 convolution (experimental).
 
-**Header**: `04_convolution/conv_winograd.cuh`
+**Header**: `convolution/conv_winograd.cuh`
 
 ```cpp
-#include "04_convolution/conv_winograd.cuh"
+#include "convolution/conv_winograd.cuh"
 
 namespace hpc::convolution {
 
@@ -494,10 +494,10 @@ void conv2d_winograd(const float* input, const float* weight, float* output,
 
 IO-aware attention mechanism.
 
-**Header**: `05_attention/flash_attention.cuh`
+**Header**: `attention/flash_attention.cuh`
 
 ```cpp
-#include "05_attention/flash_attention.cuh"
+#include "attention/flash_attention.cuh"
 
 namespace hpc::attention {
 
@@ -523,7 +523,7 @@ void flash_attention_forward(const T* Q, const T* K, const T* V,
 **Example**:
 
 ```cpp
-#include "05_attention/flash_attention.cuh"
+#include "attention/flash_attention.cuh"
 
 int batch = 2, heads = 8, seq = 512, dim = 64;
 int total = batch * heads * seq * dim;
@@ -547,10 +547,10 @@ hpc::attention::flash_attention_forward<float>(
 
 ### RoPE (Rotary Positional Embedding)
 
-**Header**: `05_attention/rope.cuh`
+**Header**: `attention/rope.cuh`
 
 ```cpp
-#include "05_attention/rope.cuh"
+#include "attention/rope.cuh"
 
 namespace hpc::attention {
 
@@ -569,10 +569,10 @@ void apply_rope(T* query, T* key,
 
 For MoE routing.
 
-**Header**: `05_attention/topk.cuh`
+**Header**: `attention/topk.cuh`
 
 ```cpp
-#include "05_attention/topk.cuh"
+#include "attention/topk.cuh"
 
 namespace hpc::attention {
 
@@ -592,10 +592,10 @@ void topk(const T* input, T* output, int* indices,
 
 Per-row symmetric quantization.
 
-**Header**: `06_quantization/int8_quant.cuh`
+**Header**: `quantization/int8_quant.cuh`
 
 ```cpp
-#include "06_quantization/int8_quant.cuh"
+#include "quantization/int8_quant.cuh"
 
 namespace hpc::quantization {
 
@@ -617,10 +617,10 @@ void dequantize_int8(const int8_t* input, const float* scale,
 
 Tensor Memory Accelerator utilities.
 
-**Header**: `07_cuda13_features/tma.cuh`
+**Header**: `cuda13/tma.cuh`
 
 ```cpp
-#include "07_cuda13_features/tma.cuh"
+#include "cuda13/tma.cuh"
 
 namespace hpc::cuda13 {
 
@@ -644,10 +644,10 @@ void tma_copy_2d(const T* src, T* dst,
 
 ### Thread Block Clusters
 
-**Header**: `07_cuda13_features/cluster.cuh`
+**Header**: `cuda13/cluster.cuh`
 
 ```cpp
-#include "07_cuda13_features/cluster.cuh"
+#include "cuda13/cluster.cuh"
 
 namespace hpc::cuda13 {
 
@@ -670,10 +670,10 @@ void cluster_reduce(const T* input, T* output, size_t n,
 
 ### FP8 GEMM
 
-**Header**: `07_cuda13_features/fp8_gemm.cuh`
+**Header**: `cuda13/fp8_gemm.cuh`
 
 ```cpp
-#include "07_cuda13_features/fp8_gemm.cuh"
+#include "cuda13/fp8_gemm.cuh"
 
 namespace hpc::cuda13 {
 

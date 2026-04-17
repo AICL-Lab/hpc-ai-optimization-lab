@@ -26,13 +26,13 @@ This document describes the architecture, design patterns, and module organizati
 hpc-ai-optimization-lab/
 ├── src/                    # Kernel implementations
 │   ├── common/             # Shared utilities (header-only)
-│   ├── 01_elementwise/     # Module 1: Pointwise operations
-│   ├── 02_reduction/       # Module 2: Reduction operations
-│   ├── 03_gemm/            # Module 3: Matrix multiplication
-│   ├── 04_convolution/     # Module 4: Convolution operations
-│   ├── 05_attention/       # Module 5: Attention mechanisms
-│   ├── 06_quantization/    # Module 6: Quantization utilities
-│   └── 07_cuda13_features/ # Module 7: Experimental features
+│   ├── elementwise/     # Module 1: Pointwise operations
+│   ├── reduction/       # Module 2: Reduction operations
+│   ├── gemm/            # Module 3: Matrix multiplication
+│   ├── convolution/     # Module 4: Convolution operations
+│   ├── attention/       # Module 5: Attention mechanisms
+│   ├── quantization/    # Module 6: Quantization utilities
+│   └── cuda13/ # Module 7: Experimental features
 ├── tests/                  # Test suites
 ├── examples/               # Runnable examples
 ├── python/                 # Python bindings
@@ -287,8 +287,8 @@ function(hpc_add_cuda_library target)
 endfunction()
 
 # Each module
-add_subdirectory(src/01_elementwise)  # Creates hpc_elementwise
-add_subdirectory(src/02_reduction)    # Creates hpc_reduction
+add_subdirectory(src/elementwise)  # Creates hpc_elementwise
+add_subdirectory(src/reduction)    # Creates hpc_reduction
 # ...
 ```
 
