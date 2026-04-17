@@ -151,10 +151,8 @@ export default defineConfig({
       }
     },
     ssr: {
-      noExternal: [
-        '@vitepress-demo-preview/component',
-        '@vitepress-demo-preview/plugin'
-      ]
+      // noExternal removed - packages not in dependencies
+      // Previously referenced @vitepress-demo-preview which doesn't exist
     },
     resolve: {
       alias: {
