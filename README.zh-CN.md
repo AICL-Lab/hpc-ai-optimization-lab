@@ -228,7 +228,7 @@ hpc::gemm::gemm<float, hpc::gemm::OptLevel::Advanced>(
 ### Python API
 
 ```python
-import hpc_ai_lab
+import hpc_ai_opt
 import numpy as np
 
 # 创建输入数据
@@ -236,10 +236,10 @@ A = np.random.randn(1024, 1024).astype(np.float32)
 B = np.random.randn(1024, 1024).astype(np.float32)
 
 # 执行优化的 GEMM
-C = hpc_ai_lab.gemm(A, B)
+C = hpc_ai_opt.gemm(A, B)
 
 print(f"结果形状: {C.shape}")
-print(f"性能: {hpc_ai_lab.last_tflops:.1f} TFLOPS")
+print(f"性能: {hpc_ai_opt.last_tflops:.1f} TFLOPS")
 ```
 
 ---
