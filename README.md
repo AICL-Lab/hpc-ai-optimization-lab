@@ -294,6 +294,8 @@ ctest --test-dir build
 
 We welcome contributions! This project follows [Spec-Driven Development (SDD)](AGENTS.md).
 
+> **CI Scope Note**: This repository does **not** currently provide full native CUDA build-and-test coverage in CI. The CI pipeline focuses on code formatting, consistency checks, and documentation builds. GPU-dependent tests require local execution or self-hosted runners.
+
 ### Quick Start
 
 ```bash
