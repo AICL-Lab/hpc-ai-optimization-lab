@@ -85,7 +85,7 @@ ctest --output-on-failure
 ./tests/elementwise/test_relu
 
 # Check Python binding (if enabled)
-python3 -c "import hpc_ai_lab; print(hpc_ai_lab.__version__)"
+python3 -c "import hpc_ai_opt; print(hpc_ai_opt.__version__)"
 ```
 
 ## Troubleshooting

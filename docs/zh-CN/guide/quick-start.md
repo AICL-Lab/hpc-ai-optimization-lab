@@ -77,14 +77,14 @@ cmake --build . -j8
 ### Use in Python
 
 ```python
-import hpc_ai_lab
+import hpc_ai_opt
 import numpy as np
 
 # Create input tensor
 x = np.random.randn(1024).astype(np.float32)
 
 # Apply ReLU kernel
-y = hpc_ai_lab.relu(x)
+y = hpc_ai_opt.relu(x)
 
 print(f"Input: {x[:5]}")
 print(f"Output: {y[:5]}")

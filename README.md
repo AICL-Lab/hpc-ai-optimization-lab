@@ -228,7 +228,7 @@ hpc::gemm::gemm<float, hpc::gemm::OptLevel::Advanced>(
 ### Python API
 
 ```python
-import hpc_ai_lab
+import hpc_ai_opt
 import numpy as np
 
 # Create input data
@@ -236,10 +236,10 @@ A = np.random.randn(1024, 1024).astype(np.float32)
 B = np.random.randn(1024, 1024).astype(np.float32)
 
 # Execute optimized GEMM
-C = hpc_ai_lab.gemm(A, B)
+C = hpc_ai_opt.gemm(A, B)
 
 print(f"Result shape: {C.shape}")
-print(f"Performance: {hpc_ai_lab.last_tflops:.1f} TFLOPS")
+print(f"Performance: {hpc_ai_opt.last_tflops:.1f} TFLOPS")
 ```
 
 ---
