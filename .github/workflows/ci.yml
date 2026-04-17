@@ -73,8 +73,8 @@ jobs:
           print("=== Checking documented example files ===")
 
           required_files = [
-              "examples/01_elementwise/relu_example.cu",
-              "examples/03_gemm/gemm_benchmark.cu",
+              "examples/elementwise/relu_example.cu",
+              "examples/gemm/gemm_benchmark.cu",
               "examples/python/basic_usage.py",
           ]
 
