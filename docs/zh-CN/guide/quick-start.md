@@ -111,7 +111,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build . -j8
 ctest --output-on-failure
 
 # Benchmark
-./examples/03_gemm/gemm_benchmark
+./examples/gemm/gemm_benchmark
 
 # Clean build
 rm -rf build && mkdir build && cd build
