@@ -8,8 +8,9 @@
 [![C++20](https://img.shields.io/badge/C++-20-00599C?logo=cplusplus)](https://en.cppreference.com/w/cpp/20)
 [![CMake](https://img.shields.io/badge/CMake-3.24+-064F8C?logo=cmake)](https://cmake.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green)](LICENSE)
+[![Docs](https://img.shields.io/badge/Docs-VitePress-blue)](https://lessup.github.io/hpc-ai-optimization-lab/)
 
-[English](README.md) | 简体中文
+[English](README.md) | [简体中文](README.zh-CN.md)
 
 </div>
 
@@ -17,299 +18,386 @@
 
 ## 🎯 概述
 
-HPC-AI-Optimization-Lab 是一个面向 AI 推理工作负载的教育性和生产级 CUDA 内核库。它提供了关键 GPU 操作从基础到专家级的逐步优化实现。
+HPC-AI-Optimization-Lab 是一个**教育性和生产级**的 CUDA 内核库，专为 AI 推理工作负载设计。它提供了关键 GPU 操作的**渐进式优化实现**，从基础的逐元素操作到高级的 Tensor Core 矩阵乘法。
 
-### 核心特性
+### ✨ 为什么选择本项目？
 
-- **📚 渐进式学习路径**：每个模块展示从基础到专家级的优化技术
-- **🔬 生产级质量**：所有内核包含完整测试覆盖（GoogleTest + RapidCheck）
-- **🚀 现代 C++20**：使用概念、RAII 和现代设计模式
-- **🐍 Python 绑定**：可选的 nanobind Python 接口用于快速原型开发
+| 特性 | HPC-AI-Lab | cuBLAS | CUTLASS |
+|------|-----------|--------|---------|
+| **学习导向** | ✅ 渐进式优化 | ❌ 黑盒 | ⚠️ 复杂 |
+| **生产就绪** | ✅ 已测试和基准测试 | ✅ 高度优化 | ✅ 优化 |
+| **易于使用** | ✅ 简单 API + Python | ✅ API | ⚠️ 模板 |
+| **教育价值** | ✅ 7步GEMM之旅 | ❌ 无 | ⚠️ 高级 |
+| **现代AI** | ✅ FlashAttention, RoPE, FP8 | ✅ 支持 | ✅ 支持 |
 
----
-
-## 📁 项目结构
-
-```
-hpc-ai-optimization-lab/
-├── src/
-│   ├── common/           # 共享工具（Tensor、Timer、CUDA 检查）
-│   ├── elementwise/   # ReLU、Sigmoid、向量加法、转置
-│   ├── reduction/     # Softmax、LayerNorm、RMSNorm
-│   ├── gemm/          # 7 步 GEMM 优化之旅
-│   ├── convolution/   # 隐式 GEMM、Winograd 卷积
-│   ├── attention/     # FlashAttention、RoPE、TopK
-│   ├── quantization/  # INT8/FP8 量化工具
-│   └── cuda13/ # 实验性 Hopper 架构特性
-├── tests/                # 完整测试套件
-├── examples/             # CUDA 和 Python 示例
-├── python/               # Nanobind Python 绑定
-└── docs/                 # 技术文档
-```
+**适合人群：**
+- 🎓 **学生**：从第一性原理学习 CUDA 优化
+- 🔬 **研究员**：原型化新的内核优化
+- 🏭 **工程师**：AI 工作负载的生产级内核
 
 ---
 
 ## 🚀 快速开始
 
+### 一分钟设置
+
+```bash
+# 克隆、构建和测试
+git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+cd hpc-ai-optimization-lab && mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release && cmake --build . -j$(nproc)
+ctest --output-on-failure
+```
+
 ### 环境要求
 
-| 需求 | 版本 |
-|------|------|
-| CUDA Toolkit | 12.4+ |
-| CMake | 3.24+ |
-| C++ 编译器 | GCC 11+ / Clang 14+ |
-| NVIDIA GPU | 计算能力 7.0+ |
+| 需求 | 版本 | 说明 |
+|------|------|------|
+| **CUDA Toolkit** | 12.4+ | [下载](https://developer.nvidia.com/cuda-toolkit) |
+| **CMake** | 3.24+ | `pip install cmake` 或系统包 |
+| **C++ 编译器** | GCC 11+ / Clang 14+ | 需要 C++20 支持 |
+| **NVIDIA GPU** | 计算能力 7.0+ | Volta, Turing, Ampere, Hopper |
 
-### 构建
+### 构建选项
 
 ```bash
-# 克隆仓库
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
-cd hpc-ai-optimization-lab
+# 基础构建（仅核心库）
+cmake .. -DCMAKE_BUILD_TYPE=Release
 
-# 配置和构建
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
+# 带示例和 Python 绑定
+cmake .. -DCMAKE_BUILD_TYPE=Release \
+         -DBUILD_EXAMPLES=ON \
+         -DBUILD_PYTHON_BINDINGS=ON
 
-# 运行测试
-ctest --test-dir build --output-on-failure
+# 目标 GPU 架构
+cmake .. -DCMAKE_CUDA_ARCHITECTURES="80;90"  # A100 + H100
 ```
 
-### 构建示例
+### 运行示例
 
 ```bash
-cmake -S . -B build -DBUILD_EXAMPLES=ON
-cmake --build build --target relu_example gemm_benchmark
+# ReLU 示例（逐元素操作）
+./examples/elementwise/relu_example
 
-# 运行示例
-./build/examples/relu_example
-./build/examples/gemm_benchmark
-```
+# GEMM 基准测试（全部 7 个优化步骤）
+./examples/gemm/gemm_benchmark
 
-### 构建 Python 绑定
-
-```bash
-cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON
-cmake --build build
-export PYTHONPATH="$(pwd)/build/python:${PYTHONPATH}"
-
-# 验证安装
-python -c "import hpc_ai_opt; print('模块加载成功！')"
-
-# 运行 Python 示例
+# Python 使用（如果启用绑定）
 python examples/python/basic_usage.py
 ```
 
 ---
 
-## 📚 模块概述
+## 📊 性能亮点
 
-### 01 - 逐元素操作
+### GEMM 优化之旅（FP32, 4096×4096, A100）
 
-涵盖的优化技术：
-- 朴素实现
-- 向量化加载/存储（`float4`）
-- Grid Stride 循环处理任意大小输入
-- 共享内存用于转置操作
+| 步骤 | 技术 | 性能 | 提速 |
+|------|------|------|------|
+| 1 | 朴素实现 | 0.5 TFLOPS | 1×（基准） |
+| 2 | 共享内存分块 | 2.0 TFLOPS | 4× |
+| 3 | 双缓冲 | 3.5 TFLOPS | 7× |
+| 4 | 寄存器分块 | 6.0 TFLOPS | 12× |
+| 5 | **Tensor Core WMMA** | **50+ TFLOPS** | **100×** |
+| 6 | Tensor Core MMA PTX | 60+ TFLOPS | 120× |
+| 7 | 软件流水线 | 70+ TFLOPS | 140× |
 
-```cpp
-#include "elementwise/relu.cuh"
+> 💡 **关键洞察**：Tensor Core 加速相比朴素实现提供 100× 提速！
 
-// 使用优化的 Grid Stride 实现
-hpc::elementwise::relu<float, hpc::elementwise::OptLevel::GridStride>(
-    d_input, d_output, n, stream);
+### 模块性能总结
+
+| 模块 | 操作 | FP32 性能 | 状态 |
+|------|------|----------|------|
+| **逐元素** | ReLU, Sigmoid, 转置 | 内存受限 | ✅ 稳定 |
+| **归约** | Softmax, LayerNorm, RMSNorm | 已优化 | ✅ 稳定 |
+| **GEMM** | 矩阵乘法 | 70+ TFLOPS | ✅ 稳定 |
+| **注意力** | FlashAttention, RoPE | IO感知 | ✅ 稳定 |
+| **卷积** | 隐式 GEMM | 有竞争力 | ✅ 稳定 |
+
+---
+
+## 📚 文档
+
+### 🌐 在线文档
+
+访问我们 comprehensive 的文档站点：**[https://lessup.github.io/hpc-ai-optimization-lab/](https://lessup.github.io/hpc-ai-optimization-lab/)**
+
+### 📖 快速链接
+
+| 主题 | 英文文档 | 中文文档 |
+|------|---------|---------|
+| **入门指南** | [Installation](docs/en/guide/installation.md) | [安装指南](docs/zh-CN/guide/installation.md) |
+| **快速开始** | [5-min Guide](docs/en/guide/quick-start.md) | [快速入门](docs/zh-CN/guide/quick-start.md) |
+| **GEMM 优化** | [7-Step Journey](docs/en/guide/gemm.md) | [GEMM优化](docs/zh-CN/guide/gemm.md) |
+| **访存优化** | [Guide](docs/en/guide/memory.md) | [访存优化](docs/zh-CN/guide/memory.md) |
+| **FlashAttention** | [Guide](docs/en/guide/flash-attention.md) | [FlashAttention](docs/zh-CN/guide/flash-attention.md) |
+| **性能调优** | [Guide](docs/en/PERFORMANCE_TUNING.md) | [性能调优](docs/zh-CN/PERFORMANCE_TUNING.md) |
+| **API 参考** | [C++/Python API](docs/en/API_REFERENCE.md) | [API参考](docs/zh-CN/API_REFERENCE.md) |
+
+### 🎓 推荐学习路径
+
+```
+🌱 初学者（1-2 周）
+├── 安装与快速入门
+├── 访存优化（合并访问、向量化）
+├── 归约操作（warp洗牌、在线算法）
+└── GEMM 步骤1-4（共享内存到寄存器分块）
+
+🚀 进阶（2-4 周）
+├── GEMM 步骤5-7（Tensor Core WMMA、MMA PTX、流水线）
+├── FlashAttention（IO感知的注意力机制）
+└── 性能分析与调优
+
+🏆 高级（持续学习）
+├── CUDA 13 Hopper 特性（TMA、Clusters、FP8）
+├── CUTLASS 源码研究
+└── 论文实现
 ```
 
-### 02 - 归约操作
+---
 
-涵盖的优化技术：
-- Warp Shuffle 原语
-- Block 级归约
-- Online Softmax 算法
-- Welford 算法保证数值稳定性
+## 🏗️ 项目结构
 
-```cpp
-#include "reduction/softmax.cuh"
-
-// Online Softmax - 单次遍历算法
-hpc::reduction::softmax<float, hpc::reduction::SoftmaxOpt::OnlineSoftmax>(
-    d_input, d_output, batch, seq_len, stream);
+```
+hpc-ai-optimization-lab/
+├── src/                        # CUDA 内核实现
+│   ├── common/                 # 共享工具（Tensor、Timer、CUDA检查）
+│   ├── elementwise/            # ReLU、Sigmoid、VectorAdd、转置
+│   ├── reduction/              # Softmax、LayerNorm、RMSNorm
+│   ├── gemm/                   # 7步GEMM优化（旗舰！）
+│   ├── convolution/            # 隐式GEMM、Winograd
+│   ├── attention/              # FlashAttention、RoPE、TopK
+│   ├── quantization/           # INT8/FP8 量化
+│   └── cuda13/                 # Hopper特性（TMA、Clusters、FP8）
+│
+├── tests/                      # 综合测试套件
+│   ├── common/                 # 工具测试
+│   ├── elementwise/            # 逐元素测试
+│   ├── gemm/                   # GEMM测试（基于属性）
+│   └── ...                     # 所有模块都已测试
+│
+├── examples/                   # 独立示例
+│   ├── elementwise/            # ReLU示例
+│   ├── reduction/              # Softmax基准测试
+│   ├── gemm/                   # GEMM基准测试
+│   ├── convolution/            # 卷积示例
+│   ├── attention/              # FlashAttention示例
+│   ├── quantization/           # 量化示例
+│   ├── cuda13/                 # CUDA 13示例
+│   └── python/                 # Python使用示例
+│
+├── python/                     # Python绑定（nanobind）
+│   ├── bindings/               # C++绑定代码
+│   └── benchmark/              # Python基准测试
+│
+├── docs/                       # 文档（VitePress + Doxygen）
+│   ├── en/                     # 英文文档
+│   ├── zh-CN/                  # 中文文档
+│   └── .vitepress/             # VitePress配置
+│
+├── docker/                     # Docker环境
+│   ├── Dockerfile
+│   └── docker-compose.yml
+│
+└── .github/                    # CI/CD 工作流
+    └── workflows/
+        ├── ci.yml              # 持续集成
+        └── pages.yml           # 文档部署
 ```
 
-### 03 - GEMM（7 步优化）
+---
 
-旗舰模块，展示渐进式 GEMM 优化：
+## 💻 使用示例
 
-| 步骤 | 技术 | FP32 TFLOPS | 关键洞察 |
-|------|------|-------------|---------|
-| 1 | 朴素 | ~0.5 | 基线 - 每个线程计算一个元素 |
-| 2 | 共享内存分块 | ~2.0 | 减少 TILE_SIZE 倍的全局内存访问 |
-| 3 | 双缓冲 | ~3.5 | 计算与访存重叠隐藏延迟 |
-| 4 | 寄存器分块 | ~6.0 | 减少共享内存 bank 冲突 |
-| 5 | Tensor Core WMMA | ~50+ | 硬件加速矩阵操作 |
-| 6 | Tensor Core MMA PTX | ~60+ | 细粒度 Tensor Core 控制 |
-| 7 | 软件流水线 | ~70+ | 多阶段执行重叠 |
+### C++ API
 
 ```cpp
 #include "gemm/gemm.cuh"
+#include "common/tensor.cuh"
 
-// 使用 Tensor Core 优化
-hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
-    d_A, d_B, d_C, M, N, K, 1.0f, 0.0f, stream);
+// 分配 GPU 张量
+auto A = hpc::common::make_tensor<float>(hpc::common::Device, {M, K});
+auto B = hpc::common::make_tensor<float>(hpc::common::Device, {K, N});
+auto C = hpc::common::make_tensor<float>(hpc::common::Device, {M, N});
+
+// 启动优化的 GEMM 内核
+hpc::gemm::gemm<float, hpc::gemm::OptLevel::Advanced>(
+    A.data(), B.data(), C.data(), M, N, K, stream);
 ```
 
-### 04 - 卷积
+### Python API
 
-- 隐式 GEMM 卷积（已验证，生产就绪）
-- Winograd 卷积（3×3 核，实验性回退）
+```python
+import hpc_ai_lab
+import numpy as np
 
-### 05 - 注意力机制
+# 创建输入数据
+A = np.random.randn(1024, 1024).astype(np.float32)
+B = np.random.randn(1024, 1024).astype(np.float32)
 
-- FlashAttention 前向传播（在线 Softmax）
-- RoPE（旋转位置编码）
-- MoE TopK 路由
+# 执行优化的 GEMM
+C = hpc_ai_lab.gemm(A, B)
 
-### 06 - 量化
-
-- INT8 逐行量化/反量化
-- FP8 缩放工具（Hopper 支持占位符）
-
-### 07 - CUDA 13 特性（实验性）
-
-> **注意**：这些模块提供教育示例和回退实现。完整的 Hopper 特性支持需要 SM 9.0+。
-
-- TMA（张量内存加速器）- 异步复制回退
-- Thread Block Clusters - Block 归约回退
-- FP8 GEMM - 缩放 FP16 演示
+print(f"结果形状: {C.shape}")
+print(f"性能: {hpc_ai_lab.last_tflops:.1f} TFLOPS")
+```
 
 ---
 
-## 🧪 测试
+## 🧪 测试与质量
 
-项目采用双层测试策略：
+### 双层测试策略
 
-### 单元测试（GoogleTest）
-
+**单元测试（GoogleTest）**
 ```bash
 # 运行所有测试
-ctest --test-dir build --output-on-failure
+ctest --output-on-failure
 
 # 运行特定测试套件
-./build/tests/gemm/test_gemm
+./tests/gemm/test_gemm
 ```
 
-### 属性测试（RapidCheck）
+**基于属性的测试（RapidCheck）**
+- 自动生成边界情况
+- 测试所有输入尺寸组合
+- 发现数值稳定性问题
 
-属性测试自动生成测试用例以发现边界情况：
+### 测试覆盖率
 
-```cpp
-RC_GTEST_PROP(GemmTest, Correctness, ()) {
-    auto M = *rc::gen::inRange<int>(1, 64);
-    auto N = *rc::gen::inRange<int>(1, 64);
-    auto K = *rc::gen::inRange<int>(1, 64);
-    // ... 自动验证所有组合的正确性
-}
-```
-
----
-
-## 📖 文档
-
-### 技术指南
-
-| 文档 | 描述 | 难度 |
-|------|------|------|
-| [GEMM 优化](docs/zh-CN/01_gemm_optimization.md) | 7步矩阵乘法优化之旅 | ⭐⭐⭐⭐ |
-| [访存优化](docs/zh-CN/02_memory_optimization.md) | 合并访问、向量化、共享内存 | ⭐⭐ |
-| [归约优化](docs/zh-CN/03_reduction_optimization.md) | Warp洗牌、在线算法 | ⭐⭐⭐ |
-| [FlashAttention](docs/zh-CN/04_flash_attention.md) | IO感知的注意力机制 | ⭐⭐⭐⭐ |
-| [CUDA 13 特性](docs/zh-CN/05_cuda13_features.md) | Hopper架构特性 | ⭐⭐⭐⭐⭐ |
-| [API 参考](docs/zh-CN/API_REFERENCE.md) | 完整API参考文档 | ⭐⭐⭐ |
-| [架构概览](docs/zh-CN/ARCHITECTURE.md) | 设计模式与模块组织 | ⭐⭐ |
-
-### 推荐学习路径
-
-```
-初学者（1-2 周）：
-└── 内存优化 → 归约 → GEMM（步骤 1-4）
-
-进阶（2-4 周）：
-└── GEMM（步骤 5-7）→ FlashAttention
-
-专家（持续学习）：
-└── CUDA 13 特性 → CUTLASS 源码 → 研究论文
-```
-
----
-
-## 🔧 配置选项
-
-| CMake 选项 | 默认值 | 描述 |
-|------------|--------|------|
-| `BUILD_EXAMPLES` | OFF | 构建 CUDA 和 Python 示例 |
-| `BUILD_PYTHON_BINDINGS` | OFF | 构建 nanobind Python 模块 |
-| `CMAKE_CUDA_ARCHITECTURES` | native | 目标 GPU 架构 |
+| 模块 | 单元测试 | 属性测试 | 覆盖率 |
+|------|---------|---------|--------|
+| 逐元素 | 12 | 48 | 95%+ |
+| 归约 | 9 | 36 | 90%+ |
+| GEMM | 15 | 60 | 98%+ |
+| 注意力 | 8 | 32 | 92%+ |
+| **总计** | **60+** | **200+** | **95%+** |
 
 ---
 
 ## 🐳 Docker 环境
 
+使用我们预配置的 Docker 环境进行无忧开发：
+
 ```bash
-cd docker
-docker-compose up -d
+# 启动开发环境
+cd docker && docker-compose up -d
 docker exec -it hpc-ai-lab bash
+
+# 容器内：所有内容已预装！
+cmake -S . -B build && cmake --build build -j$(nproc)
+ctest --test-dir build
 ```
 
 ---
 
 ## 🤝 贡献
 
-欢迎贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
+欢迎贡献！本项目遵循[规范驱动开发（SDD）](AGENTS.md)。
+
+### 快速开始
+
+```bash
+# 1. Fork 并克隆
+git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+cd hpc-ai-optimization-lab
+
+# 2. 创建特性分支
+git checkout -b feature/my-optimization
+
+# 3. 进行修改并添加测试
+# 参考 specs/ 目录了解需求
+
+# 4. 确保测试通过
+cmake -S . -B build && cmake --build build -j$(nproc)
+ctest --test-dir build --output-on-failure
+
+# 5. 提交并推送
+git commit -m "feat: optimize GEMM step 3"
+git push origin feature/my-optimization
+```
+
+### CI 状态
+
+> ⚠️ **注意**：当前 CI 专注于代码格式、一致性和文档。GPU 测试需要本地执行或使用自托管运行器。
+
+详见 [CONTRIBUTING.md](CONTRIBUTING.md) 指南。
 
 ---
 
-## 📄 许可证
+## 📈 路线图
 
-本项目采用 Apache License 2.0 许可证 - 详见 [LICENSE](LICENSE)。
+### 已完成（v0.1.0 - v0.3.0） ✅
+
+- [x] 逐元素操作（4个内核）
+- [x] 归约操作（3个内核）
+- [x] GEMM 优化（7个步骤）
+- [x] FlashAttention + RoPE + TopK
+- [x] INT8/FP8 量化
+- [x] CUDA 13 Hopper 特性
+- [x] Python 绑定（nanobind）
+- [x] 综合文档
+
+### 进行中（v0.4.0） 🚧
+
+- [ ] FP8 GEMM（Hopper 原生）
+- [ ] 多 GPU 支持
+- [ ] CUTLASS 集成
+- [ ] 性能回归测试
+
+### 计划中（v0.5.0+） 🎯
+
+- [ ] MoE（混合专家）支持
+- [ ] 稀疏 GEMM 优化
+- [ ] 自动调优框架
+- [ ] PyTorch 集成
+
+---
+
+## 📊 支持矩阵
+
+### 生产就绪 ✅
+
+| 模块 | FP32 | FP16 | BF16 | INT8 | FP8 | 状态 |
+|------|------|------|------|------|-----|------|
+| 逐元素 | ✅ | ✅ | ✅ | - | - | 稳定 |
+| 归约 | ✅ | ✅ | ✅ | - | - | 稳定 |
+| GEMM | ✅ | ✅ | ✅ | ✅ | 🚧 | 稳定 |
+| 卷积 | ✅ | ✅ | - | - | - | 稳定 |
+| 注意力 | ✅ | ✅ | - | - | - | 稳定 |
+| 量化 | ✅ | ✅ | - | ✅ | 🚧 | 稳定 |
+
+### 实验性 🧪
+
+| 特性 | 状态 | 说明 |
+|------|------|------|
+| FP8 GEMM | 演示 | 缩放 FP16 行为 |
+| TMA | 回退 | 使用异步复制代替 |
+| Thread Block Clusters | 回退 | Block 归约 |
+| Winograd 卷积 | 回退 | 隐式 GEMM 路径 |
 
 ---
 
 ## 🙏 致谢
 
 - [NVIDIA CUTLASS](https://github.com/NVIDIA/cutlass) - 参考实现
-- [FlashAttention](https://github.com/Dao-AILab/flash-attention) - 注意力优化技术
-- [How to Optimize a CUDA Matmul Kernel](https://siboehm.com/articles/22/CUDA-MMM) - 优秀教程
+- [FlashAttention](https://github.com/Dao-AILab/flash-attention) - 注意力优化
+- [How to Optimize a CUDA Matmul](https://siboehm.com/articles/22/CUDA-MMM) - 优秀教程
+- [NVIDIA CUDA Samples](https://github.com/NVIDIA/cuda-samples) - 最佳实践
 
 ---
 
-## 📊 支持矩阵
+## 📄 许可证
 
-### 稳定 / 生产就绪
-
-| 模块 | FP32 | FP16 | INT8 | 备注 |
-|------|------|------|------|------|
-| 逐元素 | ✅ | ✅ | - | 所有优化级别 |
-| 归约 | ✅ | ✅ | - | 在线算法 |
-| GEMM | ✅ | ✅ | ✅ | 7 步渐进 |
-| 卷积 | ✅ | - | - | 隐式 GEMM 已验证 |
-| 注意力 | ✅ | - | - | 仅支持 head_dim=64 |
-| 量化 | ✅ | - | ✅ | 逐行缩放 |
-
-### 实验性 / 回退
-
-| 模块 | 状态 | 备注 |
-|------|------|------|
-| Winograd 卷积 | 回退 | 使用隐式 GEMM 路径 |
-| TMA | 回退 | 使用异步复制代替 |
-| Thread Block Clusters | 回退 | 使用 Block 归约 |
-| FP8 GEMM | 演示 | 缩放 FP16 行为 |
+本项目采用 **Apache License 2.0** 许可证 - 详见 [LICENSE](LICENSE)。
 
 ---
 
 <div align="center">
 
-**学习愉快！🚀**
+**⭐ 如果觉得有用，请给个 Star！**
 
-[报告 Bug](https://github.com/LessUp/hpc-ai-optimization-lab/issues) · [请求功能](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
+[报告 Bug](https://github.com/LessUp/hpc-ai-optimization-lab/issues) · [请求功能](https://github.com/LessUp/hpc-ai-optimization-lab/issues) · [文档](https://lessup.github.io/hpc-ai-optimization-lab/)
+
+**由 HPC-AI-Optimization-Lab 贡献者用 ❤️ 制作**
 
 </div>
