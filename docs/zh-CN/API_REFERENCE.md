@@ -166,10 +166,10 @@ CUDA_CHECK_LAST();
 
 整流线性单元（Rectified Linear Unit）激活函数。
 
-**头文件**: `01_elementwise/relu.cuh`
+**头文件**: `elementwise/relu.cuh`
 
 ```cpp
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 
 namespace hpc::elementwise {
 
@@ -190,7 +190,7 @@ void relu(const T* input, T* output, size_t n,
 **示例**:
 
 ```cpp
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 #include "common/tensor.cuh"
 
 // 使用默认优化级别（GridStride）
@@ -210,10 +210,10 @@ hpc::elementwise::relu<float, hpc::elementwise::OptLevel::Vectorized>(
 
 Sigmoid 激活函数。
 
-**头文件**: `01_elementwise/sigmoid.cuh`
+**头文件**: `elementwise/sigmoid.cuh`
 
 ```cpp
-#include "01_elementwise/sigmoid.cuh"
+#include "elementwise/sigmoid.cuh"
 
 namespace hpc::elementwise {
 
@@ -231,10 +231,10 @@ void sigmoid(const T* input, T* output, size_t n,
 
 逐元素向量加法。
 
-**头文件**: `01_elementwise/vector_add.cuh`
+**头文件**: `elementwise/vector_add.cuh`
 
 ```cpp
-#include "01_elementwise/vector_add.cuh"
+#include "elementwise/vector_add.cuh"
 
 namespace hpc::elementwise {
 
@@ -252,10 +252,10 @@ void vector_add(const T* a, const T* b, T* c, size_t n,
 
 矩阵转置，支持多种优化选项。
 
-**头文件**: `01_elementwise/transpose.cuh`
+**头文件**: `elementwise/transpose.cuh`
 
 ```cpp
-#include "01_elementwise/transpose.cuh"
+#include "elementwise/transpose.cuh"
 
 namespace hpc::elementwise {
 
@@ -281,10 +281,10 @@ void transpose(const T* input, T* output, int rows, int cols,
 
 数值稳定的 Softmax，采用在线算法实现。
 
-**头文件**: `02_reduction/softmax.cuh`
+**头文件**: `reduction/softmax.cuh`
 
 ```cpp
-#include "02_reduction/softmax.cuh"
+#include "reduction/softmax.cuh"
 
 namespace hpc::reduction {
 
@@ -306,7 +306,7 @@ void softmax(const T* input, T* output, int batch, int seq_len,
 **示例**:
 
 ```cpp
-#include "02_reduction/softmax.cuh"
+#include "reduction/softmax.cuh"
 
 int batch = 32, seq_len = 128;
 hpc::Tensor<float> input(batch * seq_len);
@@ -322,10 +322,10 @@ hpc::reduction::softmax<float>(
 
 层归一化（Layer Normalization）。
 
-**头文件**: `02_reduction/layernorm.cuh`
+**头文件**: `reduction/layernorm.cuh`
 
 ```cpp
-#include "02_reduction/layernorm.cuh"
+#include "reduction/layernorm.cuh"
 
 namespace hpc::reduction {
 
@@ -344,10 +344,10 @@ void layer_norm(const T* input, const T* gamma, const T* beta,
 
 均方根层归一化（Root Mean Square Layer Normalization）。
 
-**头文件**: `02_reduction/rmsnorm.cuh`
+**头文件**: `reduction/rmsnorm.cuh`
 
 ```cpp
-#include "02_reduction/rmsnorm.cuh"
+#include "reduction/rmsnorm.cuh"
 
 namespace hpc::reduction {
 
@@ -368,10 +368,10 @@ void rms_norm(const T* input, const T* gamma, T* output,
 
 7 步优化进阶实现。
 
-**头文件**: `03_gemm/gemm.cuh`
+**头文件**: `gemm/gemm.cuh`
 
 ```cpp
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 namespace hpc::gemm {
 
@@ -400,7 +400,7 @@ void gemm(const T* A, const T* B, T* C,
 **示例**:
 
 ```cpp
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 int M = 1024, N = 1024, K = 1024;
 
@@ -429,10 +429,10 @@ hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
 
 生产就绪的卷积实现。
 
-**头文件**: `04_convolution/conv_implicit_gemm.cuh`
+**头文件**: `convolution/conv_implicit_gemm.cuh`
 
 ```cpp
-#include "04_convolution/conv_implicit_gemm.cuh"
+#include "convolution/conv_implicit_gemm.cuh"
 
 namespace hpc::convolution {
 
@@ -466,10 +466,10 @@ void conv2d_implicit_gemm(const T* input, const T* weight, T* output,
 
 优化的 3×3 卷积（实验性）。
 
-**头文件**: `04_convolution/conv_winograd.cuh`
+**头文件**: `convolution/conv_winograd.cuh`
 
 ```cpp
-#include "04_convolution/conv_winograd.cuh"
+#include "convolution/conv_winograd.cuh"
 
 namespace hpc::convolution {
 
@@ -494,10 +494,10 @@ void conv2d_winograd(const float* input, const float* weight, float* output,
 
 IO 感知的注意力机制实现。
 
-**头文件**: `05_attention/flash_attention.cuh`
+**头文件**: `attention/flash_attention.cuh`
 
 ```cpp
-#include "05_attention/flash_attention.cuh"
+#include "attention/flash_attention.cuh"
 
 namespace hpc::attention {
 
@@ -523,7 +523,7 @@ void flash_attention_forward(const T* Q, const T* K, const T* V,
 **示例**:
 
 ```cpp
-#include "05_attention/flash_attention.cuh"
+#include "attention/flash_attention.cuh"
 
 int batch = 2, heads = 8, seq = 512, dim = 64;
 int total = batch * heads * seq * dim;
@@ -547,10 +547,10 @@ hpc::attention::flash_attention_forward<float>(
 
 ### RoPE (旋转位置编码)
 
-**头文件**: `05_attention/rope.cuh`
+**头文件**: `attention/rope.cuh`
 
 ```cpp
-#include "05_attention/rope.cuh"
+#include "attention/rope.cuh"
 
 namespace hpc::attention {
 
@@ -569,10 +569,10 @@ void apply_rope(T* query, T* key,
 
 用于 MoE（混合专家）路由。
 
-**头文件**: `05_attention/topk.cuh`
+**头文件**: `attention/topk.cuh`
 
 ```cpp
-#include "05_attention/topk.cuh"
+#include "attention/topk.cuh"
 
 namespace hpc::attention {
 
@@ -592,10 +592,10 @@ void topk(const T* input, T* output, int* indices,
 
 逐行对称量化。
 
-**头文件**: `06_quantization/int8_quant.cuh`
+**头文件**: `quantization/int8_quant.cuh`
 
 ```cpp
-#include "06_quantization/int8_quant.cuh"
+#include "quantization/int8_quant.cuh"
 
 namespace hpc::quantization {
 
@@ -617,10 +617,10 @@ void dequantize_int8(const int8_t* input, const float* scale,
 
 张量内存加速器（Tensor Memory Accelerator）工具。
 
-**头文件**: `07_cuda13_features/tma.cuh`
+**头文件**: `cuda13/tma.cuh`
 
 ```cpp
-#include "07_cuda13_features/tma.cuh"
+#include "cuda13/tma.cuh"
 
 namespace hpc::cuda13 {
 
@@ -644,10 +644,10 @@ void tma_copy_2d(const T* src, T* dst,
 
 ### 线程块集群 (Thread Block Clusters)
 
-**头文件**: `07_cuda13_features/cluster.cuh`
+**头文件**: `cuda13/cluster.cuh`
 
 ```cpp
-#include "07_cuda13_features/cluster.cuh"
+#include "cuda13/cluster.cuh"
 
 namespace hpc::cuda13 {
 
@@ -670,10 +670,10 @@ void cluster_reduce(const T* input, T* output, size_t n,
 
 ### FP8 GEMM
 
-**头文件**: `07_cuda13_features/fp8_gemm.cuh`
+**头文件**: `cuda13/fp8_gemm.cuh`
 
 ```cpp
-#include "07_cuda13_features/fp8_gemm.cuh"
+#include "cuda13/fp8_gemm.cuh"
 
 namespace hpc::cuda13 {
 

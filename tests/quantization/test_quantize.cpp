@@ -5,8 +5,8 @@
 #include <cmath>
 #include <vector>
 
-#include "06_quantization/dequant.cuh"
-#include "06_quantization/int8_quant.cuh"
+#include "quantization/dequant.cuh"
+#include "quantization/int8_quant.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

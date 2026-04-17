@@ -247,7 +247,7 @@ tests/
 
 ```cpp
 #include <gtest/gtest.h>
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

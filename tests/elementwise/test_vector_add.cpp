@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
-#include "01_elementwise/vector_add.cuh"
+#include "elementwise/vector_add.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

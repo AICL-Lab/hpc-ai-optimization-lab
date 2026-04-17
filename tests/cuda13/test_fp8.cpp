@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "07_cuda13_features/fp8_gemm.cuh"
+#include "cuda13/fp8_gemm.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

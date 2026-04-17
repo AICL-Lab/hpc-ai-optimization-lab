@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "05_attention/rope.cuh"
+#include "attention/rope.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 #include <cmath>

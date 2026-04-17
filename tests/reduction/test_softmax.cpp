@@ -2,7 +2,7 @@
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
 #include <algorithm>
-#include "02_reduction/softmax.cuh"
+#include "reduction/softmax.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 #include <cmath>

@@ -26,13 +26,13 @@
 hpc-ai-optimization-lab/
 ├── src/                    # 内核实现
 │   ├── common/             # 共享工具（仅头文件）
-│   ├── 01_elementwise/     # 模块 1：逐元素操作
-│   ├── 02_reduction/       # 模块 2：归约操作
-│   ├── 03_gemm/            # 模块 3：矩阵乘法
-│   ├── 04_convolution/     # 模块 4：卷积操作
-│   ├── 05_attention/       # 模块 5：注意力机制
-│   ├── 06_quantization/    # 模块 6：量化工具
-│   └── 07_cuda13_features/ # 模块 7：实验性功能
+│   ├── elementwise/     # 模块 1：逐元素操作
+│   ├── reduction/       # 模块 2：归约操作
+│   ├── gemm/            # 模块 3：矩阵乘法
+│   ├── convolution/     # 模块 4：卷积操作
+│   ├── attention/       # 模块 5：注意力机制
+│   ├── quantization/    # 模块 6：量化工具
+│   └── cuda13/ # 模块 7：实验性功能
 ├── tests/                  # 测试套件
 ├── examples/               # 可运行示例
 ├── python/                 # Python 绑定
@@ -288,8 +288,8 @@ function(hpc_add_cuda_library target)
 endfunction()
 
 # 每个模块
-add_subdirectory(src/01_elementwise)  # 创建 hpc_elementwise
-add_subdirectory(src/02_reduction)    # 创建 hpc_reduction
+add_subdirectory(src/elementwise)  # 创建 hpc_elementwise
+add_subdirectory(src/reduction)    # 创建 hpc_reduction
 # ...
 ```
 

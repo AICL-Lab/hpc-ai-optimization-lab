@@ -2,7 +2,7 @@
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
 #include <algorithm>
-#include "07_cuda13_features/cluster.cuh"
+#include "cuda13/cluster.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 #include <numeric>

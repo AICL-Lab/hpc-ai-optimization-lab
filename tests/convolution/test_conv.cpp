@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "04_convolution/conv_implicit_gemm.cuh"
-#include "04_convolution/conv_winograd.cuh"
+#include "convolution/conv_implicit_gemm.cuh"
+#include "convolution/conv_winograd.cuh"
 #include "common/tensor.cuh"
 #include "../test_utils.hpp"
 

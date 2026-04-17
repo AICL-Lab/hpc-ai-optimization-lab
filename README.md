@@ -34,13 +34,13 @@ HPC-AI-Optimization-Lab is an educational and production-ready CUDA kernel libra
 hpc-ai-optimization-lab/
 ├── src/
 │   ├── common/           # Shared utilities (Tensor, Timer, CUDA checks)
-│   ├── 01_elementwise/   # ReLU, Sigmoid, Vector Add, Transpose
-│   ├── 02_reduction/     # Softmax, LayerNorm, RMSNorm
-│   ├── 03_gemm/          # 7-step GEMM optimization journey
-│   ├── 04_convolution/   # Implicit GEMM, Winograd convolution
-│   ├── 05_attention/     # FlashAttention, RoPE, TopK
-│   ├── 06_quantization/  # INT8/FP8 quantization utilities
-│   └── 07_cuda13_features/ # Experimental Hopper architecture features
+│   ├── elementwise/   # ReLU, Sigmoid, Vector Add, Transpose
+│   ├── reduction/     # Softmax, LayerNorm, RMSNorm
+│   ├── gemm/          # 7-step GEMM optimization journey
+│   ├── convolution/   # Implicit GEMM, Winograd convolution
+│   ├── attention/     # FlashAttention, RoPE, TopK
+│   ├── quantization/  # INT8/FP8 quantization utilities
+│   └── cuda13/ # Experimental Hopper architecture features
 ├── tests/                # Comprehensive test suite
 ├── examples/             # CUDA and Python examples
 ├── python/               # Nanobind Python bindings
@@ -113,7 +113,7 @@ Optimizations covered:
 - Shared memory for transpose operations
 
 ```cpp
-#include "01_elementwise/relu.cuh"
+#include "elementwise/relu.cuh"
 
 // Using optimized Grid Stride implementation
 hpc::elementwise::relu<float, hpc::elementwise::OptLevel::GridStride>(
@@ -129,7 +129,7 @@ Optimizations covered:
 - Welford's algorithm for numerical stability
 
 ```cpp
-#include "02_reduction/softmax.cuh"
+#include "reduction/softmax.cuh"
 
 // Online Softmax - single pass algorithm
 hpc::reduction::softmax<float, hpc::reduction::SoftmaxOpt::OnlineSoftmax>(
@@ -151,7 +151,7 @@ The flagship module demonstrating progressive GEMM optimization:
 | 7 | Software Pipelining | ~70+ | Multi-stage execution overlap |
 
 ```cpp
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 // Using Tensor Core optimization
 hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
@@ -170,7 +170,7 @@ hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
 - MoE TopK routing
 
 ```cpp
-#include "05_attention/flash_attention.cuh"
+#include "attention/flash_attention.cuh"
 
 hpc::attention::FlashAttnConfig config{
     .batch_size = batch,

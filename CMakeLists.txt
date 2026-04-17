@@ -97,13 +97,13 @@ function(hpc_add_cuda_library target)
 endfunction()
 
 # Kernel modules
-add_subdirectory(src/01_elementwise)
-add_subdirectory(src/02_reduction)
-add_subdirectory(src/03_gemm)
-add_subdirectory(src/04_convolution)
-add_subdirectory(src/05_attention)
-add_subdirectory(src/06_quantization)
-add_subdirectory(src/07_cuda13_features)
+add_subdirectory(src/elementwise)
+add_subdirectory(src/reduction)
+add_subdirectory(src/gemm)
+add_subdirectory(src/convolution)
+add_subdirectory(src/attention)
+add_subdirectory(src/quantization)
+add_subdirectory(src/cuda13)
 
 # Python bindings
 if(BUILD_PYTHON_BINDINGS)

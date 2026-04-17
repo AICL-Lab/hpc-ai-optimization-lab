@@ -230,7 +230,7 @@ python -m http.server 8001 -d python/_build/html
 
 ```cpp
 // 始终包含必要的头文件
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 
 int matrix_size = 1024;  // 使用有意义的命名
 ```

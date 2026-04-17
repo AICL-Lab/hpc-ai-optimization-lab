@@ -15,7 +15,7 @@
 #include <string>
 #include <random>
 
-#include "03_gemm/gemm.cuh"
+#include "gemm/gemm.cuh"
 #include "common/cuda_check.cuh"
 #include "common/tensor.cuh"
 

@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include/hpc
+
+Name: hpc-ai-optimization-lab
+Description: High-Performance CUDA Kernels for AI/ML Workloads
+Version: @PROJECT_VERSION@
+Requires: cuda >= 12.4
+Libs: -L${libdir} -lhpc_elementwise -lhpc_reduction -lhpc_gemm -lhpc_convolution -lhpc_attention -lhpc_quantization -lhpc_cuda13
+Cflags: -I${includedir} -std=c++20
