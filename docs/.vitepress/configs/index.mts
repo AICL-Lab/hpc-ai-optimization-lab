@@ -1,5 +1,7 @@
 import type { HeadConfig, DefaultTheme } from 'vitepress'
 
+const SITE_URL = 'https://lessup.github.io/hpc-ai-optimization-lab'
+
 // Head 配置
 export function head(): HeadConfig[] {
   return [
@@ -7,39 +9,43 @@ export function head(): HeadConfig[] {
     ['meta', { charset: 'utf-8' }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }],
     
-    // SEO
-    ['meta', { name: 'description', content: 'A comprehensive CUDA kernel optimization laboratory for AI workloads' }],
-    ['meta', { name: 'keywords', content: 'CUDA, GPU, optimization, HPC, AI, machine learning, Tensor Core, FlashAttention' }],
+    // SEO Meta Tags
+    ['meta', { name: 'description', content: 'A comprehensive CUDA kernel optimization laboratory for AI workloads. Learn GPU programming from memory coalescing to Tensor Core optimization with GEMM, FlashAttention, and CUDA 13 features.' }],
+    ['meta', { name: 'keywords', content: 'CUDA, GPU, optimization, HPC, AI, machine learning, Tensor Core, FlashAttention, GEMM, kernel optimization, NVIDIA, deep learning, parallel computing, CUDA programming' }],
     ['meta', { name: 'author', content: 'HPC-AI-Optimization-Lab Contributors' }],
     ['meta', { name: 'theme-color', content: '#0891b2' }],
+    ['meta', { name: 'google-site-verification', content: '' }], // Add your Google Search Console verification
     
     // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'HPC-AI-Optimization-Lab' }],
-    ['meta', { property: 'og:title', content: 'HPC-AI-Optimization-Lab Documentation' }],
-    ['meta', { property: 'og:description', content: 'A comprehensive CUDA kernel optimization laboratory for AI workloads' }],
-    ['meta', { property: 'og:url', content: 'https://lessup.github.io/hpc-ai-optimization-lab/' }],
-    ['meta', { property: 'og:image', content: 'https://lessup.github.io/hpc-ai-optimization-lab/og-image.png' }],
+    ['meta', { property: 'og:title', content: 'HPC-AI-Optimization-Lab | CUDA Kernel Optimization' }],
+    ['meta', { property: 'og:description', content: 'A comprehensive CUDA kernel optimization laboratory for AI workloads. From naive implementations to Tensor Core mastery.' }],
+    ['meta', { property: 'og:url', content: `${SITE_URL}/` }],
+    ['meta', { property: 'og:image', content: `${SITE_URL}/og-image.png` }],
+    ['meta', { property: 'og:locale', content: 'en_US' }],
+    ['meta', { property: 'og:locale:alternate', content: 'zh_CN' }],
     
     // Twitter Card
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:site', content: '@LessUp' }],
     ['meta', { name: 'twitter:title', content: 'HPC-AI-Optimization-Lab' }],
-    ['meta', { name: 'twitter:description', content: 'CUDA kernel optimization laboratory for AI workloads' }],
+    ['meta', { name: 'twitter:description', content: 'CUDA kernel optimization laboratory: GEMM, FlashAttention, Tensor Core optimization' }],
+    ['meta', { name: 'twitter:image', content: `${SITE_URL}/og-image.png` }],
     
-    // 预连接到 CDN
-    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
-    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
-    
-    // Favicon
+    // Favicon and Icons
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' }],
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+    ['link', { rel: 'manifest', href: '/site.webmanifest' }],
     
-    // Canonical
-    ['link', { rel: 'canonical', href: 'https://lessup.github.io/hpc-ai-optimization-lab/' }],
+    // Canonical URL
+    ['link', { rel: 'canonical', href: `${SITE_URL}/` }],
     
-    // Performance hints
-    ['meta', { name: 'render-color', content: '#081120' }],
-    ['meta', { 'http-equiv': 'x-ua-compatible', content: 'ie=edge' }]
+    // Performance and Security
+    ['meta', { 'http-equiv': 'x-ua-compatible', content: 'ie=edge' }],
+    ['meta', { name: 'format-detection', content: 'telephone=no' }]
   ]
 }
 
@@ -53,17 +59,25 @@ export function nav(): DefaultTheme.NavItem[] {
         { text: 'Getting Started', link: '/en/guide/' },
         { text: 'Memory Optimization', link: '/en/guide/memory' },
         { text: 'GEMM Optimization', link: '/en/guide/gemm' },
-        { text: 'FlashAttention', link: '/en/guide/flash-attention' }
+        { text: 'FlashAttention', link: '/en/guide/flash-attention' },
+        { text: 'CUDA 13 Features', link: '/en/guide/cuda13' }
       ]
     },
     {
       text: 'API',
       items: [
         { text: 'C++ / CUDA', link: '/cpp-api/index.html', target: '_blank' },
-        { text: 'Python', link: '/python-api/index.html', target: '_blank' }
+        { text: 'Python', link: '/python-api/index.html', target: '_blank' },
+        { text: 'Architecture', link: '/en/api/architecture' }
       ]
     },
-    { text: 'v0.3.0', link: '/en/changelog' }
+    { 
+      text: 'v0.3.0',
+      items: [
+        { text: 'Changelog', link: '/en/changelog' },
+        { text: 'GitHub Releases', link: 'https://github.com/LessUp/hpc-ai-optimization-lab/releases' }
+      ]
+    }
   ]
 }
 
@@ -72,7 +86,7 @@ export function sidebar(): DefaultTheme.Sidebar {
   return {
     '/en/': [
       {
-        text: 'Introduction',
+        text: 'Getting Started',
         collapsed: false,
         items: [
           { text: 'What is HPC-AI-Lab?', link: '/en/' },
@@ -90,11 +104,21 @@ export function sidebar(): DefaultTheme.Sidebar {
           { text: 'FlashAttention', link: '/en/guide/flash-attention' },
           { text: 'CUDA 13 Features', link: '/en/guide/cuda13' }
         ]
+      },
+      {
+        text: 'Advanced',
+        collapsed: true,
+        items: [
+          { text: 'Performance Tuning', link: '/en/guide/performance-tuning' },
+          { text: 'Profiling', link: '/en/guide/profiling' },
+          { text: 'Best Practices', link: '/en/guide/best-practices' },
+          { text: 'Troubleshooting', link: '/en/guide/troubleshooting' }
+        ]
       }
     ],
     '/zh-CN/': [
       {
-        text: '介绍',
+        text: '入门',
         collapsed: false,
         items: [
           { text: '什么是 HPC-AI-Lab？', link: '/zh-CN/' },
@@ -111,6 +135,16 @@ export function sidebar(): DefaultTheme.Sidebar {
           { text: 'GEMM 优化', link: '/zh-CN/guide/gemm' },
           { text: 'FlashAttention', link: '/zh-CN/guide/flash-attention' },
           { text: 'CUDA 13 特性', link: '/zh-CN/guide/cuda13' }
+        ]
+      },
+      {
+        text: '高级',
+        collapsed: true,
+        items: [
+          { text: '性能调优', link: '/zh-CN/guide/performance-tuning' },
+          { text: '性能分析', link: '/zh-CN/guide/profiling' },
+          { text: '最佳实践', link: '/zh-CN/guide/best-practices' },
+          { text: '故障排除', link: '/zh-CN/guide/troubleshooting' }
         ]
       }
     ]

@@ -245,6 +245,6 @@ ncu --metrics sm__pipe_tensor_op_hmma_cycles_active ./your_program
 ---
 
 For more details, see:
-- [GEMM Optimization Guide](01_gemm_optimization.md)
-- [Memory Optimization Guide](02_memory_optimization.md)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [GEMM Optimization Guide](gemm.md)
+- [Memory Optimization Guide](memory.md)
+- [Troubleshooting Guide](troubleshooting.md)

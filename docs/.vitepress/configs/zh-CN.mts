@@ -60,6 +60,7 @@ export default {
           text: '高级',
           collapsed: true,
           items: [
+            { text: '性能调优', link: '/zh-CN/guide/performance-tuning' },
             { text: '性能分析', link: '/zh-CN/guide/profiling' },
             { text: '最佳实践', link: '/zh-CN/guide/best-practices' },
             { text: '故障排除', link: '/zh-CN/guide/troubleshooting' }

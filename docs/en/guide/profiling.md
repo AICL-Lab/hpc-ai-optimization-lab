@@ -122,7 +122,7 @@ compute-sanitizer --tool racecheck ./bin/tests/test_reduction
 
 4. **Implement Optimization**
    - Apply tiling, vectorization, or other techniques
-   - See [Performance Tuning Guide](../PERFORMANCE_TUNING.md)
+   - See [Performance Tuning Guide](performance-tuning.md)
 
 5. **Verify Improvement**
    ```bash
@@ -184,4 +184,4 @@ Reference performance numbers (A100, FP32):
 
 - [NVIDIA Nsight Compute Documentation](https://docs.nvidia.com/nsight-compute/)
 - [CUDA Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/)
-- [Performance Tuning Guide](../PERFORMANCE_TUNING.md)
+- [Performance Tuning Guide](performance-tuning.md)

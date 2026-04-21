@@ -60,6 +60,7 @@ export default {
           text: 'Advanced',
           collapsed: true,
           items: [
+            { text: 'Performance Tuning', link: '/en/guide/performance-tuning' },
             { text: 'Profiling', link: '/en/guide/profiling' },
             { text: 'Best Practices', link: '/en/guide/best-practices' },
             { text: 'Troubleshooting', link: '/en/guide/troubleshooting' }

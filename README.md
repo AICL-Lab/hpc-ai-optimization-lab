@@ -131,8 +131,8 @@ Visit our comprehensive documentation at: **[https://lessup.github.io/hpc-ai-opt
 | **GEMM Optimization** | [7-Step Journey](docs/en/guide/gemm.md) | [GEMM优化](docs/zh-CN/guide/gemm.md) |
 | **Memory Optimization** | [Guide](docs/en/guide/memory.md) | [访存优化](docs/zh-CN/guide/memory.md) |
 | **FlashAttention** | [Guide](docs/en/guide/flash-attention.md) | [FlashAttention](docs/zh-CN/guide/flash-attention.md) |
-| **Performance Tuning** | [Guide](docs/en/PERFORMANCE_TUNING.md) | [性能调优](docs/zh-CN/PERFORMANCE_TUNING.md) |
-| **API Reference** | [C++/Python API](docs/en/API_REFERENCE.md) | [API参考](docs/zh-CN/API_REFERENCE.md) |
+| **Performance Tuning** | [Guide](docs/en/guide/performance-tuning.md) | [性能调优](docs/zh-CN/guide/performance-tuning.md) |
+| **API Reference** | [C++/Python API](docs/en/api/index.md) | [API参考](docs/zh-CN/api/index.md) |
 
 ### 🎓 Recommended Learning Path
 

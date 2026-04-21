@@ -131,8 +131,8 @@ python examples/python/basic_usage.py
 | **GEMM 优化** | [7-Step Journey](docs/en/guide/gemm.md) | [GEMM优化](docs/zh-CN/guide/gemm.md) |
 | **访存优化** | [Guide](docs/en/guide/memory.md) | [访存优化](docs/zh-CN/guide/memory.md) |
 | **FlashAttention** | [Guide](docs/en/guide/flash-attention.md) | [FlashAttention](docs/zh-CN/guide/flash-attention.md) |
-| **性能调优** | [Guide](docs/en/PERFORMANCE_TUNING.md) | [性能调优](docs/zh-CN/PERFORMANCE_TUNING.md) |
-| **API 参考** | [C++/Python API](docs/en/API_REFERENCE.md) | [API参考](docs/zh-CN/API_REFERENCE.md) |
+| **性能调优** | [Guide](docs/en/guide/performance-tuning.md) | [性能调优](docs/zh-CN/guide/performance-tuning.md) |
+| **API 参考** | [C++/Python API](docs/en/api/index.md) | [API参考](docs/zh-CN/api/index.md) |
 
 ### 🎓 推荐学习路径
 

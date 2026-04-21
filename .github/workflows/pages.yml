@@ -237,7 +237,7 @@ jobs:
             echo "✅ Copied Doxygen output to cpp-api/"
           else
             mkdir -p "$SITE_DIR/cpp-api"
-            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=../en/api/cpp"></head><body><p>Redirecting to <a href="../en/api/cpp">C++ API Documentation</a>...</p></body></html>' > "$SITE_DIR/cpp-api/index.html"
+            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=../en/api/"></head><body><p>Redirecting to <a href="../en/api/">C++ API Documentation</a>...</p></body></html>' > "$SITE_DIR/cpp-api/index.html"
             echo "⚠️ Created Doxygen redirect"
           fi
           
@@ -247,21 +247,44 @@ jobs:
             echo "✅ Copied Sphinx output to python-api/"
           else
             mkdir -p "$SITE_DIR/python-api"
-            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=../en/api/python"></head><body><p>Redirecting to <a href="../en/api/python">Python API Documentation</a>...</p></body></html>' > "$SITE_DIR/python-api/index.html"
+            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=../en/api/"></head><body><p>Redirecting to <a href="../en/api/">Python API Documentation</a>...</p></body></html>' > "$SITE_DIR/python-api/index.html"
             echo "⚠️ Created Sphinx redirect"
           fi
           
+          # Create robots.txt for SEO
+          cat > "$SITE_DIR/robots.txt" << 'EOF'
+          User-agent: *
+          Allow: /
+          
+          Sitemap: https://lessup.github.io/hpc-ai-optimization-lab/sitemap.xml
+          EOF
+          
           # Create _redirects for Netlify compatibility
-          {
-            echo "# Redirect rules"
-            echo "/en/api/cpp    /cpp-api/index.html    200"
-            echo "/en/api/python /python-api/index.html 200"
-            echo "/zh-CN/api/cpp    /cpp-api/index.html    200"
-            echo "/zh-CN/api/python /python-api/index.html 200"
-          } > "$SITE_DIR/_redirects"
+          cat > "$SITE_DIR/_redirects" << 'EOF'
+          # API Redirects
+          /en/api/cpp         /cpp-api/index.html         200
+          /en/api/python      /python-api/index.html      200
+          /zh-CN/api/cpp      /cpp-api/index.html         200
+          /zh-CN/api/python   /python-api/index.html      200
+          
+          # Legacy redirects (old numbered docs)
+          /en/01_gemm_optimization.html           /en/guide/gemm.html           301
+          /en/02_memory_optimization.html         /en/guide/memory.html         301
+          /en/03_reduction_optimization.html      /en/guide/reduction.html      301
+          /en/04_flash_attention.html             /en/guide/flash-attention.html 301
+          /en/05_cuda13_features.html             /en/guide/cuda13.html         301
+          /zh-CN/01_gemm_optimization.html        /zh-CN/guide/gemm.html        301
+          /zh-CN/02_memory_optimization.html      /zh-CN/guide/memory.html      301
+          /zh-CN/03_reduction_optimization.html   /zh-CN/guide/reduction.html   301
+          /zh-CN/04_flash_attention.html          /zh-CN/guide/flash-attention.html 301
+          /zh-CN/05_cuda13_features.html          /zh-CN/guide/cuda13.html      301
+          EOF
 
-          # Create 404 page
-          cp "$SITE_DIR/404.html" "$SITE_DIR/404.html" 2>/dev/null || echo '<!DOCTYPE html><html><head><title>404</title></head><body><h1>404 - Page Not Found</h1><a href="/hpc-ai-optimization-lab/">Go Home</a></body></html>' > "$SITE_DIR/404.html"
+          # Create .nojekyll to disable Jekyll processing
+          touch "$SITE_DIR/.nojekyll"
+          
+          # Create CNAME if using custom domain (uncomment and edit if needed)
+          # echo "docs.yourdomain.com" > "$SITE_DIR/CNAME"
 
           echo ""
           echo "=== Final Site Contents ==="
