@@ -97,10 +97,10 @@ If you encounter issues:
 3. **Compilation errors**: Verify GCC 11+ or Clang 14+ is installed
 4. **Test failures**: Check GPU availability and CUDA driver version
 
-For more help, see the [Troubleshooting Guide](../TROUBLESHOOTING.md).
+For more help, see the [Troubleshooting Guide](troubleshooting.md).
 
 ## Next Steps
 
 - Follow the [Quick Start Guide](quick-start.md) for your first kernel
-- Explore the [Module Documentation](../API_REFERENCE.md)
+- Explore the [API Documentation](../api/index.md)
 - Check out [Examples](../../examples/README.md)

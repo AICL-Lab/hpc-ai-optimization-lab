@@ -1,0 +1,23 @@
+{
+  "name": "HPC-AI-Optimization-Lab",
+  "short_name": "HPC-AI-Lab",
+  "description": "CUDA kernel optimization laboratory for AI workloads",
+  "start_url": "/hpc-ai-optimization-lab/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0891b2",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/logo-large.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["education", "developer tools"],
+  "lang": "en"
+}

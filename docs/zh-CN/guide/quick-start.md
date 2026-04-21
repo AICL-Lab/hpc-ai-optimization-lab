@@ -98,8 +98,8 @@ Now that you have the basics, explore:
 |-------|-------|
 | Memory Optimization | [Memory Guide](memory.md) |
 | GEMM Optimization | [GEMM Guide](gemm.md) |
-| Performance Tuning | [Performance Tuning](../PERFORMANCE_TUNING.md) |
-| API Reference | [API Reference](../API_REFERENCE.md) |
+| Performance Tuning | [Performance Tuning](performance-tuning.md) |
+| API Reference | [API Reference](../api/index.md) |
 
 ## Common Commands Cheat Sheet
 
@@ -123,5 +123,5 @@ pip install -e python/
 ## Getting Help
 
 - **Documentation**: Browse the [Guides](index.md)
-- **Issues**: Check [Troubleshooting](../TROUBLESHOOTING.md)
+- **Issues**: Check [Troubleshooting](troubleshooting.md)
 - **Community**: Open a [GitHub Issue](https://github.com/LessUp/hpc-ai-optimization-lab/issues)

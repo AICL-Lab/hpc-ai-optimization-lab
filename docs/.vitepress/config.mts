@@ -3,6 +3,9 @@ import { head, nav, sidebar, search } from './configs/index.mts'
 import enConfig from './configs/en.mts'
 import zhCNConfig from './configs/zh-CN.mts'
 
+const BASE_URL = '/hpc-ai-optimization-lab/'
+const SITE_URL = 'https://lessup.github.io'
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   // 站点元数据
@@ -12,6 +15,7 @@ export default defineConfig({
   description: 'A comprehensive CUDA kernel optimization laboratory for AI workloads',
   
   // 基础配置
+  base: BASE_URL,
   srcDir: '.',
   srcExclude: ['**/README.md', '**/node_modules/**'],
   outDir: './.vitepress/dist',
@@ -22,6 +26,17 @@ export default defineConfig({
   
   // 最后更新时间
   lastUpdated: true,
+  
+  // Sitemap 配置
+  sitemap: {
+    hostname: SITE_URL + BASE_URL,
+    lastmodDateOnly: true
+  },
+  
+  // robots.txt 配置
+  robots: {
+    allowAll: true
+  },
   
   // 多语言配置
   locales: {
@@ -124,7 +139,6 @@ export default defineConfig({
     },
     lineNumbers: true,
     config: async (md) => {
-      // 自定义 Markdown 插件
       const { default: footnote } = await import('markdown-it-footnote')
       const { default: taskLists } = await import('markdown-it-task-lists')
       md.use(footnote)
@@ -150,10 +164,6 @@ export default defineConfig({
         }
       }
     },
-    ssr: {
-      // noExternal removed - packages not in dependencies
-      // Previously referenced @vitepress-demo-preview which doesn't exist
-    },
     resolve: {
       alias: {
         '@': '/.vitepress'
@@ -163,11 +173,20 @@ export default defineConfig({
   
   // 缓存重写
   transformPageData: (pageData) => {
-    // 添加自定义页面数据
     pageData.frontmatter.head ??= []
+    
+    // Open Graph URL
     pageData.frontmatter.head.push([
       'meta',
-      { property: 'og:url', content: `https://lessup.github.io/hpc-ai-optimization-lab${pageData.relativePath}` }
+      { property: 'og:url', content: `${SITE_URL}${BASE_URL}${pageData.relativePath.replace(/\.md$/, '.html')}` }
     ])
+    
+    // Article published time (for SEO)
+    if (pageData.frontmatter.lastUpdated) {
+      pageData.frontmatter.head.push([
+        'meta',
+        { property: 'article:modified_time', content: new Date(pageData.frontmatter.lastUpdated).toISOString() }
+      ])
+    }
   }
 })

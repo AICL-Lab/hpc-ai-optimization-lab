@@ -19,23 +19,23 @@ This release focuses on making the documentation accessible to both English and 
 
 #### English Documentation Suite
 
-- **[GEMM Optimization](docs/en/01_gemm_optimization.md)** - 7-step matrix multiplication optimization journey (translated from Chinese)
-- **[Memory Optimization](docs/en/02_memory_optimization.md)** - Coalesced access, vectorization, shared memory patterns (translated from Chinese)
-- **[Reduction Optimization](docs/en/03_reduction_optimization.md)** - Warp shuffle, online softmax, LayerNorm algorithms (translated from Chinese)
-- **[FlashAttention](docs/en/04_flash_attention.md)** - IO-aware attention mechanism with tiling strategy (translated from Chinese)
-- **[CUDA 13 Features](docs/en/05_cuda13_features.md)** - Hopper architecture: TMA, Clusters, FP8 support (translated from Chinese)
-- **[API Reference](docs/en/API_REFERENCE.md)** - Complete C++/CUDA API documentation
-- **[Architecture Overview](docs/en/ARCHITECTURE.md)** - Project design patterns and module organization
+- **[GEMM Optimization](docs/en/guide/gemm.md)** - 7-step matrix multiplication optimization journey
+- **[Memory Optimization](docs/en/guide/memory.md)** - Coalesced access, vectorization, shared memory patterns
+- **[Reduction Optimization](docs/en/guide/reduction.md)** - Warp shuffle, online softmax, LayerNorm algorithms
+- **[FlashAttention](docs/en/guide/flash-attention.md)** - IO-aware attention mechanism with tiling strategy
+- **[CUDA 13 Features](docs/en/guide/cuda13.md)** - Hopper architecture: TMA, Clusters, FP8 support
+- **[API Reference](docs/en/api/index.md)** - Complete C++/CUDA API documentation
+- **[Architecture Overview](docs/en/api/architecture.md)** - Project design patterns and module organization
 
 #### 中文文档集 / Chinese Documentation Suite
 
-- **[GEMM 优化](docs/zh-CN/01_gemm_optimization.md)** - 7步矩阵乘法优化之旅
-- **[访存优化](docs/zh-CN/02_memory_optimization.md)** - 合并访问、向量化、共享内存模式
-- **[归约优化](docs/zh-CN/03_reduction_optimization.md)** - Warp洗牌、在线Softmax、LayerNorm算法
-- **[FlashAttention](docs/zh-CN/04_flash_attention.md)** - 基于IO感知的注意力机制与分块策略
-- **[CUDA 13 特性](docs/zh-CN/05_cuda13_features.md)** - Hopper架构：TMA、集群、FP8支持
-- **[API 参考](docs/zh-CN/API_REFERENCE.md)** - 完整C++/CUDA API文档（从英文翻译）
-- **[架构概览](docs/zh-CN/ARCHITECTURE.md)** - 项目设计模式与模块组织（从英文翻译）
+- **[GEMM 优化](docs/zh-CN/guide/gemm.md)** - 7步矩阵乘法优化之旅
+- **[访存优化](docs/zh-CN/guide/memory.md)** - 合并访问、向量化、共享内存模式
+- **[归约优化](docs/zh-CN/guide/reduction.md)** - Warp洗牌、在线Softmax、LayerNorm算法
+- **[FlashAttention](docs/zh-CN/guide/flash-attention.md)** - 基于IO感知的注意力机制与分块策略
+- **[CUDA 13 特性](docs/zh-CN/guide/cuda13.md)** - Hopper架构：TMA、集群、FP8支持
+- **[API 参考](docs/zh-CN/api/index.md)** - 完整C++/CUDA API文档
+- **[架构概览](docs/zh-CN/api/architecture.md)** - 项目设计模式与模块组织
 
 ### Reorganization / 结构重组
 
@@ -176,6 +176,7 @@ This release focuses on making the documentation accessible to both English and 
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.3.0 | 2026-04-16 | Documentation internationalization (English + Chinese) |
 | 0.2.0 | 2025-01-15 | Project quality improvements, CI/CD, documentation portal |
 | 0.1.0 | 2024-01-01 | Initial release |
 
@@ -209,6 +210,7 @@ This release focuses on making the documentation accessible to both English and 
 
 ---
 
-[Unreleased]: https://github.com/LessUp/hpc-ai-optimization-lab/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/LessUp/hpc-ai-optimization-lab/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/LessUp/hpc-ai-optimization-lab/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LessUp/hpc-ai-optimization-lab/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/LessUp/hpc-ai-optimization-lab/releases/tag/v0.1.0
