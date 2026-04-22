@@ -17,12 +17,10 @@ import json
 import os
 from dataclasses import dataclass, asdict
 from datetime import datetime
-import subprocess
 
 # Optional imports for visualization
 try:
     import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -68,13 +66,10 @@ def get_device_info() -> DeviceInfo:
     # Approximate cores per SM based on compute capability
     if props.major >= 8:  # Ampere+
         cores_per_sm = 128
-        tensor_cores_per_sm = 4
     elif props.major >= 7:  # Volta/Turing
         cores_per_sm = 64
-        tensor_cores_per_sm = 8
     else:
         cores_per_sm = 64
-        tensor_cores_per_sm = 0
 
     clock_ghz = props.clock_rate / 1e6
     peak_fp32 = sm_count * cores_per_sm * 2 * clock_ghz / 1000  # TFLOPS
@@ -503,8 +498,8 @@ Examples:
     print(f"Peak FP32: {device_info.peak_fp32_tflops:.1f} TFLOPS")
     print(f"Peak Bandwidth: {device_info.peak_bandwidth_gb_s:.0f} GB/s")
 
-    # Parse sizes
-    sizes = [int(s) for s in args.sizes.split(",")]
+    # Parse sizes (will be used for actual benchmarks)
+    _sizes = [int(s) for s in args.sizes.split(",")]  # noqa: F841
 
     # Placeholder for actual benchmarks
     # In a real implementation, this would import and run the actual kernels
