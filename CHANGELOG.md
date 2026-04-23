@@ -1,214 +1,35 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+This file records the high-level release history of **HPC-AI-Optimization-Lab**. Detailed notes, one-off summaries, and supporting release material belong under `changelog/`.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
----
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but the active surface is intentionally kept concise for this repository's stabilization phase.
 
 ## [Unreleased]
 
+### Changed
+
+- Ongoing repository stabilization: OpenSpec realignment, assistant-guidance cleanup, documentation reduction, and workflow hardening.
+
 ## [0.3.0] - 2026-04-16
 
-### Documentation Internationalization / 文档国际化
+### Changed
 
-This release focuses on making the documentation accessible to both English and Chinese readers through complete bilingual documentation suite.
-
-本次发布专注于通过完整的双语文档集使文档对英文和中文读者都可访问。
-
-#### English Documentation Suite
-
-- **[GEMM Optimization](docs/en/guide/gemm.md)** - 7-step matrix multiplication optimization journey
-- **[Memory Optimization](docs/en/guide/memory.md)** - Coalesced access, vectorization, shared memory patterns
-- **[Reduction Optimization](docs/en/guide/reduction.md)** - Warp shuffle, online softmax, LayerNorm algorithms
-- **[FlashAttention](docs/en/guide/flash-attention.md)** - IO-aware attention mechanism with tiling strategy
-- **[CUDA 13 Features](docs/en/guide/cuda13.md)** - Hopper architecture: TMA, Clusters, FP8 support
-- **[API Reference](docs/en/api/index.md)** - Complete C++/CUDA API documentation
-- **[Architecture Overview](docs/en/api/architecture.md)** - Project design patterns and module organization
-
-#### 中文文档集 / Chinese Documentation Suite
-
-- **[GEMM 优化](docs/zh-CN/guide/gemm.md)** - 7步矩阵乘法优化之旅
-- **[访存优化](docs/zh-CN/guide/memory.md)** - 合并访问、向量化、共享内存模式
-- **[归约优化](docs/zh-CN/guide/reduction.md)** - Warp洗牌、在线Softmax、LayerNorm算法
-- **[FlashAttention](docs/zh-CN/guide/flash-attention.md)** - 基于IO感知的注意力机制与分块策略
-- **[CUDA 13 特性](docs/zh-CN/guide/cuda13.md)** - Hopper架构：TMA、集群、FP8支持
-- **[API 参考](docs/zh-CN/api/index.md)** - 完整C++/CUDA API文档
-- **[架构概览](docs/zh-CN/api/architecture.md)** - 项目设计模式与模块组织
-
-### Reorganization / 结构重组
-
-- Restructured `docs/` directory with `en/` and `zh-CN/` subdirectories
-- Created professional documentation navigation with language switching
-- Moved historical changelogs to `changelog/archive/`
-- Added comprehensive release notes for v0.3.0
-
-- 重组 `docs/` 目录，创建 `en/` 和 `zh-CN/` 子目录
-- 创建专业文档导航与语言切换
-- 将历史变更日志移至 `changelog/archive/`
-- 添加 v0.3.0 详细发布说明
-
-### Improvements in Previous Unreleased Changes / 先前未发布改进
-
-- Comprehensive API reference documentation (`docs/API_REFERENCE.md`)
-- Architecture design documentation (`docs/ARCHITECTURE.md`)
-- Learning paths and quick reference in documentation portal
-- Support matrix documentation for stable vs experimental features
-- Enhanced documentation portal with modern dark theme
-- Rewrote README.md with badges, tables, and clear module overview
-- Rewrote README.zh-CN.md (Chinese) with matching improvements
-
----
+- Promoted the bilingual documentation surface and refreshed the repository presentation.
+- Consolidated release-note material under `changelog/`.
 
 ## [0.2.0] - 2025-01-15
 
 ### Added
 
-- Project quality improvement infrastructure
-  - Apache 2.0 LICENSE
-  - CONTRIBUTING.md with development guidelines
-  - CODE_OF_CONDUCT.md (Contributor Covenant)
-  - GitHub Issue templates (Bug Report, Feature Request)
-  - GitHub Pull Request template
-- CI/CD with GitHub Actions
-  - Format check (clang-format, ruff)
-  - Entry consistency verification
-  - Documentation build (Doxygen + Sphinx)
-  - GitHub Pages deployment
-- Code quality tools configuration
-  - `.clang-format` (Google style)
-  - `.clang-tidy` (static analysis)
-  - `.editorconfig` (editor settings)
-  - `.pre-commit-config.yaml` (git hooks)
-- Documentation system
-  - Doxygen configuration for C++/CUDA API
-  - Sphinx configuration for Python API
-  - Documentation portal (index.html, guides.html)
-  - Modern dark theme CSS
-
-### Changed
-
-- Unified Python extension module name to `hpc_ai_opt`
-- Connected `examples/` to top-level CMake build via `BUILD_EXAMPLES`
-- Updated documentation to reflect repository structure
-
----
+- Basic open-source governance files and GitHub templates.
+- Initial CI, formatting, and documentation-tooling baseline.
 
 ## [0.1.0] - 2024-01-01
 
 ### Added
 
-- **Initial Release** of HPC-AI-Optimization-Lab
-
-- **Common Library** (`src/common/`)
-  - `cuda_check.cuh`: CUDA error checking macros (`CUDA_CHECK`, `CUDA_CHECK_LAST`)
-  - `timer.cuh`: High-precision GPU timer using CUDA events
-  - `tensor.cuh`: RAII Tensor class with C++20 Concepts
-  - `types.cuh`: Half/BF16 type wrappers and utilities
-
-- **Elementwise Module** (`src/elementwise/`)
-  - ReLU: Naive → Vectorized (float4) → Grid Stride Loop
-  - Sigmoid: Three optimization levels
-  - Vector Add: Three optimization levels
-  - Transpose: Naive → Shared Memory → Shared Memory + Padding
-
-- **Reduction Module** (`src/reduction/`)
-  - Softmax: Naive → Warp Shuffle → Online Softmax → Fused
-  - LayerNorm: Warp Shuffle + Block Reduce
-  - RMSNorm: Optimized implementation with Welford's algorithm
-
-- **GEMM Module** (`src/gemm/`) - 7-Step Optimization Journey
-  - Step 1: Naive Global Memory (~0.5 TFLOPS)
-  - Step 2: Shared Memory Tiling (~2.0 TFLOPS)
-  - Step 3: Double Buffering (~3.5 TFLOPS)
-  - Step 4: Register Tiling (~6.0 TFLOPS)
-  - Step 5: Tensor Core WMMA (~50+ TFLOPS)
-  - Step 6: Tensor Core MMA PTX (~60+ TFLOPS)
-  - Step 7: Software Pipelining (~70+ TFLOPS)
-  - Multi-precision support: SGEMM, HGEMM, Int8-GEMM
-
-- **Convolution Module** (`src/convolution/`)
-  - Implicit GEMM convolution (production-ready)
-  - Winograd convolution (3×3 kernels, with fallback)
-
-- **Attention Module** (`src/attention/`)
-  - FlashAttention Forward Pass with online softmax
-  - RoPE (Rotary Positional Embedding)
-  - MoE TopK routing
-
-- **Quantization Module** (`src/quantization/`)
-  - Weight-Only Dequantization
-  - INT8 per-row quantization/dequantization
-  - FP8 scaling utilities
-
-- **CUDA 13 Features** (`src/cuda13/`) - Experimental
-  - TMA (Tensor Memory Accelerator) - fallback implementation
-  - Thread Block Clusters - fallback implementation
-  - FP8 GEMM (e4m3/e5m2) - demonstration implementation
-
-- **Testing Infrastructure**
-  - GoogleTest unit testing framework
-  - RapidCheck property-based testing
-  - Comprehensive test coverage for all modules
-
-- **Documentation**
-  - GEMM optimization guide (7-step deep dive)
-  - Memory optimization guide (coalescing, vectorization)
-  - Reduction optimization guide (warp shuffle, online algorithms)
-  - FlashAttention guide (tiling, IO analysis)
-  - CUDA 13 features guide (experimental)
-
-- **Build System**
-  - CMake 3.24+ with modern target-based configuration
-  - FetchContent for dependency management (googletest, nanobind, fmt, cutlass)
-  - Automatic GPU architecture detection
-  - Docker development environment (CUDA 12.4+)
-
-- **Python Integration**
-  - Nanobind bindings with zero-copy design
-  - PyTorch tensor support
-  - Benchmark scripts with PyTorch comparison
-
----
-
-## Version History
-
-| Version | Date | Description |
-|---------|------|-------------|
-| 0.3.0 | 2026-04-16 | Documentation internationalization (English + Chinese) |
-| 0.2.0 | 2025-01-15 | Project quality improvements, CI/CD, documentation portal |
-| 0.1.0 | 2024-01-01 | Initial release |
-
----
-
-## Upgrade Guide
-
-### From 0.1.0 to 0.2.0
-
-1. **Python Module Name**: The Python module is now consistently named `hpc_ai_opt`
-   ```python
-   # Old (may still work)
-   import hpc_kernels
-   
-   # New (recommended)
-   import hpc_ai_opt
-   ```
-
-2. **Build System**: Examples are now opt-in
-   ```bash
-   # Enable examples
-   cmake -S . -B build -DBUILD_EXAMPLES=ON
-   ```
-
-3. **CI Changes**: New format checks require clang-format 17+
-   ```bash
-   # Install pre-commit hooks locally
-   pip install pre-commit
-   pre-commit install
-   ```
-
----
+- Initial CUDA kernel library structure across common utilities, elementwise ops, reduction, GEMM, convolution, attention, quantization, and experimental CUDA 13 paths.
+- Initial testing, examples, and optional Python binding surface.
 
 [Unreleased]: https://github.com/LessUp/hpc-ai-optimization-lab/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/LessUp/hpc-ai-optimization-lab/compare/v0.2.0...v0.3.0
