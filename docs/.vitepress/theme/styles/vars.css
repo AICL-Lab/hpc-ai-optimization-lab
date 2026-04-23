@@ -1,0 +1,171 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HPC-AI-Optimization-Lab Design System - CSS Variables
+   A professional design system with light/dark mode support
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────────────────────
+   Shared Variables (theme-independent)
+   ─────────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Typography */
+  --vp-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --vp-font-family-mono: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+  
+  /* Layout */
+  --vp-nav-height: 64px;
+  --vp-sidebar-width: 280px;
+  --vp-layout-max-width: 1440px;
+  
+  /* Transitions */
+  --vp-transition-duration: 0.25s;
+  --vp-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────────
+   Dark Mode (Default)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Primary Brand - NVIDIA CUDA Green */
+  --vp-c-brand-1: #76B900;
+  --vp-c-brand-2: #5FD85F;
+  --vp-c-brand-3: #4CAF50;
+  --vp-c-brand-soft: rgba(118, 185, 0, 0.15);
+  
+  /* Secondary - Performance Teal */
+  --vp-c-secondary-1: #00D4AA;
+  --vp-c-secondary-2: #00B894;
+  --vp-c-secondary-soft: rgba(0, 212, 170, 0.15);
+  
+  /* Accent - Tensor Orange */
+  --vp-c-accent-1: #FF6B35;
+  --vp-c-accent-2: #F09340;
+  --vp-c-accent-soft: rgba(255, 107, 53, 0.15);
+  
+  /* Background Colors */
+  --vp-c-bg: #0D1117;
+  --vp-c-bg-alt: #161B22;
+  --vp-c-bg-elv: #21262D;
+  --vp-c-bg-soft: #30363D;
+  
+  /* Text Colors */
+  --vp-c-text-1: #F0F6FC;
+  --vp-c-text-2: #C9D1D9;
+  --vp-c-text-3: #8B949E;
+  
+  /* Border Colors */
+  --vp-c-border: #30363D;
+  --vp-c-divider: #21262D;
+  --vp-c-gutter: #161B22;
+  
+  /* Status Colors */
+  --vp-c-success-1: #3FB950;
+  --vp-c-success-soft: rgba(63, 185, 80, 0.15);
+  --vp-c-warning-1: #D29922;
+  --vp-c-warning-soft: rgba(210, 153, 34, 0.15);
+  --vp-c-danger-1: #F85149;
+  --vp-c-danger-soft: rgba(248, 81, 73, 0.15);
+  --vp-c-info-1: #58A6FF;
+  --vp-c-info-soft: rgba(88, 166, 255, 0.15);
+  
+  /* Shadows (darker for dark mode) */
+  --vp-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --vp-shadow-2: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --vp-shadow-3: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --vp-shadow-4: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────────
+   Light Mode Overrides
+   ═══════════════════════════════════════════════════════════════════════════════ */
+html:not(.dark) {
+  /* Primary Brand - NVIDIA CUDA Green (slightly darker for light bg) */
+  --vp-c-brand-1: #5A8F00;
+  --vp-c-brand-2: #76B900;
+  --vp-c-brand-3: #8FD617;
+  --vp-c-brand-soft: rgba(118, 185, 0, 0.12);
+  
+  /* Secondary */
+  --vp-c-secondary-1: #00A884;
+  --vp-c-secondary-2: #00D4AA;
+  --vp-c-secondary-soft: rgba(0, 168, 132, 0.12);
+  
+  /* Accent */
+  --vp-c-accent-1: #E55A2B;
+  --vp-c-accent-2: #FF6B35;
+  --vp-c-accent-soft: rgba(229, 90, 43, 0.12);
+  
+  /* Background Colors */
+  --vp-c-bg: #FFFFFF;
+  --vp-c-bg-alt: #F6F8FA;
+  --vp-c-bg-elv: #FFFFFF;
+  --vp-c-bg-soft: #F3F4F6;
+  
+  /* Text Colors */
+  --vp-c-text-1: #1F2937;
+  --vp-c-text-2: #4B5563;
+  --vp-c-text-3: #6B7280;
+  
+  /* Border Colors */
+  --vp-c-border: #E5E7EB;
+  --vp-c-divider: #E5E7EB;
+  --vp-c-gutter: #F3F4F6;
+  
+  /* Status Colors (adjusted for light bg) */
+  --vp-c-success-1: #238636;
+  --vp-c-success-soft: rgba(35, 134, 54, 0.12);
+  --vp-c-warning-1: #9A6700;
+  --vp-c-warning-soft: rgba(154, 103, 0, 0.12);
+  --vp-c-danger-1: #CF222E;
+  --vp-c-danger-soft: rgba(207, 34, 46, 0.12);
+  --vp-c-info-1: #0969DA;
+  --vp-c-info-soft: rgba(9, 105, 218, 0.12);
+  
+  /* Shadows (lighter for light mode) */
+  --vp-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --vp-shadow-2: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --vp-shadow-3: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --vp-shadow-4: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Fallback for browsers without :not() support - use data-theme attribute */
+html[data-theme='light'] {
+  --vp-c-brand-1: #5A8F00;
+  --vp-c-brand-2: #76B900;
+  --vp-c-brand-3: #8FD617;
+  --vp-c-brand-soft: rgba(118, 185, 0, 0.12);
+  
+  --vp-c-secondary-1: #00A884;
+  --vp-c-secondary-2: #00D4AA;
+  --vp-c-secondary-soft: rgba(0, 168, 132, 0.12);
+  
+  --vp-c-accent-1: #E55A2B;
+  --vp-c-accent-2: #FF6B35;
+  --vp-c-accent-soft: rgba(229, 90, 43, 0.12);
+  
+  --vp-c-bg: #FFFFFF;
+  --vp-c-bg-alt: #F6F8FA;
+  --vp-c-bg-elv: #FFFFFF;
+  --vp-c-bg-soft: #F3F4F6;
+  
+  --vp-c-text-1: #1F2937;
+  --vp-c-text-2: #4B5563;
+  --vp-c-text-3: #6B7280;
+  
+  --vp-c-border: #E5E7EB;
+  --vp-c-divider: #E5E7EB;
+  --vp-c-gutter: #F3F4F6;
+  
+  --vp-c-success-1: #238636;
+  --vp-c-success-soft: rgba(35, 134, 54, 0.12);
+  --vp-c-warning-1: #9A6700;
+  --vp-c-warning-soft: rgba(154, 103, 0, 0.12);
+  --vp-c-danger-1: #CF222E;
+  --vp-c-danger-soft: rgba(207, 34, 46, 0.12);
+  --vp-c-info-1: #0969DA;
+  --vp-c-info-soft: rgba(9, 105, 218, 0.12);
+  
+  --vp-shadow-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --vp-shadow-2: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --vp-shadow-3: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --vp-shadow-4: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}

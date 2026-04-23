@@ -8,7 +8,7 @@ This documentation covers the full spectrum of CUDA kernel optimization, from fu
 
 - **Memory Optimization** - Coalesced access, vectorization, shared memory patterns
 - **Reduction Operations** - Warp shuffle, block reduction, online algorithms
-- **GEMM Optimization** - 7-step journey from naive to Tensor Core (140x speedup)
+- **GEMM Optimization** - 7-step journey from naive kernels to Tensor Core-oriented implementations
 - **FlashAttention** - IO-aware attention mechanism
 - **CUDA 13 Features** - Experimental Hopper architecture features
 
@@ -66,8 +66,7 @@ python examples/python/basic_usage.py
 
 ## API References
 
-- [C++ / CUDA API](/cpp-api/) - Doxygen-generated documentation
-- [Python API](/python-api/) - Sphinx-generated documentation
+- [API Reference](/en/api/index) - consolidated C++ / CUDA / Python reference notes
 - [Architecture Overview](/en/api/architecture) - Design patterns and module organization
 
 ## Next Steps

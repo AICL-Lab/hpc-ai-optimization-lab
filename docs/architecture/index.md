@@ -1,53 +1,52 @@
 # Architecture Overview
 
-This directory contains high-level architecture documentation and design decisions. For detailed technical specifications, see the `/specs` directory.
+This directory keeps high-level architecture context for the current codebase. Active repository workflow and cleanup requirements now live under `openspec/`, while earlier design decisions are preserved in `openspec/archive/`.
 
 ---
 
-## Architecture Documents
+## Current reference documents
 
 | Document | Description | Link |
 |----------|-------------|------|
-| System Architecture | Complete system architecture design | [ARCHITECTURE.md](../ARCHITECTURE.md) |
-| API Reference | All C++/CUDA/Python APIs | [API_REFERENCE.md](../API_REFERENCE.md) |
+| System Architecture | High-level module and layering overview | [ARCHITECTURE.md](../ARCHITECTURE.md) |
+| API Reference | C++/CUDA/Python surface reference | [API_REFERENCE.md](../API_REFERENCE.md) |
 
 ---
 
-## RFC Documents (Technical Design)
+## Historical design records
 
-RFCs (Request for Comments) are detailed technical design documents that define the architecture and design decisions.
+- `openspec/archive/2026-04-17-core-architecture/`
+- `openspec/archive/2026-04-17-quality-standards/`
 
-| RFC | Title | Description |
-|-----|-------|-------------|
-| [RFC 0001](../../specs/rfc/0001-core-architecture.md) | Core Architecture | System architecture, design patterns, memory strategy, GEMM optimization, performance analysis |
-| [RFC 0002](../../specs/rfc/0002-quality-standards.md) | Quality Standards | CI/CD automation, documentation system, code quality tools |
+These archives preserve the earlier architecture and quality-standard design work that was previously linked through the removed legacy `specs/` tree.
 
 ---
 
-## System Architecture (High-Level)
+## System architecture (high level)
 
+```text
+Applications / examples / benchmarks
+                |
+                v
+      Python bindings (nanobind)
+                |
+                v
+  CUDA kernels (elementwise / reduction / gemm /
+   convolution / attention / quantization / cuda13)
+                |
+                v
+Common infrastructure (tensor / timer / cuda checks /
+types / reduction helpers / launch helpers)
+                |
+                v
+Build and runtime layer (CMake / FetchContent / CUDA / Docker)
 ```
-Application Layer (Examples, Benchmarks, Python Scripts)
-         |
-         v
-Python Binding Layer (nanobind module)
-         |
-         v
-Kernel Layer (Elementwise, Reduction, GEMM, Convolution, Attention, Quantization, CUDA 13)
-         |
-         v
-Common Infrastructure (Tensor, Timer, CudaCheck, Types, Reduce, Launch)
-         |
-         v
-Build & Runtime (CMake, FetchContent, CUDA 12.4+, Docker)
-```
 
 ---
 
-## Core Design Patterns
+## Core patterns
 
-1. **Module Interface Pattern**: Unified template-based interfaces with optimization levels
-2. **RAII Resource Management**: Automatic GPU memory management with move semantics
-3. **Zero-Copy Python Bindings**: Direct pointer passing via nanobind
-
-For detailed design patterns and implementation guidelines, see [RFC 0001](../../specs/rfc/0001-core-architecture.md).
+1. Unified module interfaces for optimized kernel families
+2. RAII-based GPU resource management
+3. Thin Python bindings over the C++/CUDA core
+4. CMake-driven build graph with optional bindings and docs surfaces

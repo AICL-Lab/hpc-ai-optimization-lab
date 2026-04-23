@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { head, nav, sidebar, search } from './configs/index.mts'
+import { head, search } from './configs/index.mts'
 import enConfig from './configs/en.mts'
 import zhCNConfig from './configs/zh-CN.mts'
 
@@ -8,37 +8,43 @@ const SITE_URL = 'https://lessup.github.io'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  // 站点元数据
+  // Site Metadata
   lang: 'en-US',
   title: 'HPC-AI-Optimization-Lab',
   titleTemplate: ':title | HPC-AI-Optimization-Lab',
-  description: 'A comprehensive CUDA kernel optimization laboratory for AI workloads',
+  description: 'CUDA kernel optimization lab for GEMM, FlashAttention, quantization, and GPU performance learning.',
   
-  // 基础配置
+  // Base Configuration
   base: BASE_URL,
   srcDir: '.',
   srcExclude: ['**/README.md', '**/node_modules/**'],
   outDir: './.vitepress/dist',
   cacheDir: './.vitepress/cache',
   
-  // 清理 URL
+  // Clean URLs
   cleanUrls: true,
   
-  // 最后更新时间
+  // Ignore dead links in existing docs
+  ignoreDeadLinks: true,
+  
+  // Last Updated
   lastUpdated: true,
   
-  // Sitemap 配置
+  // Appearance (dark/light mode)
+  appearance: true,
+  
+  // Sitemap
   sitemap: {
     hostname: SITE_URL + BASE_URL,
     lastmodDateOnly: true
   },
   
-  // robots.txt 配置
+  // Robots
   robots: {
     allowAll: true
   },
   
-  // 多语言配置
+  // Multi-language Configuration
   locales: {
     root: {
       label: 'English',
@@ -54,84 +60,75 @@ export default defineConfig({
     }
   },
   
-  // Head 配置
+  // Head Configuration
   head: head(),
   
-  // 主题配置
+  // Theme Configuration
   themeConfig: {
     // Logo
-    logo: { src: '/logo.svg', width: 24, height: 24 },
+    logo: { src: '/logo.svg', width: 28, height: 28 },
     
-    // 站点标题
-    siteTitle: 'HPC-AI-Lab',
+    // Site Title
+    siteTitle: 'HPC-AI-Optimization-Lab',
     
-    // 导航栏
-    nav: nav(),
-    
-    // 侧边栏
-    sidebar: sidebar(),
-    
-    // 搜索配置
+    // Search
     search: search(),
     
-    // 社交链接
+    // Social Links
     socialLinks: [
       { icon: 'github', link: 'https://github.com/LessUp/hpc-ai-optimization-lab' }
     ],
     
-    // 编辑链接
+    // Edit Link
     editLink: {
-      pattern: 'https://github.com/LessUp/hpc-ai-optimization-lab/edit/main/docs/:path',
-      text: 'Edit this page on GitHub'
+      pattern: 'https://github.com/LessUp/hpc-ai-optimization-lab/edit/master/docs/:path',
+      text: 'Edit on GitHub'
     },
     
-    // 页脚
+    // Footer
     footer: {
       message: 'Released under the Apache 2.0 License.',
       copyright: 'Copyright © 2024-2026 HPC-AI-Optimization-Lab Contributors'
     },
     
-    // 广告
-    carbonAds: undefined,
-    
-    // 文档页脚
+    // Document Footer
     docFooter: {
-      prev: 'Previous page',
-      next: 'Next page'
+      prev: 'Previous',
+      next: 'Next'
     },
     
-    // 大纲
+    // Outline
     outline: {
       label: 'On this page',
       level: [2, 4]
     },
     
-    // 最后更新时间文本
+    // Last Updated Text
     lastUpdated: {
-      text: 'Last updated',
+      text: 'Updated',
       formatOptions: {
-        dateStyle: 'full',
-        timeStyle: 'medium'
+        dateStyle: 'medium',
+        timeStyle: 'short'
       }
     },
     
-    // 返回顶部
-    returnToTopLabel: 'Return to top',
+    // Return to Top
+    returnToTopLabel: 'Back to top',
     
-    // 菜单
+    // Menu Labels
     sidebarMenuLabel: 'Menu',
-    langMenuLabel: 'Change language',
+    langMenuLabel: 'Languages',
     
-    // 暗色模式
-    darkModeSwitchLabel: 'Appearance',
-    lightModeSwitchTitle: 'Switch to light theme',
-    darkModeSwitchTitle: 'Switch to dark theme',
+    // Dark Mode Switch
+    darkModeSwitchLabel: 'Theme',
+    lightModeSwitchTitle: 'Switch to light',
+    darkModeSwitchTitle: 'Switch to dark',
     
-    // 外部链接图标
+    // External Link Icon
     externalLinkIcon: true
   },
   
-  // Markdown 配置
+  // Markdown Configuration
   markdown: {
     theme: {
       light: 'github-light',
@@ -146,32 +143,18 @@ export default defineConfig({
     }
   },
   
-  // Vite 配置
+  // Vite Configuration
   vite: {
     server: {
       port: 5173,
       host: true
     },
     build: {
-      chunkSizeWarningLimit: 1000,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            'group-zh': [
-              './configs/zh-CN.mts'
-            ]
-          }
-        }
-      }
-    },
-    resolve: {
-      alias: {
-        '@': '/.vitepress'
-      }
+      chunkSizeWarningLimit: 1000
     }
   },
   
-  // 缓存重写
+  // Transform Page Data
   transformPageData: (pageData) => {
     pageData.frontmatter.head ??= []
     
@@ -181,7 +164,7 @@ export default defineConfig({
       { property: 'og:url', content: `${SITE_URL}${BASE_URL}${pageData.relativePath.replace(/\.md$/, '.html')}` }
     ])
     
-    // Article published time (for SEO)
+    // Article modified time
     if (pageData.frontmatter.lastUpdated) {
       pageData.frontmatter.head.push([
         'meta',

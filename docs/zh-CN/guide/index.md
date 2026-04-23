@@ -8,7 +8,7 @@
 
 - **访存优化** - 合并访问、向量化、共享内存模式
 - **归约操作** - 线程束洗牌、块级归约、在线算法
-- **GEMM 优化** - 从朴素到张量核心的 7 步之旅（140 倍加速）
+- **GEMM 优化** - 从朴素实现到面向 Tensor Core 的 7 步演进
 - **FlashAttention** - 基于 IO 感知的注意力机制
 - **CUDA 13 特性** - 实验性 Hopper 架构特性
 
@@ -66,8 +66,7 @@ python examples/python/basic_usage.py
 
 ## API 参考
 
-- [C++ / CUDA API](/cpp-api/) - Doxygen 生成的文档
-- [Python API](/python-api/) - Sphinx 生成的文档
+- [API 参考](/zh-CN/api/index) - 聚合后的 C++ / CUDA / Python 参考说明
 - [架构概览](/zh-CN/api/architecture) - 设计模式与模块组织
 
 ## 下一步
