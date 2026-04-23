@@ -1,348 +1,75 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# HPC-AI-Optimization-Lab GitHub Pages Deployment
-# State-of-the-art documentation site with VitePress, Doxygen, and Sphinx
-# ═══════════════════════════════════════════════════════════════════════════════
-
-name: Documentation
+name: Pages
 
 on:
   push:
-    branches: [master, main]
+    branches: [main, master]
     paths:
       - 'docs/**'
-      - 'src/**/*.cuh'
-      - 'src/**/*.cu'
-      - 'src/**/*.h'
-      - 'src/**/*.cpp'
-      - 'python/**'
       - 'README.md'
       - 'README.zh-CN.md'
       - '.github/workflows/pages.yml'
+      - 'docs/package.json'
   pull_request:
-    branches: [master, main]
+    branches: [main, master]
     paths:
       - 'docs/**'
       - 'README.md'
+      - 'README.zh-CN.md'
+      - '.github/workflows/pages.yml'
+      - 'docs/package.json'
   workflow_dispatch:
-    inputs:
-      full_rebuild:
-        description: 'Force full rebuild of all documentation'
-        type: boolean
-        default: false
 
-# Security: Minimal permissions
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Concurrency: Cancel in-progress runs
 concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   NODE_VERSION: '20'
-  PYTHON_VERSION: '3.11'
-  VITEPRESS_BASE: '/hpc-ai-optimization-lab/'
-  # Opt into Node.js 24 for GitHub Actions (Node.js 20 deprecated)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # ═════════════════════════════════════════════════════════════════════════════
-  # Job 1: Build Documentation (VitePress + Doxygen + Sphinx)
-  # ═════════════════════════════════════════════════════════════════════════════
-  build-docs:
-    name: Build Documentation
+  build:
+    name: Build Pages
     runs-on: ubuntu-latest
-    outputs:
-      doxygen_success: ${{ steps.doxygen.outputs.success }}
-      sphinx_success: ${{ steps.sphinx.outputs.success }}
-    
     steps:
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 1: Checkout repository
-      # ─────────────────────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 2: Configure GitHub Pages
-      # ─────────────────────────────────────────────────────────────────────────
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 3: Setup Node.js for VitePress
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: docs/package.json
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 4: Install Node.js dependencies
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Install VitePress dependencies
-        working-directory: docs
-        run: |
-          echo "=== Installing VitePress ==="
-          npm install
-          echo "VitePress version: $(npx vitepress --version)"
+      - name: Install documentation dependencies
+        run: npm --prefix docs ci
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 5: Setup Python for Sphinx
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Build VitePress site
+        run: npm --prefix docs run docs:build
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 6: Install Python dependencies
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Install Python dependencies
-        run: |
-          echo "=== Installing Python dependencies ==="
-          pip install \
-            sphinx \
-            sphinx-rtd-theme \
-            breathe \
-            myst-parser \
-            sphinx-copybutton \
-            pyyaml \
-            furo
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 7: Install system dependencies
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Install system dependencies
-        run: |
-          echo "=== Installing Doxygen and Graphviz ==="
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            doxygen \
-            graphviz \
-            plantuml
-          echo "Doxygen version: $(doxygen --version)"
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 8: Cache Doxygen and Sphinx outputs
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Cache documentation builds
-        id: cache-docs
-        uses: actions/cache@v4
-        with:
-          path: |
-            docs/api
-            docs/python/_build
-          key: docs-cache-${{ hashFiles('src/**/*.cuh', 'src/**/*.cu', 'python/**/*.py', 'docs/Doxyfile', 'docs/python/conf.py') }}
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 9: Build Doxygen (C++/CUDA API)
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Build Doxygen documentation
-        id: doxygen
-        run: |
-          echo "=== Building Doxygen Documentation ==="
-          
-          if [ -f docs/Doxyfile ]; then
-            # Create output directory
-            mkdir -p docs/api
-            
-            # Build with verbose output
-            cd docs
-            doxygen Doxyfile 2>&1 | tee doxygen_output.log | grep -E "(Generating|for|error|warning:)" || true
-            
-            if [ -d api/html ] && [ "$(find api/html -name '*.html' | wc -l)" -gt 0 ]; then
-              html_count=$(find api/html -name '*.html' | wc -l)
-              echo "✅ Doxygen generated $html_count HTML files"
-              echo "success=true" >> $GITHUB_OUTPUT
-            else
-              echo "❌ Doxygen output directory not found or empty"
-              echo "success=false" >> $GITHUB_OUTPUT
-              mkdir -p api/html
-              echo "<!-- Doxygen build failed -->" > api/html/index.html
-            fi
-          else
-            echo "⚠️ docs/Doxyfile not found, creating placeholder"
-            mkdir -p docs/api/html
-            echo "<!-- Doxygen configuration not found -->" > docs/api/html/index.html
-            echo "success=false" >> $GITHUB_OUTPUT
-          fi
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 10: Build Sphinx (Python API)
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Build Sphinx documentation
-        id: sphinx
-        run: |
-          echo "=== Building Sphinx Documentation ==="
-          
-          if [ -f docs/python/conf.py ]; then
-            # Ensure templates directory exists
-            mkdir -p docs/python/_templates
-            
-            cd docs/python
-            sphinx-build -b html . _build/html 2>&1 | tee sphinx_output.log || true
-            sphinx_exit=${PIPESTATUS[0]}
-            
-            cd ../..
-            if [ -d docs/python/_build/html ] && [ "$(find docs/python/_build/html -name '*.html' | wc -l)" -gt 0 ]; then
-              html_count=$(find docs/python/_build/html -name '*.html' | wc -l)
-              echo "✅ Sphinx generated $html_count HTML files"
-              echo "success=true" >> $GITHUB_OUTPUT
-            else
-              echo "⚠️ Sphinx build completed with issues (exit code: $sphinx_exit)"
-              echo "success=false" >> $GITHUB_OUTPUT
-              mkdir -p docs/python/_build/html
-              echo "<!-- Sphinx build had issues -->" > docs/python/_build/html/index.html
-            fi
-          else
-            echo "⚠️ docs/python/conf.py not found, creating placeholder"
-            mkdir -p docs/python/_build/html
-            echo "<!-- Sphinx configuration not found -->" > docs/python/_build/html/index.html
-            echo "success=false" >> $GITHUB_OUTPUT
-          fi
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 11: Build VitePress site
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Build VitePress documentation
-        run: |
-          echo "=== Building VitePress Site ==="
-          cd docs
-          npm run docs:build
-          echo "✅ VitePress build completed"
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 12: Combine all documentation
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Combine documentation outputs
-        run: |
-          echo "=== Combining Documentation ==="
-          
-          SITE_DIR="docs/.vitepress/dist"
-          
-          # Ensure site directory exists
-          mkdir -p "$SITE_DIR"
-          
-          # Copy Doxygen output (C++ API)
-          if [ -d docs/api/html ] && [ "$(find docs/api/html -name '*.html' 2>/dev/null | wc -l)" -gt 0 ]; then
-            cp -r docs/api/html "$SITE_DIR/cpp-api"
-            echo "✅ Copied Doxygen output to cpp-api/"
-          else
-            mkdir -p "$SITE_DIR/cpp-api"
-            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=../en/api/"></head><body><p>Redirecting to <a href="../en/api/">C++ API Documentation</a>...</p></body></html>' > "$SITE_DIR/cpp-api/index.html"
-            echo "⚠️ Created Doxygen redirect"
-          fi
-          
-          # Copy Sphinx output (Python API)
-          if [ -d docs/python/_build/html ] && [ "$(find docs/python/_build/html -name '*.html' 2>/dev/null | wc -l)" -gt 0 ]; then
-            cp -r docs/python/_build/html "$SITE_DIR/python-api"
-            echo "✅ Copied Sphinx output to python-api/"
-          else
-            mkdir -p "$SITE_DIR/python-api"
-            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=../en/api/"></head><body><p>Redirecting to <a href="../en/api/">Python API Documentation</a>...</p></body></html>' > "$SITE_DIR/python-api/index.html"
-            echo "⚠️ Created Sphinx redirect"
-          fi
-          
-          # Create robots.txt for SEO
-          cat > "$SITE_DIR/robots.txt" << 'EOF'
-          User-agent: *
-          Allow: /
-          
-          Sitemap: https://lessup.github.io/hpc-ai-optimization-lab/sitemap.xml
-          EOF
-          
-          # Create _redirects for Netlify compatibility
-          cat > "$SITE_DIR/_redirects" << 'EOF'
-          # API Redirects
-          /en/api/cpp         /cpp-api/index.html         200
-          /en/api/python      /python-api/index.html      200
-          /zh-CN/api/cpp      /cpp-api/index.html         200
-          /zh-CN/api/python   /python-api/index.html      200
-          
-          # Legacy redirects (old numbered docs)
-          /en/01_gemm_optimization.html           /en/guide/gemm.html           301
-          /en/02_memory_optimization.html         /en/guide/memory.html         301
-          /en/03_reduction_optimization.html      /en/guide/reduction.html      301
-          /en/04_flash_attention.html             /en/guide/flash-attention.html 301
-          /en/05_cuda13_features.html             /en/guide/cuda13.html         301
-          /zh-CN/01_gemm_optimization.html        /zh-CN/guide/gemm.html        301
-          /zh-CN/02_memory_optimization.html      /zh-CN/guide/memory.html      301
-          /zh-CN/03_reduction_optimization.html   /zh-CN/guide/reduction.html   301
-          /zh-CN/04_flash_attention.html          /zh-CN/guide/flash-attention.html 301
-          /zh-CN/05_cuda13_features.html          /zh-CN/guide/cuda13.html      301
-          EOF
-
-          # Create .nojekyll to disable Jekyll processing
-          touch "$SITE_DIR/.nojekyll"
-          
-          # Create CNAME if using custom domain (uncomment and edit if needed)
-          # echo "docs.yourdomain.com" > "$SITE_DIR/CNAME"
-
-          echo ""
-          echo "=== Final Site Contents ==="
-          ls -la "$SITE_DIR/"
-          echo ""
-          echo "Total size: $(du -sh "$SITE_DIR/" | cut -f1)"
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 13: Debug output
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Debug build output
-        if: failure()
-        run: |
-          echo "=== Debugging build failure ==="
-          echo "VitePress output:"
-          ls -la docs/.vitepress/dist/ 2>/dev/null || echo "Directory not found"
-          echo ""
-          echo "Doxygen log tail:"
-          tail -50 docs/doxygen_output.log 2>/dev/null || echo "No Doxygen log"
-          echo ""
-          echo "Sphinx log tail:"
-          tail -50 docs/python/sphinx_output.log 2>/dev/null || echo "No Sphinx log"
-
-      # ─────────────────────────────────────────────────────────────────────────
-      # Step 14: Upload artifact
-      # ─────────────────────────────────────────────────────────────────────────
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/.vitepress/dist
-          name: github-pages
 
-  # ═════════════════════════════════════════════════════════════════════════════
-  # Job 2: Deploy to GitHub Pages
-  # ═════════════════════════════════════════════════════════════════════════════
   deploy:
-    name: Deploy to GitHub Pages
-    needs: build-docs
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    name: Deploy Pages
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Deployment summary
-        run: |
-          echo "## 🚀 Documentation Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Build Status" >> $GITHUB_STEP_SUMMARY
-          echo "- Doxygen (C++ API): ${{ needs.build-docs.outputs.doxygen_success == 'true' && '✅ Success' || '⚠️ Issues' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Sphinx (Python API): ${{ needs.build-docs.outputs.sphinx_success == 'true' && '✅ Success' || '⚠️ Issues' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- VitePress: ✅ Success" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The documentation site is now live! 🎉" >> $GITHUB_STEP_SUMMARY
