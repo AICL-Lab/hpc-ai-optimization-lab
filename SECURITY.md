@@ -1,47 +1,36 @@
 # Security Policy
 
-## Supported Versions
+## Supported scope
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+Security-minded fixes are handled against the latest repository state on the default branch. Older snapshots and historical tags should be treated as unsupported unless explicitly noted otherwise.
 
-## Reporting a Vulnerability
+This project contains educational and optimization-focused CUDA code. Review, validate, and constrain any deployment context yourself before using it in sensitive environments.
 
-We take the security of HPC-AI-Optimization-Lab seriously. If you believe you have found a security vulnerability, please report it to us as soon as possible.
+## Reporting a vulnerability
 
-### Reporting Process
+Please **do not** open a public issue for a suspected security problem.
 
-1. **Do NOT** open a public GitHub issue for security vulnerabilities
-2. Email your findings to the project maintainers
+When possible:
+
+1. Use GitHub's private vulnerability reporting / security advisory flow for this repository.
+2. If that is not available, contact the maintainer through a non-public repository-owner channel before disclosing details publicly.
 3. Include:
-   - Description of the vulnerability
-   - Steps to reproduce the issue
-   - Potential impact assessment
-   - Suggested fix (if any)
+   - affected file, module, or workflow
+   - reproduction steps
+   - impact assessment
+   - any mitigation or patch suggestion you already have
 
-### Response Timeline
+## Response expectations
 
-- **Initial Response**: Within 48 hours
-- **Status Update**: Within 7 days
-- **Fix Timeline**: Based on severity
-  - Critical: Within 7 days
-  - High: Within 30 days
-  - Medium/Low: Within 90 days
+Reports are handled on a best-effort basis. The project will prioritize issues that affect:
 
-### Security Best Practices
+- repository credential or token safety
+- unsafe workflow permissions or automation behavior
+- build or release-chain integrity
+- clear security-impacting bugs in the active codebase
 
-When using this project:
+## General guidance
 
-1. Always review code changes before merging
-2. Keep dependencies up to date
-3. Follow the principle of least privilege when configuring access
-4. Regularly audit CI/CD workflows and permissions
-
-## Security Updates
-
-Security updates will be released as patch versions and announced in the [CHANGELOG.md](CHANGELOG.md).
-
-## Acknowledgments
-
-We appreciate responsible disclosure of security issues and will acknowledge reporters (with permission) in our release notes.
+- Review workflow permissions and GitHub settings before enabling new automation.
+- Prefer least-privilege credentials and short-lived tokens.
+- Keep local dependencies and toolchains current when building or testing the project.

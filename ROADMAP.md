@@ -1,137 +1,49 @@
-# Project Roadmap | 项目路线图
+# Project Roadmap | 项目收尾方向
 
-This document outlines the development roadmap for HPC-AI-Optimization-Lab.
-
----
-
-## Current Version: 0.3.0
-
-### ✅ Completed
-
-- [x] Bilingual documentation (EN/ZH-CN)
-- [x] Python bindings for core kernels
-- [x] Comprehensive test coverage
-- [x] CI/CD pipeline
-- [x] Security policy
-- [x] Performance tuning guide
-- [x] Troubleshooting documentation
+This repository is in a **finishing-and-hardening** phase. The goal is to leave the current version clean, credible, and easy to understand rather than to keep expanding the feature surface.
 
 ---
 
-## Version 0.4.0 (Planned: Q3 2026)
+## Current focus | 当前重点
 
-### 🎯 Primary Goals
-
-1. **Enhanced FlashAttention**
-   - [ ] Support for variable head_dim (32, 64, 128)
-   - [ ] Backward pass implementation
-   - [ ] Multi-query attention (MQA) support
-   - [ ] Sliding window attention
-
-2. **Real CUDA 13 Features**
-   - [ ] Native TMA implementation for Hopper
-   - [ ] Thread Block Clusters with cooperative groups
-   - [ ] True FP8 GEMM with hardware acceleration
-   - [ ] Warpgroup MMA instructions
-
-3. **Python Bindings Enhancement**
-   - [ ] Support for FP16/BF16 tensors
-   - [ ] Optional GEMM optimization level selection
-   - [ ] Batched operations
-   - [ ] Async API with futures
-
-### 📊 Performance Targets
-
-| Kernel | Current | Target |
-|--------|---------|--------|
-| GEMM FP16 (Tensor Core) | 62 TFLOPS | 70 TFLOPS |
-| FlashAttention | 180 TFLOPS | 220 TFLOPS |
-| Softmax | 650 GB/s | 750 GB/s |
+- Align repository workflow, specs, and change management around OpenSpec.
+- Reduce low-value or duplicated documentation and keep the active docs surface high-signal.
+- Simplify CI, Pages, and engineering automation so checks are trustworthy and low-noise.
+- Improve GitHub-facing presentation so README, Pages, and About metadata tell the same story.
+- Sweep repository-level bugs and inconsistencies that reduce build, docs, or workflow trust.
 
 ---
 
-## Version 0.5.0 (Planned: Q4 2026)
+## Not a close-out priority | 当前不作为收尾优先项
 
-### 🎯 Primary Goals
-
-1. **New Kernels**
-   - [ ] Grouped GEMM for MoE
-   - [ ] Sparse attention patterns
-   - [ ] Fused Adam optimizer kernel
-   - [ ] Fused LayerNorm + Residual
-
-2. **Advanced Optimizations**
-   - [ ] INT4 quantization support
-   - [ ] Mixed-precision GEMM (FP8/FP16/FP32)
-   - [ ] Kernel fusion framework
-
-3. **Developer Experience**
-   - [ ] Python benchmarking suite
-   - [ ] Automated performance regression tests
-   - [ ] Integration with PyTorch 2.0 compile
+- Large new kernel families or major API expansion
+- Broad plugin bundles or heavy default MCP integrations
+- Long speculative version tables and roadmap promises without bounded implementation work
+- Public promises about future releases that are not already backed by active OpenSpec changes
 
 ---
 
-## Version 1.0.0 (Planned: 2027)
+## How follow-up work is tracked | 后续工作如何跟踪
 
-### 🎯 Primary Goals
-
-1. **Production Readiness**
-   - [ ] Full backward pass for all kernels
-   - [ ] cuDNN compatibility layer
-   - [ ] Multi-GPU support
-   - [ ] Production deployment guide
-
-2. **Ecosystem Integration**
-   - [ ] vLLM integration
-   - [ ] TensorRT-LLM plugin
-   - [ ] MLC-LLM support
-   - [ ] ONNX Runtime custom op
-
-3. **Documentation**
-   - [ ] Video tutorials
-   - [ ] Interactive Jupyter notebooks
-   - [ ] Performance comparison database
+- Non-trivial work goes through `openspec/changes/<change>/`.
+- Historical decisions live in `openspec/archive/`.
+- Any residual follow-up should be captured as bounded tasks or changes, not as speculative version plans.
 
 ---
 
-## Long-term Vision
+## Stabilization completion criteria | 稳定化完成标准
 
-### Research Directions
+The current cleanup program is considered complete when:
 
-- **Automated Kernel Generation**: ML-based kernel optimization
-- **Architecture-Agnostic Kernels**: Portable across NVIDIA, AMD, Intel GPUs
-- **Dynamic Kernel Selection**: Runtime optimization level selection
-- **Memory Optimization**: Advanced memory pool management
-
-### Community Goals
-
-- Monthly contributor meetings
-- Annual CUDA optimization workshop
-- Partnership with CUDA education programs
-- Academic collaboration for kernel research
+- active repository workflow and documentation all point to OpenSpec as the same source of truth
+- GitHub-facing surfaces (README, Pages, About metadata) tell a consistent project story
+- retained CI and Pages workflows are low-noise and fail honestly
+- remaining follow-up work fits into a small bounded backlog instead of sprawling roadmap promises
 
 ---
 
-## Contributing to the Roadmap
+## Remaining bounded backlog | 剩余 bounded backlog
 
-We welcome community input on our roadmap! Here's how you can contribute:
-
-1. **Feature Requests**: Open an issue with the `enhancement` label
-2. **Roadmap Discussion**: Use GitHub Discussions
-3. **Implementation**: Check for `help wanted` issues
-4. **Feedback**: Comment on roadmap items you care about
-
----
-
-## Version History
-
-| Version | Date | Key Features |
-|---------|------|--------------|
-| 0.3.0 | 2026-04 | Bilingual docs, Python bindings expansion |
-| 0.2.0 | 2025-01 | CI/CD, quality infrastructure |
-| 0.1.0 | 2024-01 | Initial release, core kernels |
-
----
-
-*This roadmap is subject to change based on community feedback and hardware evolution.*
+- polish the Pages landing experience so it matches the cleaned README and GitHub About copy even more closely
+- do one final repository-wide review pass for lingering stale claims, duplicate docs, or workflow edge cases
+- complete and archive the active `stabilize-project-for-archive` OpenSpec change once its remaining tasks are closed
