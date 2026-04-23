@@ -1,0 +1,25 @@
+{
+  "lspServers": {
+    "clangd": {
+      "command": "clangd",
+      "args": [
+        "--background-index",
+        "--clang-tidy",
+        "--completion-style=detailed",
+        "--header-insertion=never"
+      ],
+      "fileExtensions": {
+        ".c": "c",
+        ".cc": "cpp",
+        ".cpp": "cpp",
+        ".cxx": "cpp",
+        ".h": "cpp",
+        ".hh": "cpp",
+        ".hpp": "cpp",
+        ".hxx": "cpp",
+        ".cu": "cpp",
+        ".cuh": "cpp"
+      }
+    }
+  }
+}
