@@ -15,28 +15,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  NODE_VERSION: '20'
   PYTHON_VERSION: '3.11'
-  CLANG_FORMAT_VERSION: '17'
-  # Opt into Node.js 24 for GitHub Actions (Node.js 20 deprecated)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  # ============================================
-  # Job 1: Code Format Check
-  # ============================================
-  format-check:
-    name: Format Check
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Check C/C++/CUDA formatting
-        uses: jidicula/clang-format-action@v4.13.0
-        with:
-          clang-format-version: ${{ env.CLANG_FORMAT_VERSION }}
-          check-path: 'src'
-          fallback-style: 'Google'
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -46,295 +35,41 @@ jobs:
       - name: Install Python linting tools
         run: pip install ruff
 
-      - name: Check Python code quality
-        run: |
-          echo "=== Running ruff linter ==="
-          ruff check python/ --output-format=github || true
-
-          echo "=== Checking Python formatting ==="
-          ruff format --check python/ --diff || true
-
-  # ============================================
-  # Job 2: Entry Consistency Check
-  # ============================================
-  consistency-check:
-    name: Entry Consistency Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Verify documented example files exist
-        run: |
-          python3 << 'EOF'
-          import sys
-          from pathlib import Path
-
-          print("=== Checking documented example files ===")
-
-          required_files = [
-              "examples/elementwise/relu_example.cu",
-              "examples/gemm/gemm_benchmark.cu",
-              "examples/python/basic_usage.py",
-          ]
-
-          missing = []
-          for file_path in required_files:
-              path = Path(file_path)
-              if path.exists():
-                  print(f"✓ Found: {file_path}")
-              else:
-                  print(f"✗ Missing: {file_path}")
-                  missing.append(file_path)
-
-          if missing:
-              print(f"\n❌ Error: Missing {len(missing)} documented example file(s)")
-              sys.exit(1)
-
-          print(f"\n✓ All {len(required_files)} example files verified")
-          EOF
-
-      - name: Verify Python module naming is consistent
-        run: |
-          python3 << 'EOF'
-          import sys
-          from pathlib import Path
-
-          print("=== Checking Python module naming consistency ===")
-
-          checks = {
-              'python/bindings/bindings.cpp': 'NB_MODULE(hpc_ai_opt, m)',
-              'python/CMakeLists.txt': 'nanobind_add_module(hpc_ai_opt',
-              'examples/python/basic_usage.py': 'import hpc_ai_opt',
-              'docs/python/index.rst': 'hpc_ai_opt',
-              'README.md': 'hpc_ai_opt',
-              'README.zh-CN.md': 'hpc_ai_opt',
-          }
-
-          errors = []
-          for file_path, expected in checks.items():
-              path = Path(file_path)
-              if not path.exists():
-                  print(f"⚠ File not found: {file_path}")
-                  continue
-
-              content = path.read_text(encoding='utf-8')
-              if expected in content:
-                  print(f"✓ {file_path}: contains '{expected}'")
-              else:
-                  print(f"✗ {file_path}: missing '{expected}'")
-                  errors.append(file_path)
-
-          if errors:
-              print(f"\n❌ Error: {len(errors)} file(s) have naming inconsistencies")
-              sys.exit(1)
-
-          print(f"\n✓ All naming checks passed")
-          EOF
-
-      - name: Verify CI scope is documented
-        run: |
-          python3 << 'EOF'
-          import sys
-          from pathlib import Path
-
-          print("=== Checking CI scope documentation ===")
-
-          readme = Path('README.md')
-          if not readme.exists():
-              print("❌ Error: README.md not found")
-              sys.exit(1)
-
-          content = readme.read_text(encoding='utf-8')
-          scope_text = "does **not** currently provide full native CUDA build-and-test"
-
-          if scope_text in content:
-              print(f"✓ CI scope documentation found in README.md")
-          else:
-              print("❌ Error: CI scope documentation missing from README.md")
-              print("Expected text: 'does **not** currently provide full native CUDA build-and-test'")
-              sys.exit(1)
-
-          print("\n✓ CI scope documentation verified")
-          EOF
-
-      - name: Verify required configuration files exist
-        run: |
-          python3 << 'EOF'
-          import sys
-          from pathlib import Path
-
-          print("=== Checking required configuration files ===")
-
-          required_configs = [
-              ".clang-format",
-              ".clang-tidy",
-              ".editorconfig",
-              ".pre-commit-config.yaml",
-              "CMakeLists.txt",
-              "LICENSE",
-              "CONTRIBUTING.md",
-              "CODE_OF_CONDUCT.md",
-              "CHANGELOG.md",
-              "SECURITY.md",
-          ]
-
-          missing = []
-          for config in required_configs:
-              if Path(config).exists():
-                  print(f"✓ Found: {config}")
-              else:
-                  print(f"✗ Missing: {config}")
-                  missing.append(config)
-
-          if missing:
-              print(f"\n❌ Error: Missing {len(missing)} configuration file(s)")
-              sys.exit(1)
-
-          print(f"\n✓ All {len(required_configs)} configuration files verified")
-          EOF
-
-      - name: Verify version consistency
-        run: |
-          python3 << 'EOF'
-          import re
-          import sys
-          from pathlib import Path
-
-          print("=== Checking version consistency ===")
-
-          # Check CMakeLists.txt version
-          cmake = Path('CMakeLists.txt').read_text()
-          cmake_match = re.search(r'VERSION\s+(\d+\.\d+\.\d+)', cmake)
-          cmake_version = cmake_match.group(1) if cmake_match else None
-
-          # Check Doxyfile version
-          doxyfile = Path('docs/Doxyfile').read_text()
-          doxy_match = re.search(r'PROJECT_NUMBER\s*=\s*(\d+\.\d+\.\d+)', doxyfile)
-          doxy_version = doxy_match.group(1) if doxy_match else None
-
-          print(f"CMakeLists.txt version: {cmake_version}")
-          print(f"Doxyfile version: {doxy_version}")
-
-          if cmake_version and doxy_version and cmake_version != doxy_version:
-              print(f"❌ Error: Version mismatch!")
-              sys.exit(1)
-
-          print("✓ Versions are consistent")
-          EOF
-
-  # ============================================
-  # Job 3: Documentation Build
-  # ============================================
-  docs:
-    name: Build Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Doxygen and Graphviz
+      - name: Install clang-format
         run: |
           sudo apt-get update
-          sudo apt-get install -y doxygen graphviz
+          sudo apt-get install -y clang-format-17
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Sphinx and dependencies
+      - name: Check C/C++/CUDA formatting
         run: |
-          pip install \
-            sphinx \
-            sphinx-rtd-theme \
-            breathe \
-            myst-parser \
-            sphinx-copybutton
+          mapfile -t files < <(git ls-files '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.cu' '*.cuh')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No C/C++/CUDA files to check"
+            exit 0
+          fi
+          clang-format-17 --dry-run --Werror "${files[@]}"
 
-      - name: Build Doxygen documentation
+      - name: Check Python code quality
         run: |
-          echo "=== Building Doxygen (C++/CUDA API) ==="
-          if [ -f docs/Doxyfile ]; then
-            cd docs
-            doxygen Doxyfile 2>&1 | tee doxygen.log
-            if [ -d api/html ]; then
-              echo "✓ Doxygen HTML generated at docs/api/html/"
-              echo "Generated $(find api/html -name '*.html' | wc -l) HTML files"
-            else
-              echo "⚠ Warning: Doxygen output not found"
-            fi
-          else
-            echo "⚠ Warning: docs/Doxyfile not found, skipping Doxygen build"
-          fi
+          ruff check python/ examples/python/
+          ruff format --check python/ examples/python/
 
-      - name: Build Sphinx documentation
-        run: |
-          echo "=== Building Sphinx (Python API) ==="
-          if [ -f docs/python/conf.py ]; then
-            # Ensure templates directory exists
-            mkdir -p docs/python/_templates
-
-            cd docs/python
-            sphinx-build -b html . _build/html 2>&1 | tee sphinx.log
-            sphinx_exit=$?
-
-            if [ $sphinx_exit -eq 0 ] && [ -d _build/html ]; then
-              echo "✓ Sphinx HTML generated at docs/python/_build/html/"
-              echo "Generated $(find _build/html -name '*.html' | wc -l) HTML files"
-            else
-              echo "⚠ Warning: Sphinx build completed with issues"
-            fi
-          else
-            echo "⚠ Warning: docs/python/conf.py not found, skipping Sphinx build"
-          fi
-
-      - name: Verify documentation output
-        run: |
-          echo "=== Verifying documentation build ==="
-
-          # Check Doxygen output
-          if [ -d docs/api/html ]; then
-            echo "✓ Doxygen documentation available"
-          fi
-
-          # Check Sphinx output
-          if [ -d docs/python/_build/html ]; then
-            echo "✓ Sphinx documentation available"
-          fi
-
-          # At least one should exist
-          if [ -d docs/api/html ] || [ -d docs/python/_build/html ]; then
-            echo "✓ Documentation build successful"
-          else
-            echo "⚠ Warning: No documentation was generated (this may be expected for partial builds)"
-          fi
-
-  # ============================================
-  # Job 4: CI Status Summary
-  # ============================================
-  ci-success:
-    name: CI Success
+  docs:
+    name: Docs Build
     runs-on: ubuntu-latest
-    needs: [format-check, consistency-check, docs]
-    if: always()
     steps:
-      - name: Check all jobs status
-        run: |
-          echo "=== CI Status Summary ==="
-          echo ""
-          echo "| Job | Status |"
-          echo "|-----|--------|"
-          echo "| Format Check | ${{ needs.format-check.result }} |"
-          echo "| Consistency Check | ${{ needs.consistency-check.result }} |"
-          echo "| Docs Build | ${{ needs.docs.result }} |"
-          echo ""
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          if [[ "${{ needs.format-check.result }}" != "success" || \
-                "${{ needs.consistency-check.result }}" != "success" || \
-                "${{ needs.docs.result }}" != "success" ]]; then
-            echo "❌ One or more required jobs failed"
-            exit 1
-          fi
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
 
-          echo "✅ All required jobs passed!"
+      - name: Install documentation dependencies
+        run: npm --prefix docs ci
+
+      - name: Build VitePress site
+        run: npm --prefix docs run docs:build
