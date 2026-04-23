@@ -11,7 +11,7 @@
       "displayName": "Default (Debug)",
       "description": "Debug build with native GPU architecture",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build",
+      "binaryDir": "${sourceDir}/build/default",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CUDA_ARCHITECTURES": "native"
@@ -22,7 +22,7 @@
       "displayName": "Release",
       "description": "Release build with native GPU architecture",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-release",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CUDA_ARCHITECTURES": "native"
@@ -33,7 +33,7 @@
       "displayName": "CI (sm_80)",
       "description": "CI build targeting Ampere (sm_80)",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-ci",
+      "binaryDir": "${sourceDir}/build/ci",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CUDA_ARCHITECTURES": "80"
