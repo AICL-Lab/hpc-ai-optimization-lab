@@ -84,3 +84,20 @@ Thumbs.db
 
 # Local AI agent worktrees
 .claude/
+
+# Node.js / npm (Docs)
+node_modules/
+package-lock.json
+!docs/package-lock.json
+
+# VitePress build output
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# Python linters cache
+.ruff_cache/
+.mypy_cache/
+
+# Temporary test files
+*.tmp.*
+*.temp.*
