@@ -85,6 +85,12 @@ Thumbs.db
 # Local AI agent worktrees
 .claude/
 
+# oh-my-claudecode
+.omc/
+
+# LSP configuration
+.clangd
+
 # Node.js / npm (Docs)
 node_modules/
 package-lock.json
