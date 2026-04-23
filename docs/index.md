@@ -1,32 +1,35 @@
 ---
 layout: home
+
 hero:
   name: HPC-AI-Optimization-Lab
-  text: CUDA Kernel Optimization Lab
-  tagline: From Naive to Tensor Core — Master GPU Performance Optimization
+  text: CUDA kernel optimization lab
+  tagline: Explore GEMM, FlashAttention, quantization, and GPU performance learning from one bilingual landing page.
+  image:
+    src: /logo-large.svg
+    alt: HPC-AI-Optimization-Lab logo
+  actions:
+    - theme: brand
+      text: Enter English docs
+      link: /en/
+    - theme: alt
+      text: 进入中文文档
+      link: /zh-CN/
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/LessUp/hpc-ai-optimization-lab
+
+features:
+  - title: Learn progressively
+    details: Start from memory patterns and reduction basics, then move into GEMM, FlashAttention, and CUDA 13 notes.
+  - title: Understand the repository
+    details: The docs surface complements the README and routes you toward architecture notes, API pages, examples, and practical guides.
+  - title: Navigate by language
+    details: English and Simplified Chinese entry points stay aligned so the project story is consistent across public surfaces.
 ---
 
-<script setup>
-import { onMounted } from 'vue'
+## Quick directions
 
-onMounted(() => {
-  const browserLang = navigator.language || navigator.userLanguage
-  const targetPath = browserLang.startsWith('zh') ? '/zh-CN/' : '/en/'
-  
-  if (typeof window !== 'undefined') {
-    const currentPath = window.location.pathname
-    if (currentPath.endsWith('/hpc-ai-optimization-lab/') || currentPath.endsWith('/hpc-ai-optimization-lab')) {
-      window.location.replace(targetPath)
-    }
-  }
-})
-</script>
-
-<div style="text-align: center; padding: 2rem;">
-  <p style="color: var(--vp-c-text-2);">
-    Redirecting to your preferred language...
-  </p>
-  <p>
-    <a href="/en/">English</a> | <a href="/zh-CN/">简体中文</a>
-  </p>
-</div>
+- **English**: [/en/](/en/)
+- **简体中文**: [/zh-CN/](/zh-CN/)
+- **GitHub repository**: [LessUp/hpc-ai-optimization-lab](https://github.com/LessUp/hpc-ai-optimization-lab)
