@@ -1,25 +1,27 @@
 #include <gtest/gtest.h>
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
-#include "cuda13/tma.cuh"
-#include "common/tensor.cuh"
+
 #include "../test_utils.hpp"
+#include "common/tensor.cuh"
+#include "cuda13/tma.cuh"
 
 // Property 13: Fallback copy path preserves data integrity.
 RC_GTEST_PROP(TMATest, FallbackCopyPreservesDataIntegrity, ()) {
     auto rows = *rc::gen::inRange<int>(1, 128);
     auto cols = *rc::gen::inRange<int>(1, 128);
     auto input = *rc::gen::container<std::vector<float>>(rows * cols, rc::gen::arbitrary<float>());
-    
+
     hpc::Tensor<float> d_src(rows * cols);
     hpc::Tensor<float> d_dst(rows * cols);
     d_src.copy_from_host(input);
-    
-    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols, hpc::cuda13::TMAConfig{});
+
+    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols,
+                                    hpc::cuda13::TMAConfig{});
     cudaDeviceSynchronize();
-    
+
     auto result = d_dst.to_host();
-    
+
     for (size_t i = 0; i < input.size(); ++i) {
         RC_ASSERT(input[i] == result[i]);
     }
@@ -28,14 +30,15 @@ RC_GTEST_PROP(TMATest, FallbackCopyPreservesDataIntegrity, ()) {
 TEST(TMATest, FallbackCopyMatchesInput) {
     int rows = 64, cols = 64;
     auto input = hpc::test::random_vector<float>(rows * cols);
-    
+
     hpc::Tensor<float> d_src(rows * cols);
     hpc::Tensor<float> d_dst(rows * cols);
     d_src.copy_from_host(input);
-    
-    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols, hpc::cuda13::TMAConfig{});
+
+    hpc::cuda13::tma_copy_2d<float>(d_src.data(), d_dst.data(), rows, cols,
+                                    hpc::cuda13::TMAConfig{});
     cudaDeviceSynchronize();
-    
+
     auto result = d_dst.to_host();
     EXPECT_TRUE(hpc::test::vectors_almost_equal(result, input));
 }

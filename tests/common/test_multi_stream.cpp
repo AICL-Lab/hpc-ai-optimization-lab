@@ -1,12 +1,14 @@
-#include <gtest/gtest.h>
-#include <vector>
-#include <thread>
 #include <cuda_runtime.h>
 
+#include <thread>
+#include <vector>
+
+#include <gtest/gtest.h>
+
+#include "../test_utils.hpp"
 #include "common/tensor.cuh"
 #include "elementwise/relu.cuh"
 #include "gemm/gemm.cuh"
-#include "../test_utils.hpp"
 
 namespace {
 
@@ -33,8 +35,7 @@ TEST(MultiStreamTest, ConcurrentReluKernels) {
 
     // Launch kernels on different streams
     for (int i = 0; i < NUM_STREAMS; ++i) {
-        hpc::elementwise::relu<float>(
-            inputs[i].data(), outputs[i].data(), N, streams[i]);
+        hpc::elementwise::relu<float>(inputs[i].data(), outputs[i].data(), N, streams[i]);
     }
 
     // Synchronize and verify
@@ -78,8 +79,8 @@ TEST(MultiStreamTest, OverlappingGemm) {
     // Launch GEMM kernels concurrently
     for (int i = 0; i < NUM_STREAMS; ++i) {
         hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(
-            A_tensors[i].data(), B_tensors[i].data(), C_tensors[i].data(),
-            M, N, K, 1.0f, 0.0f, streams[i]);
+            A_tensors[i].data(), B_tensors[i].data(), C_tensors[i].data(), M, N, K, 1.0f, 0.0f,
+            streams[i]);
     }
 
     // Verify all results
@@ -225,4 +226,4 @@ TEST(MultiStreamTest, StreamErrorHandling) {
     SUCCEED();
 }
 
-} // namespace
+}  // namespace

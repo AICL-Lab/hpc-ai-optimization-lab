@@ -2,6 +2,7 @@
 // This example demonstrates how to use FlashAttention kernels
 
 #include <iostream>
+
 #include "attention/flash_attention.cuh"
 
 int main() {

@@ -1,18 +1,18 @@
-#include <gtest/gtest.h>
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <vector>
 
+#include <gtest/gtest.h>
+
+#include "../test_utils.hpp"
 #include "attention/flash_attention.cuh"
 #include "common/tensor.cuh"
-#include "../test_utils.hpp"
 
 namespace {
 
-std::vector<float> cpu_flash_attention(const std::vector<float>& q,
-                                       const std::vector<float>& k,
+std::vector<float> cpu_flash_attention(const std::vector<float>& q, const std::vector<float>& k,
                                        const std::vector<float>& v,
                                        const hpc::attention::FlashAttnConfig& config) {
     const int head_dim = config.head_dim;
@@ -35,8 +35,7 @@ std::vector<float> cpu_flash_attention(const std::vector<float>& q,
                     }
                     float score = 0.0f;
                     for (int d = 0; d < head_dim; ++d) {
-                        score += q[base + q_idx * head_dim + d] *
-                                 k[base + kv_idx * head_dim + d];
+                        score += q[base + q_idx * head_dim + d] * k[base + kv_idx * head_dim + d];
                     }
                     score *= config.scale;
                     scores[kv_idx] = score;
@@ -90,13 +89,11 @@ void expect_attention_matches_reference(bool causal) {
     d_v.copy_from_host(v);
 
     const hpc::attention::FlashAttnConfig config{
-        batch, heads, seq, dim,
-        1.0f / std::sqrt(static_cast<float>(dim)),
-        causal,
+        batch, heads, seq, dim, 1.0f / std::sqrt(static_cast<float>(dim)), causal,
     };
 
-    hpc::attention::flash_attention_forward<float>(
-        d_q.data(), d_k.data(), d_v.data(), d_o.data(), config);
+    hpc::attention::flash_attention_forward<float>(d_q.data(), d_k.data(), d_v.data(), d_o.data(),
+                                                   config);
     cudaDeviceSynchronize();
 
     const auto expected = cpu_flash_attention(q, k, v, config);
@@ -109,7 +106,7 @@ void expect_attention_matches_reference(bool causal) {
     }
 }
 
-} // namespace
+}  // namespace
 
 TEST(FlashAttentionTest, MatchesReferenceWithoutCausalMask) {
     expect_attention_matches_reference(false);
@@ -136,13 +133,10 @@ TEST(FlashAttentionTest, RejectsUnsupportedHeadDim) {
     d_o.zero();
 
     const hpc::attention::FlashAttnConfig config{
-        batch, heads, seq, dim,
-        1.0f / std::sqrt(static_cast<float>(dim)),
-        false,
+        batch, heads, seq, dim, 1.0f / std::sqrt(static_cast<float>(dim)), false,
     };
 
-    EXPECT_THROW(
-        hpc::attention::flash_attention_forward<float>(
-            d_q.data(), d_k.data(), d_v.data(), d_o.data(), config),
-        std::invalid_argument);
+    EXPECT_THROW(hpc::attention::flash_attention_forward<float>(d_q.data(), d_k.data(), d_v.data(),
+                                                                d_o.data(), config),
+                 std::invalid_argument);
 }

@@ -1,22 +1,22 @@
 // HPC-AI-Optimization-Lab Python Bindings
 // Thin nanobind wrappers over selected CUDA kernels.
 
-#include <nanobind/nanobind.h>
-#include <nanobind/tensor.h>
+#include <cuda_runtime.h>
 
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
-#include <cuda_runtime.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/tensor.h>
 
 #include "elementwise/relu.cuh"
 #include "elementwise/sigmoid.cuh"
 #include "elementwise/transpose.cuh"
+#include "gemm/gemm.cuh"
 #include "reduction/layernorm.cuh"
 #include "reduction/rmsnorm.cuh"
 #include "reduction/softmax.cuh"
-#include "gemm/gemm.cuh"
 
 namespace nb = nanobind;
 
@@ -33,15 +33,16 @@ size_t require_non_empty(const nb::tensor<T, nb::device::cuda>& tensor, const ch
 
 inline void require_size(size_t actual, size_t expected, const char* name) {
     if (actual != expected) {
-        throw std::invalid_argument(
-            std::string(name) + " has unexpected size: expected " +
-            std::to_string(expected) + ", got " + std::to_string(actual));
+        throw std::invalid_argument(std::string(name) + " has unexpected size: expected " +
+                                    std::to_string(expected) + ", got " + std::to_string(actual));
     }
 }
 
-inline size_t require_positive_product(int lhs, int rhs, const char* lhs_name, const char* rhs_name) {
+inline size_t require_positive_product(int lhs, int rhs, const char* lhs_name,
+                                       const char* rhs_name) {
     if (lhs <= 0 || rhs <= 0) {
-        throw std::invalid_argument(std::string(lhs_name) + " and " + rhs_name + " must be positive");
+        throw std::invalid_argument(std::string(lhs_name) + " and " + rhs_name +
+                                    " must be positive");
     }
     return static_cast<size_t>(lhs) * static_cast<size_t>(rhs);
 }
@@ -58,7 +59,7 @@ inline void require_finite(float value, const char* name) {
     }
 }
 
-} // namespace
+}  // namespace
 
 void relu_wrapper(nb::tensor<float, nb::device::cuda>& input,
                   nb::tensor<float, nb::device::cuda>& output) {
@@ -77,8 +78,7 @@ void sigmoid_wrapper(nb::tensor<float, nb::device::cuda>& input,
 }
 
 void transpose_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                       nb::tensor<float, nb::device::cuda>& output,
-                       int rows, int cols) {
+                       nb::tensor<float, nb::device::cuda>& output, int rows, int cols) {
     const size_t expected = require_positive_product(rows, cols, "rows", "cols");
     require_size(input.size(), expected, "input");
     require_size(output.size(), expected, "output");
@@ -87,8 +87,7 @@ void transpose_wrapper(nb::tensor<float, nb::device::cuda>& input,
 }
 
 void softmax_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                     nb::tensor<float, nb::device::cuda>& output,
-                     int batch, int seq_len) {
+                     nb::tensor<float, nb::device::cuda>& output, int batch, int seq_len) {
     const size_t expected = require_positive_product(batch, seq_len, "batch", "seq_len");
     require_size(input.size(), expected, "input");
     require_size(output.size(), expected, "output");
@@ -99,38 +98,34 @@ void softmax_wrapper(nb::tensor<float, nb::device::cuda>& input,
 void layer_norm_wrapper(nb::tensor<float, nb::device::cuda>& input,
                         nb::tensor<float, nb::device::cuda>& gamma,
                         nb::tensor<float, nb::device::cuda>& beta,
-                        nb::tensor<float, nb::device::cuda>& output,
-                        int batch, int hidden_size, float eps) {
+                        nb::tensor<float, nb::device::cuda>& output, int batch, int hidden_size,
+                        float eps) {
     const size_t expected = require_positive_product(batch, hidden_size, "batch", "hidden_size");
     require_finite_positive(eps, "eps");
     require_size(input.size(), expected, "input");
     require_size(output.size(), expected, "output");
     require_size(gamma.size(), static_cast<size_t>(hidden_size), "gamma");
     require_size(beta.size(), static_cast<size_t>(hidden_size), "beta");
-    hpc::reduction::layer_norm<float>(
-        input.data(), gamma.data(), beta.data(), output.data(),
-        batch, hidden_size, eps, nullptr);
+    hpc::reduction::layer_norm<float>(input.data(), gamma.data(), beta.data(), output.data(), batch,
+                                      hidden_size, eps, nullptr);
 }
 
 void rms_norm_wrapper(nb::tensor<float, nb::device::cuda>& input,
                       nb::tensor<float, nb::device::cuda>& gamma,
-                      nb::tensor<float, nb::device::cuda>& output,
-                      int batch, int hidden_size, float eps) {
+                      nb::tensor<float, nb::device::cuda>& output, int batch, int hidden_size,
+                      float eps) {
     const size_t expected = require_positive_product(batch, hidden_size, "batch", "hidden_size");
     require_finite_positive(eps, "eps");
     require_size(input.size(), expected, "input");
     require_size(output.size(), expected, "output");
     require_size(gamma.size(), static_cast<size_t>(hidden_size), "gamma");
-    hpc::reduction::rms_norm<float>(
-        input.data(), gamma.data(), output.data(),
-        batch, hidden_size, eps, nullptr);
+    hpc::reduction::rms_norm<float>(input.data(), gamma.data(), output.data(), batch, hidden_size,
+                                    eps, nullptr);
 }
 
-void matmul_wrapper(nb::tensor<float, nb::device::cuda>& A,
-                    nb::tensor<float, nb::device::cuda>& B,
-                    nb::tensor<float, nb::device::cuda>& C,
-                    int M, int N, int K,
-                    float alpha, float beta) {
+void matmul_wrapper(nb::tensor<float, nb::device::cuda>& A, nb::tensor<float, nb::device::cuda>& B,
+                    nb::tensor<float, nb::device::cuda>& C, int M, int N, int K, float alpha,
+                    float beta) {
     const size_t a_expected = require_positive_product(M, K, "M", "K");
     const size_t b_expected = require_positive_product(K, N, "K", "N");
     const size_t c_expected = require_positive_product(M, N, "M", "N");
@@ -139,8 +134,8 @@ void matmul_wrapper(nb::tensor<float, nb::device::cuda>& A,
     require_size(A.size(), a_expected, "A");
     require_size(B.size(), b_expected, "B");
     require_size(C.size(), c_expected, "C");
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(
-        A.data(), B.data(), C.data(), M, N, K, alpha, beta, nullptr);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(A.data(), B.data(), C.data(), M, N,
+                                                                K, alpha, beta, nullptr);
 }
 
 NB_MODULE(hpc_ai_opt, m) {

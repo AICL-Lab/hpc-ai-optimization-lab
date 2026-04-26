@@ -1,21 +1,22 @@
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+
 #include <gtest/gtest.h>
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
-#include <algorithm>
-#include "reduction/rmsnorm.cuh"
-#include "common/tensor.cuh"
+
 #include "../test_utils.hpp"
-#include <cmath>
-#include <numeric>
+#include "common/tensor.cuh"
+#include "reduction/rmsnorm.cuh"
 
 // Feature: hpc-ai-optimization-lab, Property: RMSNorm output has unit RMS when gamma=1
 RC_GTEST_PROP(RMSNormTest, UnitRMSWithGammaOne, ()) {
     auto batch = *rc::gen::inRange<int>(1, 16);
     auto hidden = *rc::gen::inRange<int>(64, 256);
-    auto input = *rc::gen::container<std::vector<float>>(batch * hidden,
-        rc::gen::map(rc::gen::arbitrary<float>(), [](float x) {
-            return std::clamp(x, -2.0f, 2.0f);
-        }));
+    auto input = *rc::gen::container<std::vector<float>>(
+        batch * hidden, rc::gen::map(rc::gen::arbitrary<float>(),
+                                     [](float x) { return std::clamp(x, -2.0f, 2.0f); }));
 
     // gamma = 1.0 for all hidden dims
     std::vector<float> gamma(hidden, 1.0f);
@@ -27,9 +28,7 @@ RC_GTEST_PROP(RMSNormTest, UnitRMSWithGammaOne, ()) {
     d_input.copy_from_host(input);
     d_gamma.copy_from_host(gamma);
 
-    hpc::reduction::rms_norm<float>(
-        d_input.data(), d_gamma.data(), d_output.data(),
-        batch, hidden);
+    hpc::reduction::rms_norm<float>(d_input.data(), d_gamma.data(), d_output.data(), batch, hidden);
     cudaDeviceSynchronize();
 
     auto result = d_output.to_host();
@@ -54,9 +53,7 @@ TEST(RMSNormTest, BasicTest) {
     d_input.copy_from_host(input);
     d_gamma.copy_from_host(gamma);
 
-    hpc::reduction::rms_norm<float>(
-        d_input.data(), d_gamma.data(), d_output.data(),
-        batch, hidden);
+    hpc::reduction::rms_norm<float>(d_input.data(), d_gamma.data(), d_output.data(), batch, hidden);
     cudaDeviceSynchronize();
 
     auto result = d_output.to_host();
