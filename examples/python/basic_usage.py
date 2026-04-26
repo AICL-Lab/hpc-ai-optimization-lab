@@ -15,13 +15,15 @@ except ImportError as exc:
         "Build the bindings first:\n"
         "  cmake -S . -B build -DBUILD_PYTHON_BINDINGS=ON\n"
         "  cmake --build build\n"
-        "  export PYTHONPATH=\"$(pwd)/build/python:${PYTHONPATH}\"\n"
+        '  export PYTHONPATH="$(pwd)/build/python:${PYTHONPATH}"\n'
     ) from exc
 
 
 def require_cuda() -> torch.device:
     if not torch.cuda.is_available():
-        raise SystemExit("Error: this example requires a CUDA-enabled PyTorch installation.")
+        raise SystemExit(
+            "Error: this example requires a CUDA-enabled PyTorch installation."
+        )
     return torch.device("cuda")
 
 
@@ -50,7 +52,9 @@ def example_reduction(device: torch.device) -> None:
     x = torch.randn(64, 128, device=device, dtype=torch.float32)
     softmax_out = torch.empty_like(x)
     opt.reduction.softmax(x, softmax_out, x.shape[0], x.shape[1])
-    torch.testing.assert_close(softmax_out, torch.softmax(x, dim=-1), rtol=1e-5, atol=1e-5)
+    torch.testing.assert_close(
+        softmax_out, torch.softmax(x, dim=-1), rtol=1e-5, atol=1e-5
+    )
     print("Softmax passed")
 
 
