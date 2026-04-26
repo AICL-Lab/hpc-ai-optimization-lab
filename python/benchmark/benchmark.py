@@ -21,12 +21,14 @@ from datetime import datetime
 # Optional imports for visualization
 try:
     import matplotlib.pyplot as plt
+
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
 
 try:
     import numpy as np
+
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False
@@ -35,6 +37,7 @@ except ImportError:
 @dataclass
 class BenchmarkResult:
     """Container for benchmark results."""
+
     kernel: str
     hpc_ms: float
     baseline_ms: float
@@ -48,6 +51,7 @@ class BenchmarkResult:
 @dataclass
 class DeviceInfo:
     """GPU device information."""
+
     name: str
     compute_capability: Tuple[int, int]
     total_memory_gb: float
@@ -99,7 +103,7 @@ def benchmark_kernel(
     min_run_time: float = 1.0,
     flops: Optional[int] = None,
     bytes_accessed: Optional[int] = None,
-    **kwargs
+    **kwargs,
 ) -> BenchmarkResult:
     """
     Compare HPC kernel with baseline implementation.
@@ -128,14 +132,14 @@ def benchmark_kernel(
     # Benchmark HPC kernel
     hpc_timer = Timer(
         stmt="hpc_fn(*args, **kwargs)",
-        globals={"hpc_fn": hpc_fn, "args": args, "kwargs": kwargs}
+        globals={"hpc_fn": hpc_fn, "args": args, "kwargs": kwargs},
     )
     hpc_result = hpc_timer.blocked_autorange(min_run_time=min_run_time)
 
     # Benchmark baseline
     baseline_timer = Timer(
         stmt="baseline_fn(*args, **kwargs)",
-        globals={"baseline_fn": baseline_fn, "args": args, "kwargs": kwargs}
+        globals={"baseline_fn": baseline_fn, "args": args, "kwargs": kwargs},
     )
     baseline_result = baseline_timer.blocked_autorange(min_run_time=min_run_time)
 
@@ -201,7 +205,9 @@ class RooflineAnalyzer:
         achieved_tflops = result.tflops
 
         # Ridge point: where compute and memory rooflines meet
-        ridge_point = self.device_info.peak_fp32_tflops / self.device_info.peak_bandwidth_gb_s
+        ridge_point = (
+            self.device_info.peak_fp32_tflops / self.device_info.peak_bandwidth_gb_s
+        )
 
         # Determine bottleneck
         if ai < ridge_point:
@@ -228,7 +234,7 @@ class RooflineAnalyzer:
         self,
         results: List[BenchmarkResult],
         output_path: str = "roofline.png",
-        title: str = "Roofline Analysis"
+        title: str = "Roofline Analysis",
     ):
         """Generate roofline plot for multiple kernels."""
         if not HAS_MATPLOTLIB or not HAS_NUMPY:
@@ -252,9 +258,11 @@ class RooflineAnalyzer:
         roofline = np.minimum(memory_roof, compute_roof)
 
         # Plot roofline
-        ax.loglog(ai_range, roofline, 'b-', linewidth=2, label='Roofline')
-        ax.loglog(ai_range, memory_roof, 'b--', alpha=0.5, label='Memory Bound')
-        ax.axhline(y=peak_compute, color='b', linestyle=':', alpha=0.5, label='Compute Bound')
+        ax.loglog(ai_range, roofline, "b-", linewidth=2, label="Roofline")
+        ax.loglog(ai_range, memory_roof, "b--", alpha=0.5, label="Memory Bound")
+        ax.axhline(
+            y=peak_compute, color="b", linestyle=":", alpha=0.5, label="Compute Bound"
+        )
 
         # Plot kernel results
         colors = plt.cm.tab10(np.linspace(0, 1, len(results)))
@@ -265,25 +273,25 @@ class RooflineAnalyzer:
                     result.tflops,
                     s=200,
                     c=[color],
-                    marker='o',
+                    marker="o",
                     label=result.kernel,
-                    zorder=5
+                    zorder=5,
                 )
 
         # Ridge point
         ridge_point = peak_compute / peak_bandwidth
-        ax.axvline(x=ridge_point, color='gray', linestyle='--', alpha=0.5)
+        ax.axvline(x=ridge_point, color="gray", linestyle="--", alpha=0.5)
         ax.annotate(
-            f'Ridge Point\n({ridge_point:.1f} FLOP/B)',
+            f"Ridge Point\n({ridge_point:.1f} FLOP/B)",
             xy=(ridge_point, peak_compute * 0.5),
             fontsize=9,
-            ha='center'
+            ha="center",
         )
 
-        ax.set_xlabel('Arithmetic Intensity (FLOP/Byte)', fontsize=12)
-        ax.set_ylabel('Performance (TFLOPS)', fontsize=12)
-        ax.set_title(f'{title}\n{self.device_info.name}', fontsize=14)
-        ax.legend(loc='lower right')
+        ax.set_xlabel("Arithmetic Intensity (FLOP/Byte)", fontsize=12)
+        ax.set_ylabel("Performance (TFLOPS)", fontsize=12)
+        ax.set_title(f"{title}\n{self.device_info.name}", fontsize=14)
+        ax.legend(loc="lower right")
         ax.grid(True, alpha=0.3)
         ax.set_xlim(0.01, 10000)
         ax.set_ylim(0.01, peak_compute * 2)
@@ -294,13 +302,17 @@ class RooflineAnalyzer:
         print(f"Roofline plot saved to {output_path}")
 
 
-def print_results(results: List[BenchmarkResult], device_info: Optional[DeviceInfo] = None):
+def print_results(
+    results: List[BenchmarkResult], device_info: Optional[DeviceInfo] = None
+):
     """Print benchmark results in a formatted table."""
     print("\n" + "=" * 90)
     if device_info:
         print(f"Device: {device_info.name}")
-        print(f"Peak FP32: {device_info.peak_fp32_tflops:.1f} TFLOPS | "
-              f"Peak Bandwidth: {device_info.peak_bandwidth_gb_s:.0f} GB/s")
+        print(
+            f"Peak FP32: {device_info.peak_fp32_tflops:.1f} TFLOPS | "
+            f"Peak Bandwidth: {device_info.peak_bandwidth_gb_s:.0f} GB/s"
+        )
         print("=" * 90)
 
     header = f"{'Kernel':<25} {'HPC (ms)':<10} {'Base (ms)':<10} {'Speedup':<10}"
@@ -325,7 +337,7 @@ def generate_html_report(
     results: List[BenchmarkResult],
     device_info: DeviceInfo,
     output_path: str = "benchmark_report.html",
-    roofline_image: Optional[str] = None
+    roofline_image: Optional[str] = None,
 ):
     """Generate HTML benchmark report."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -415,7 +427,7 @@ def generate_html_report(
 </html>
 """
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         f.write(html)
     print(f"HTML report saved to {output_path}")
 
@@ -423,7 +435,7 @@ def generate_html_report(
 def plot_speedup_chart(
     results: List[BenchmarkResult],
     output_path: str = "speedup_chart.png",
-    title: str = "Kernel Speedup vs Baseline"
+    title: str = "Kernel Speedup vs Baseline",
 ):
     """Generate speedup bar chart."""
     if not HAS_MATPLOTLIB:
@@ -434,7 +446,7 @@ def plot_speedup_chart(
 
     kernels = [r.kernel for r in results]
     speedups = [r.speedup for r in results]
-    colors = ['#4CAF50' if s >= 1.0 else '#f44336' for s in speedups]
+    colors = ["#4CAF50" if s >= 1.0 else "#f44336" for s in speedups]
 
     bars = ax.bar(kernels, speedups, color=colors)
 
@@ -442,22 +454,22 @@ def plot_speedup_chart(
     for bar, speedup in zip(bars, speedups):
         height = bar.get_height()
         ax.annotate(
-            f'{speedup:.2f}x',
+            f"{speedup:.2f}x",
             xy=(bar.get_x() + bar.get_width() / 2, height),
             xytext=(0, 3),
             textcoords="offset points",
-            ha='center',
-            va='bottom',
-            fontsize=10
+            ha="center",
+            va="bottom",
+            fontsize=10,
         )
 
-    ax.axhline(y=1.0, color='gray', linestyle='--', alpha=0.7, label='Baseline')
-    ax.set_xlabel('Kernel', fontsize=12)
-    ax.set_ylabel('Speedup', fontsize=12)
+    ax.axhline(y=1.0, color="gray", linestyle="--", alpha=0.7, label="Baseline")
+    ax.set_xlabel("Kernel", fontsize=12)
+    ax.set_ylabel("Speedup", fontsize=12)
     ax.set_title(title, fontsize=14)
     ax.legend()
 
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
@@ -474,16 +486,26 @@ Examples:
   python benchmark.py --suite gemm --sizes 1024,2048,4096
   python benchmark.py --suite all --output results.json --html report.html
   python benchmark.py --roofline --output roofline.png
-        """
+        """,
     )
-    parser.add_argument("--suite", type=str, default="all",
-                        choices=["all", "gemm", "elementwise", "reduction", "attention"],
-                        help="Benchmark suite to run")
-    parser.add_argument("--sizes", type=str, default="1024,2048,4096",
-                        help="Comma-separated list of sizes to benchmark")
+    parser.add_argument(
+        "--suite",
+        type=str,
+        default="all",
+        choices=["all", "gemm", "elementwise", "reduction", "attention"],
+        help="Benchmark suite to run",
+    )
+    parser.add_argument(
+        "--sizes",
+        type=str,
+        default="1024,2048,4096",
+        help="Comma-separated list of sizes to benchmark",
+    )
     parser.add_argument("--output", type=str, help="Output JSON file for results")
     parser.add_argument("--html", type=str, help="Output HTML report file")
-    parser.add_argument("--roofline", action="store_true", help="Generate roofline plot")
+    parser.add_argument(
+        "--roofline", action="store_true", help="Generate roofline plot"
+    )
     parser.add_argument("--chart", action="store_true", help="Generate speedup chart")
     args = parser.parse_args()
 
@@ -494,7 +516,9 @@ Examples:
     # Get device info
     device_info = get_device_info()
     print(f"\nDevice: {device_info.name}")
-    print(f"Compute Capability: {device_info.compute_capability[0]}.{device_info.compute_capability[1]}")
+    print(
+        f"Compute Capability: {device_info.compute_capability[0]}.{device_info.compute_capability[1]}"
+    )
     print(f"Peak FP32: {device_info.peak_fp32_tflops:.1f} TFLOPS")
     print(f"Peak Bandwidth: {device_info.peak_bandwidth_gb_s:.0f} GB/s")
 
@@ -515,12 +539,16 @@ Examples:
         print_results(results, device_info)
 
         if args.output:
-            with open(args.output, 'w') as f:
-                json.dump({
-                    "device": asdict(device_info),
-                    "results": [asdict(r) for r in results],
-                    "timestamp": datetime.now().isoformat()
-                }, f, indent=2)
+            with open(args.output, "w") as f:
+                json.dump(
+                    {
+                        "device": asdict(device_info),
+                        "results": [asdict(r) for r in results],
+                        "timestamp": datetime.now().isoformat(),
+                    },
+                    f,
+                    indent=2,
+                )
             print(f"Results saved to {args.output}")
 
         if args.html:
