@@ -2,6 +2,7 @@
 // This example demonstrates how to use convolution kernels
 
 #include <iostream>
+
 #include "convolution/conv_implicit_gemm.cuh"
 
 int main() {

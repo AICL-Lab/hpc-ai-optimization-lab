@@ -9,20 +9,19 @@
  */
 
 #include <cuda_runtime.h>
+
 #include <cstdio>
 #include <random>
 #include <vector>
 
-#include "elementwise/relu.cuh"
 #include "common/cuda_check.cuh"
 #include "common/tensor.cuh"
+#include "elementwise/relu.cuh"
 
 /**
  * @brief Naive ReLU kernel for comparison
  */
-__global__ void relu_naive(const float* __restrict__ input,
-                           float* __restrict__ output,
-                           int n) {
+__global__ void relu_naive(const float* __restrict__ input, float* __restrict__ output, int n) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < n) {
         output[idx] = fmaxf(input[idx], 0.0f);

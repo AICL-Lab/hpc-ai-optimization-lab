@@ -2,6 +2,7 @@
 // This example demonstrates how to use quantization kernels
 
 #include <iostream>
+
 #include "quantization/int8_quant.cuh"
 
 int main() {

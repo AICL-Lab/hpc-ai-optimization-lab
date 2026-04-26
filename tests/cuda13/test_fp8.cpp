@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
-#include "cuda13/fp8_gemm.cuh"
-#include "common/tensor.cuh"
+
 #include "../test_utils.hpp"
+#include "common/tensor.cuh"
+#include "cuda13/fp8_gemm.cuh"
 
 TEST(FP8GemmTest, BasicTest) {
     int M = 32, N = 32, K = 32;
@@ -26,7 +27,8 @@ TEST(FP8GemmTest, BasicTest) {
     d_B.copy_from_host(B_half);
     d_C.zero();
 
-    hpc::cuda13::fp8_gemm(d_A.data(), d_B.data(), d_C.data(), M, N, K, hpc::cuda13::FP8GEMMConfig{});
+    hpc::cuda13::fp8_gemm(d_A.data(), d_B.data(), d_C.data(), M, N, K,
+                          hpc::cuda13::FP8GEMMConfig{});
     cudaDeviceSynchronize();
 
     auto C = d_C.to_host();

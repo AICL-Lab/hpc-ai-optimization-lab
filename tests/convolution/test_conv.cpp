@@ -1,18 +1,20 @@
-#include <gtest/gtest.h>
 #include <vector>
 
+#include <gtest/gtest.h>
+
+#include "../test_utils.hpp"
+#include "common/tensor.cuh"
 #include "convolution/conv_implicit_gemm.cuh"
 #include "convolution/conv_winograd.cuh"
-#include "common/tensor.cuh"
-#include "../test_utils.hpp"
 
 namespace {
 
-std::vector<float> cpu_conv2d(const std::vector<float>& input,
-                              const std::vector<float>& weight,
+std::vector<float> cpu_conv2d(const std::vector<float>& input, const std::vector<float>& weight,
                               const hpc::convolution::ConvParams& p) {
-    const int out_h = (p.in_height + 2 * p.pad_h - p.dilation_h * (p.kernel_h - 1) - 1) / p.stride_h + 1;
-    const int out_w = (p.in_width + 2 * p.pad_w - p.dilation_w * (p.kernel_w - 1) - 1) / p.stride_w + 1;
+    const int out_h =
+        (p.in_height + 2 * p.pad_h - p.dilation_h * (p.kernel_h - 1) - 1) / p.stride_h + 1;
+    const int out_w =
+        (p.in_width + 2 * p.pad_w - p.dilation_w * (p.kernel_w - 1) - 1) / p.stride_w + 1;
     std::vector<float> output(p.batch * p.out_channels * out_h * out_w, 0.0f);
 
     for (int b = 0; b < p.batch; ++b) {
@@ -28,12 +30,12 @@ std::vector<float> cpu_conv2d(const std::vector<float>& input,
                                 if (ih < 0 || ih >= p.in_height || iw < 0 || iw >= p.in_width) {
                                     continue;
                                 }
-                                const int input_idx = b * (p.in_channels * p.in_height * p.in_width) +
-                                                      ic * (p.in_height * p.in_width) +
-                                                      ih * p.in_width + iw;
-                                const int weight_idx = oc * (p.in_channels * p.kernel_h * p.kernel_w) +
-                                                       ic * (p.kernel_h * p.kernel_w) +
-                                                       kh * p.kernel_w + kw;
+                                const int input_idx =
+                                    b * (p.in_channels * p.in_height * p.in_width) +
+                                    ic * (p.in_height * p.in_width) + ih * p.in_width + iw;
+                                const int weight_idx =
+                                    oc * (p.in_channels * p.kernel_h * p.kernel_w) +
+                                    ic * (p.kernel_h * p.kernel_w) + kh * p.kernel_w + kw;
                                 sum += input[input_idx] * weight[weight_idx];
                             }
                         }
@@ -49,17 +51,20 @@ std::vector<float> cpu_conv2d(const std::vector<float>& input,
     return output;
 }
 
-} // namespace
+}  // namespace
 
 TEST(ConvolutionTest, ImplicitGemmMatchesReference) {
     const hpc::convolution::ConvParams params{
-        1, 2, 3, 5, 5,
-        3, 3, 1, 1, 1, 1, 1, 1,
+        1, 2, 3, 5, 5, 3, 3, 1, 1, 1, 1, 1, 1,
     };
-    const int out_h = (params.in_height + 2 * params.pad_h - params.dilation_h * (params.kernel_h - 1) - 1) /
-                      params.stride_h + 1;
-    const int out_w = (params.in_width + 2 * params.pad_w - params.dilation_w * (params.kernel_w - 1) - 1) /
-                      params.stride_w + 1;
+    const int out_h =
+        (params.in_height + 2 * params.pad_h - params.dilation_h * (params.kernel_h - 1) - 1) /
+            params.stride_h +
+        1;
+    const int out_w =
+        (params.in_width + 2 * params.pad_w - params.dilation_w * (params.kernel_w - 1) - 1) /
+            params.stride_w +
+        1;
 
     const auto input = hpc::test::random_vector<float>(
         params.batch * params.in_channels * params.in_height * params.in_width, -1.0f, 1.0f);
@@ -75,12 +80,13 @@ TEST(ConvolutionTest, ImplicitGemmMatchesReference) {
     d_weight.copy_from_host(weight);
     d_output.zero();
 
-    hpc::convolution::conv2d_implicit_gemm<float>(
-        d_input.data(), d_weight.data(), d_output.data(), params);
+    hpc::convolution::conv2d_implicit_gemm<float>(d_input.data(), d_weight.data(), d_output.data(),
+                                                  params);
     cudaDeviceSynchronize();
 
     const auto output = d_output.to_host();
-    ASSERT_EQ(output.size(), static_cast<size_t>(params.batch * params.out_channels * out_h * out_w));
+    ASSERT_EQ(output.size(),
+              static_cast<size_t>(params.batch * params.out_channels * out_h * out_w));
     EXPECT_TRUE(hpc::test::vectors_almost_equal(output, expected, 1e-4f, 1e-4f));
 }
 
@@ -95,8 +101,10 @@ TEST(ConvolutionTest, WinogradPathMatchesImplicitGemmFallback) {
     const int out_w = width;
     constexpr int output_size = batch * out_channels * out_h * out_w;
 
-    const auto input = hpc::test::random_vector<float>(batch * in_channels * height * width, -1.0f, 1.0f);
-    const auto weight = hpc::test::random_vector<float>(out_channels * in_channels * kernel * kernel, -1.0f, 1.0f);
+    const auto input =
+        hpc::test::random_vector<float>(batch * in_channels * height * width, -1.0f, 1.0f);
+    const auto weight =
+        hpc::test::random_vector<float>(out_channels * in_channels * kernel * kernel, -1.0f, 1.0f);
 
     hpc::Tensor<float> d_input(input.size());
     hpc::Tensor<float> d_weight(weight.size());
@@ -109,14 +117,12 @@ TEST(ConvolutionTest, WinogradPathMatchesImplicitGemmFallback) {
     d_winograd.zero();
 
     const hpc::convolution::ConvParams params{
-        batch, in_channels, out_channels, height, width,
-        kernel, kernel, 1, 1, 1, 1, 1, 1,
+        batch, in_channels, out_channels, height, width, kernel, kernel, 1, 1, 1, 1, 1, 1,
     };
 
-    hpc::convolution::conv2d_implicit_gemm<float>(
-        d_input.data(), d_weight.data(), d_implicit.data(), params);
-    hpc::convolution::conv2d_winograd(
-        d_input.data(), d_weight.data(), d_winograd.data(), params);
+    hpc::convolution::conv2d_implicit_gemm<float>(d_input.data(), d_weight.data(),
+                                                  d_implicit.data(), params);
+    hpc::convolution::conv2d_winograd(d_input.data(), d_weight.data(), d_winograd.data(), params);
     cudaDeviceSynchronize();
 
     const auto implicit_output = d_implicit.to_host();

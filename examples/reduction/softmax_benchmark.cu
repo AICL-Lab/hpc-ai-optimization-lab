@@ -2,6 +2,7 @@
 // This example demonstrates how to use the reduction kernels
 
 #include <iostream>
+
 #include "reduction/softmax.cuh"
 
 int main() {

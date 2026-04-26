@@ -1,15 +1,17 @@
+#include <algorithm>
+#include <stdexcept>
+
 #include <gtest/gtest.h>
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
-#include <stdexcept>
-#include <algorithm>
-#include "gemm/gemm.cuh"
-#include "common/tensor.cuh"
+
 #include "../test_utils.hpp"
+#include "common/tensor.cuh"
+#include "gemm/gemm.cuh"
 
 // CPU reference GEMM
-void cpu_gemm(const float* A, const float* B, float* C,
-              int M, int N, int K, float alpha, float beta) {
+void cpu_gemm(const float* A, const float* B, float* C, int M, int N, int K, float alpha,
+              float beta) {
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < N; ++j) {
             float sum = 0.0f;
@@ -26,22 +28,20 @@ RC_GTEST_PROP(GemmTest, Correctness, ()) {
     auto M = *rc::gen::inRange<int>(1, 64);
     auto N = *rc::gen::inRange<int>(1, 64);
     auto K = *rc::gen::inRange<int>(1, 64);
-    
-    auto A = *rc::gen::container<std::vector<float>>(M * K,
-        rc::gen::map(rc::gen::arbitrary<float>(), [](float x) {
-            return std::clamp(x, -1.0f, 1.0f);
-        }));
-    auto B = *rc::gen::container<std::vector<float>>(K * N,
-        rc::gen::map(rc::gen::arbitrary<float>(), [](float x) {
-            return std::clamp(x, -1.0f, 1.0f);
-        }));
-    
+
+    auto A = *rc::gen::container<std::vector<float>>(
+        M * K, rc::gen::map(rc::gen::arbitrary<float>(),
+                            [](float x) { return std::clamp(x, -1.0f, 1.0f); }));
+    auto B = *rc::gen::container<std::vector<float>>(
+        K * N, rc::gen::map(rc::gen::arbitrary<float>(),
+                            [](float x) { return std::clamp(x, -1.0f, 1.0f); }));
+
     std::vector<float> C_cpu(M * N, 0.0f);
     std::vector<float> C_gpu(M * N, 0.0f);
-    
+
     // CPU reference
     cpu_gemm(A.data(), B.data(), C_cpu.data(), M, N, K, 1.0f, 0.0f);
-    
+
     // GPU implementation
     hpc::Tensor<float> d_A(M * K);
     hpc::Tensor<float> d_B(K * N);
@@ -49,13 +49,13 @@ RC_GTEST_PROP(GemmTest, Correctness, ()) {
     d_A.copy_from_host(A);
     d_B.copy_from_host(B);
     d_C.copy_from_host(C_gpu);
-    
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K);
+
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(d_A.data(), d_B.data(), d_C.data(),
+                                                                M, N, K);
     cudaDeviceSynchronize();
-    
+
     C_gpu = d_C.to_host();
-    
+
     for (int i = 0; i < M * N; ++i) {
         RC_ASSERT(hpc::test::almost_equal(C_gpu[i], C_cpu[i], 1e-3f, 1e-4f));
     }
@@ -78,15 +78,14 @@ TEST(GemmTest, BaselineImplementationsMatchReference) {
     d_B.copy_from_host(B);
 
     d_C.zero();
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::Naive>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::Naive>(d_A.data(), d_B.data(), d_C.data(), M, N, K);
     cudaDeviceSynchronize();
     const auto naive = d_C.to_host();
     EXPECT_TRUE(hpc::test::vectors_almost_equal(naive, C_cpu, 1e-3f, 1e-4f));
 
     d_C.zero();
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(d_A.data(), d_B.data(), d_C.data(),
+                                                                M, N, K);
     cudaDeviceSynchronize();
     const auto tiled = d_C.to_host();
     EXPECT_TRUE(hpc::test::vectors_almost_equal(tiled, C_cpu, 1e-3f, 1e-4f));
@@ -109,15 +108,15 @@ TEST(GemmTest, AdvancedFloatImplementationsMatchReference) {
     d_B.copy_from_host(B);
 
     d_C.zero();
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::DoubleBuffer>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::DoubleBuffer>(d_A.data(), d_B.data(), d_C.data(), M,
+                                                             N, K);
     cudaDeviceSynchronize();
     const auto double_buffer = d_C.to_host();
     EXPECT_TRUE(hpc::test::vectors_almost_equal(double_buffer, C_cpu, 1e-3f, 1e-4f));
 
     d_C.zero();
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::RegisterTiling>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::RegisterTiling>(d_A.data(), d_B.data(), d_C.data(),
+                                                               M, N, K);
     cudaDeviceSynchronize();
     const auto register_tiling = d_C.to_host();
     EXPECT_TRUE(hpc::test::vectors_almost_equal(register_tiling, C_cpu, 1e-3f, 1e-4f));
@@ -140,8 +139,8 @@ TEST(GemmTest, SoftwarePipelineMatchesReference) {
     d_B.copy_from_host(B);
     d_C.zero();
 
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SoftwarePipeline>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SoftwarePipeline>(d_A.data(), d_B.data(), d_C.data(),
+                                                                 M, N, K);
     cudaDeviceSynchronize();
 
     const auto C_gpu = d_C.to_host();
@@ -164,10 +163,10 @@ TEST(GemmTest, Int8NaiveFallbackMatchesSharedMemPath) {
     d_naive.zero();
     d_tiled.zero();
 
-    hpc::gemm::gemm<int8_t, hpc::gemm::GemmOpt::Naive>(
-        d_A.data(), d_B.data(), d_naive.data(), M, N, K);
-    hpc::gemm::gemm<int8_t, hpc::gemm::GemmOpt::SharedMemTiling>(
-        d_A.data(), d_B.data(), d_tiled.data(), M, N, K);
+    hpc::gemm::gemm<int8_t, hpc::gemm::GemmOpt::Naive>(d_A.data(), d_B.data(), d_naive.data(), M, N,
+                                                       K);
+    hpc::gemm::gemm<int8_t, hpc::gemm::GemmOpt::SharedMemTiling>(d_A.data(), d_B.data(),
+                                                                 d_tiled.data(), M, N, K);
     cudaDeviceSynchronize();
 
     const auto naive = d_naive.to_host();
@@ -191,10 +190,10 @@ TEST(GemmTest, TensorCoreMmaMatchesWmmaFallback) {
     d_wmma.zero();
     d_mma.zero();
 
-    hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
-        d_A.data(), d_B.data(), d_wmma.data(), M, N, K);
-    hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreMMA>(
-        d_A.data(), d_B.data(), d_mma.data(), M, N, K);
+    hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(d_A.data(), d_B.data(),
+                                                                d_wmma.data(), M, N, K);
+    hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreMMA>(d_A.data(), d_B.data(), d_mma.data(),
+                                                               M, N, K);
     cudaDeviceSynchronize();
 
     const auto wmma = d_wmma.to_host();
@@ -220,5 +219,6 @@ TEST(GemmTest, TensorCorePathsRejectInvalidShapes) {
     d_C.zero();
 
     EXPECT_THROW((hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
-        d_A.data(), d_B.data(), d_C.data(), M, N, K)), std::invalid_argument);
+                     d_A.data(), d_B.data(), d_C.data(), M, N, K)),
+                 std::invalid_argument);
 }
