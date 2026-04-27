@@ -1,0 +1,9 @@
+change:
+  title: "文档清理与死链接修复"
+  status: archived
+  archived_at: "2026-04-27"
+  commit: "74c26c2"
+scope:
+  - documentation
+  - ci-cd
+  - code-quality
