@@ -4,15 +4,6 @@ This directory keeps high-level architecture context for the current codebase. A
 
 ---
 
-## Current reference documents
-
-| Document | Description | Link |
-|----------|-------------|------|
-| System Architecture | High-level module and layering overview | [ARCHITECTURE.md](../ARCHITECTURE.md) |
-| API Reference | C++/CUDA/Python surface reference | [API_REFERENCE.md](../API_REFERENCE.md) |
-
----
-
 ## Historical design records
 
 - `openspec/archive/2026-04-17-core-architecture/`
