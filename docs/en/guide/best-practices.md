@@ -256,5 +256,5 @@ void relu(const T* input, T* output, size_t n,
 ## Further Reading
 
 - [CUDA C Best Practices Guide](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/)
-- [Performance Tuning Guide](../PERFORMANCE_TUNING.md)
-- [Architecture Guide](../ARCHITECTURE.md)
+- [Performance Tuning Guide](performance-tuning.md)
+- [Architecture Guide](../api/architecture.md)

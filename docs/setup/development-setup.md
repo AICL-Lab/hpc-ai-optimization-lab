@@ -126,4 +126,4 @@ python examples/python/basic_usage.py
 | GPU architecture not detected | Set `CMAKE_CUDA_ARCHITECTURES` manually |
 | Python binding import error | Check `PYTHONPATH` includes build/python |
 
-For more issues, see [Troubleshooting Guide](../en/TROUBLESHOOTING.md).
+For more issues, see [Troubleshooting Guide](../en/guide/troubleshooting.md).

@@ -23,7 +23,8 @@ template <typename T, GemmOpt Opt = GemmOpt::SharedMemTiling>
 void gemm(const T* A, const T* B, T* C, int M, int N, int K, float alpha = 1.0f, float beta = 0.0f,
           cudaStream_t stream = nullptr);
 
-// CUTLASS comparison wrapper
+// CUTLASS comparison wrapper - not yet implemented
+// Use gemm<T, GemmOpt::TensorCoreWMMA> for Tensor Core GEMM
 template <typename T>
 void gemm_cutlass(const T* A, const T* B, T* C, int M, int N, int K, float alpha = 1.0f,
                   float beta = 0.0f, cudaStream_t stream = nullptr);

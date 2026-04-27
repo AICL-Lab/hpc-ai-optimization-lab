@@ -103,4 +103,4 @@ For more help, see the [Troubleshooting Guide](troubleshooting.md).
 
 - Follow the [Quick Start Guide](quick-start.md) for your first kernel
 - Explore the [API Documentation](../api/index.md)
-- Check out [Examples](../../examples/README.md)
+- Check out [Examples](https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/examples)
