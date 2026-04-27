@@ -11,6 +11,12 @@
 - [x] 处理未实现的 `gemm_cutlass` 函数声明
 - [x] 更新 GitHub 仓库描述
 
-## 验证
+## 收尾
+- [x] 修复 Issue Template 中的 API Reference 链接
 - [x] 文档构建成功 (npm run docs:build)
 - [x] Git 提交并推送
+
+## 提交记录
+- `74c26c2` fix: resolve documentation dead links and remove redundant CI job
+- `3c50ae2` chore(openspec): archive doc-cleanup-fix change
+- `124be5b` fix: update API reference link in issue template config
