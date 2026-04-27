@@ -76,6 +76,6 @@ Located in: `examples/gemm/gemm_benchmark.cu`
 
 After running the examples:
 
-1. Read the [Quick Start Guide](../en/guide/quick-start.md)
-2. Explore the [API Reference](../en/API_REFERENCE.md)
+1. Read the [Quick Start Guide](../guide/quick-start.md)
+2. Explore the [API Reference](../api/index.md)
 3. Try optimizing the examples yourself!

@@ -23,10 +23,7 @@ export default defineConfig({
   
   // Clean URLs
   cleanUrls: true,
-  
-  // Ignore dead links in existing docs
-  ignoreDeadLinks: true,
-  
+
   // Last Updated
   lastUpdated: true,
   
