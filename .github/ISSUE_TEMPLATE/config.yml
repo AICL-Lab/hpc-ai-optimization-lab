@@ -17,5 +17,5 @@ contact_links:
     about: Get started quickly with setup and build instructions
 
   - name: 📖 API Reference
-    url: https://github.com/LessUp/hpc-ai-optimization-lab/blob/main/docs/API_REFERENCE.md
+    url: https://lessup.github.io/hpc-ai-optimization-lab/en/api/
     about: Browse the complete API documentation
