@@ -1,4 +1,11 @@
+#include <memory>
 #include <stdexcept>
+#include <string>
+
+#include <cutlass/cutlass.h>
+#include <cutlass/gemm/device/gemm.h>
+#include <cutlass/layout/matrix.h>
+#include <mma.h>
 
 #include "../common/cuda_check.cuh"
 #include "gemm.cuh"
@@ -16,7 +23,55 @@ void validate_gemm_args(const void* A, const void* B, const void* C, int M, int 
     }
 }
 
+[[noreturn]] void throw_cutlass_error(cutlass::Status status, const char* context) {
+    throw std::runtime_error(std::string(context) + ": " + cutlass::cutlassGetStatusString(status));
+}
+
 }  // namespace
+
+template <typename T>
+void gemm_cutlass(const T* A, const T* B, T* C, int M, int N, int K, float alpha, float beta,
+                  cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
+    (void)alpha;
+    (void)beta;
+    (void)stream;
+    throw std::invalid_argument("gemm_cutlass currently supports float only");
+}
+
+template void gemm_cutlass<__half>(const __half* A, const __half* B, __half* C, int M, int N, int K,
+                                   float alpha, float beta, cudaStream_t stream);
+
+template <>
+void gemm_cutlass<float>(const float* A, const float* B, float* C, int M, int N, int K, float alpha,
+                         float beta, cudaStream_t stream) {
+    validate_gemm_args(A, B, C, M, N, K);
+
+    using CutlassGemm = cutlass::gemm::device::Gemm<float, cutlass::layout::RowMajor, float,
+                                                    cutlass::layout::RowMajor, float,
+                                                    cutlass::layout::RowMajor>;
+
+    CutlassGemm gemm_op;
+    typename CutlassGemm::Arguments args({M, N, K}, {A, K}, {B, N}, {C, N}, {C, N}, {alpha, beta});
+    cutlass::Status status = CutlassGemm::can_implement(args);
+    if (status != cutlass::Status::kSuccess) {
+        throw_cutlass_error(status, "gemm_cutlass cannot implement problem");
+    }
+
+    const size_t workspace_size = CutlassGemm::get_workspace_size(args);
+    std::unique_ptr<void, decltype(&cudaFree)> workspace(nullptr, &cudaFree);
+    if (workspace_size > 0) {
+        void* raw_workspace = nullptr;
+        CUDA_CHECK(cudaMalloc(&raw_workspace, workspace_size));
+        workspace.reset(raw_workspace);
+    }
+
+    status = gemm_op(args, workspace.get(), stream);
+
+    if (status != cutlass::Status::kSuccess) {
+        throw_cutlass_error(status, "gemm_cutlass launch failed");
+    }
+}
 
 constexpr int TILE_SIZE = 32;
 
@@ -331,7 +386,6 @@ void gemm<__half, GemmOpt::RegisterTiling>(const __half* A, const __half* B, __h
 }
 
 // Tensor Core GEMM using WMMA API
-#include <mma.h>
 using namespace nvcuda;
 
 // WMMA tile dimensions (fixed by hardware)

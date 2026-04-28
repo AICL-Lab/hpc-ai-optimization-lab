@@ -63,7 +63,7 @@ def example_gemm(device: torch.device) -> None:
     m, n, k = 128, 96, 64
     a = torch.randn(m, k, device=device, dtype=torch.float32)
     b = torch.randn(k, n, device=device, dtype=torch.float32)
-    c = torch.empty(m, n, device=device, dtype=torch.float32)
+    c = torch.zeros(m, n, device=device, dtype=torch.float32)
 
     opt.gemm.matmul(a, b, c, m, n, k, 1.0, 0.0)
     torch.testing.assert_close(c, a @ b, rtol=1e-4, atol=1e-4)
@@ -73,6 +73,7 @@ def example_gemm(device: torch.device) -> None:
 def main() -> None:
     device = require_cuda()
     print("Running hpc_ai_opt examples on", torch.cuda.get_device_name(device))
+    print("Current shipped modules: elementwise, reduction, gemm")
     example_elementwise(device)
     example_reduction(device)
     example_gemm(device)
