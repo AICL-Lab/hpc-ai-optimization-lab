@@ -156,7 +156,7 @@ ctest --output-on-failure
 ./examples/gemm/gemm_benchmark
 
 # Python example (if bindings enabled)
-python ../examples/python/basic_usage.py
+python3 ../examples/python/basic_usage.py
 ```
 
 <details>
@@ -279,33 +279,48 @@ hpc-ai-optimization-lab/
 #include "common/tensor.cuh"
 
 // Allocate GPU tensors
-auto A = hpc::common::make_tensor<float>({1024, 1024});
-auto B = hpc::common::make_tensor<float>({1024, 1024});
-auto C = hpc::common::make_tensor<float>({1024, 1024});
+constexpr int M = 1024;
+constexpr int N = 1024;
+constexpr int K = 1024;
 
-// Launch optimized kernel
-hpc::gemm::gemm<float, hpc::gemm::OptLevel::Advanced>(
-    A.data(), B.data(), C.data(), 1024, 1024, 1024);
+hpc::Tensor<float> A(M * K);
+hpc::Tensor<float> B(K * N);
+hpc::Tensor<float> C(M * N);
+C.zero();
+
+// Launch the current shared-memory-tiling GEMM path
+hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(
+    A.data(), B.data(), C.data(), M, N, K);
 
 // Automatic memory cleanup when tensors go out of scope
 ```
 
 ### Python API
 
+Current Python bindings expose `elementwise`, `reduction`, and `gemm`.
+
 ```python
 import hpc_ai_opt
-import numpy as np
+import torch
 
-# Create input data
-A = np.random.randn(1024, 1024).astype(np.float32)
-B = np.random.randn(1024, 1024).astype(np.float32)
+# Create CUDA tensors
+a = torch.randn(128, 64, device="cuda", dtype=torch.float32)
+b = torch.randn(64, 96, device="cuda", dtype=torch.float32)
+c = torch.zeros(128, 96, device="cuda", dtype=torch.float32)
 
-# Execute optimized GEMM
-C = hpc_ai_opt.gemm(A, B)
+# Execute the currently shipped GEMM binding
+hpc_ai_opt.gemm.matmul(a, b, c, 128, 96, 64, 1.0, 0.0)
 
-print(f"Result shape: {C.shape}")
-print(f"Performance: {hpc_ai_opt.last_tflops:.1f} TFLOPS")
+print(c.shape)
 ```
+
+Current phase benchmark CLI:
+
+```bash
+python3 python/benchmark/benchmark.py --suite gemm --sizes 256,512 --output results.json
+```
+
+The Python benchmark entrypoint currently wires the GEMM suite by default and emits reports only from measured result sets.
 
 ---
 
@@ -377,6 +392,8 @@ The repository is in a finishing-and-hardening phase.
 | Convolution | ✅ | ✅ | - | - | - | Stable |
 | Attention | ✅ | ✅ | - | - | - | Stable |
 | Quantization | ✅ | ✅ | - | ✅ | 🚧 | Stable |
+
+The support matrix describes the C++/CUDA core. In this phase, Python bindings cover `elementwise`, `reduction`, and `gemm` only.
 
 🚧 = Partial support / In development
 

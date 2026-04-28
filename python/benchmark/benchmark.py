@@ -60,6 +60,9 @@ class DeviceInfo:
     peak_bandwidth_gb_s: float
 
 
+DEFAULT_SUPPORTED_SUITES = ("gemm",)
+
+
 def get_device_info() -> DeviceInfo:
     """Get GPU device information."""
     props = torch.cuda.get_device_properties(0)
@@ -106,13 +109,14 @@ def benchmark_kernel(
     **kwargs,
 ) -> BenchmarkResult:
     """
-    Compare HPC kernel with baseline implementation.
+    Compare overwrite-only HPC kernels with overwrite-only baselines.
 
     Args:
         name: Kernel name for reporting
         hpc_fn: HPC-optimized kernel function
         baseline_fn: Baseline function (PyTorch/cuBLAS)
-        *args: Arguments to pass to kernels
+        *args: Arguments to pass to kernels. This helper assumes every timed
+            invocation fully overwrites any mutable outputs it receives.
         warmup: Number of warmup iterations
         min_run_time: Minimum benchmark runtime in seconds
         flops: Total floating-point operations (for TFLOPS calculation)
@@ -180,6 +184,180 @@ def compute_bandwidth(bytes_transferred: int, time_ms: float) -> float:
 def compute_tflops(flops: int, time_ms: float) -> float:
     """Compute TFLOPS."""
     return flops / (time_ms * 1e-3) / 1e12
+
+
+def run_benchmark_suite(
+    suite: str,
+    sizes: List[int],
+    suite_runners: Optional[Dict[str, Callable[[List[int]], List[Any]]]] = None,
+) -> List[Any]:
+    """Run a supported benchmark suite using explicit runner functions."""
+    runners = suite_runners or {}
+
+    if suite == "all":
+        results: List[Any] = []
+        for supported_suite in DEFAULT_SUPPORTED_SUITES:
+            runner = runners.get(supported_suite)
+            if runner is None:
+                raise ValueError(
+                    f"unsupported benchmark suite: {supported_suite} is not wired to a real runner"
+                )
+            results.extend(runner(sizes))
+        return results
+
+    runner = runners.get(suite)
+    if runner is None:
+        raise ValueError(f"unsupported benchmark suite: {suite}")
+
+    return runner(sizes)
+
+
+def run_benchmark_cli(
+    args: argparse.Namespace,
+    suite_runners: Optional[Dict[str, Callable[[List[int]], List[BenchmarkResult]]]] = None,
+    device_info_provider: Callable[[], DeviceInfo] = get_device_info,
+    hpc_module_loader: Optional[Callable[[], Any]] = None,
+    benchmark_fn: Callable[..., BenchmarkResult] = benchmark_kernel,
+    tensor_factory: Optional[Callable[[int], Tuple[Any, Any, Any]]] = None,
+) -> List[BenchmarkResult]:
+    """Execute a benchmark CLI request with explicit suite wiring."""
+    device_info = device_info_provider()
+    sizes = [int(s.strip()) for s in args.sizes.split(",") if s.strip()]
+    if suite_runners is None:
+        if hpc_module_loader is None:
+            hpc_module_loader = load_hpc_module
+        suite_runners = build_default_suite_runners(
+            hpc_module_loader(),
+            benchmark_fn=benchmark_fn,
+            tensor_factory=tensor_factory or default_gemm_tensor_factory,
+        )
+    results = run_benchmark_suite(args.suite, sizes, suite_runners=suite_runners)
+
+    print_results(results, device_info)
+
+    if args.output:
+        with open(args.output, "w") as f:
+            json.dump(
+                {
+                    "device": asdict(device_info),
+                    "results": [asdict(r) for r in results],
+                    "timestamp": datetime.now().isoformat(),
+                },
+                f,
+                indent=2,
+            )
+        print(f"Results saved to {args.output}")
+
+    roofline_img = None
+    if args.roofline:
+        roofline_img = "roofline.png"
+        if args.html:
+            roofline_img = os.path.join(
+                os.path.dirname(os.path.abspath(args.html)),
+                "roofline.png",
+            )
+        analyzer = RooflineAnalyzer(device_info)
+        analyzer.plot_roofline(results, roofline_img)
+
+    if args.html:
+        generate_html_report(results, device_info, args.html, roofline_img)
+
+    if args.chart:
+        plot_speedup_chart(results)
+
+    return results
+
+
+def run_gemm_suite(
+    sizes: List[int],
+    gemm_runner: Callable[..., None],
+    baseline_runner: Callable[..., None],
+    benchmark_fn: Callable[..., BenchmarkResult] = benchmark_kernel,
+    tensor_factory: Optional[Callable[[int], Tuple[Any, Any, Any]]] = None,
+) -> List[BenchmarkResult]:
+    """Run GEMM benchmarks for each requested square size."""
+    if tensor_factory is None:
+        raise ValueError("tensor_factory is required for GEMM benchmark execution")
+
+    results: List[BenchmarkResult] = []
+    for size in sizes:
+        a, b, c = tensor_factory(size)
+        flops = 2 * size * size * size
+        bytes_accessed = 3 * size * size * 4
+        results.append(
+            benchmark_fn(
+                f"gemm-{size}",
+                gemm_runner,
+                baseline_runner,
+                a,
+                b,
+                c,
+                size,
+                size,
+                size,
+                1.0,
+                0.0,
+                flops=flops,
+                bytes_accessed=bytes_accessed,
+            )
+        )
+
+    return results
+
+
+def build_gemm_suite_runner(
+    hpc_module: Any,
+    benchmark_fn: Callable[..., BenchmarkResult] = benchmark_kernel,
+    tensor_factory: Optional[Callable[[int], Tuple[Any, Any, Any]]] = None,
+) -> Callable[[List[int]], List[BenchmarkResult]]:
+    """Build a GEMM suite runner from the shipped Python binding surface."""
+    if not hasattr(hpc_module, "gemm"):
+        raise ValueError("hpc module does not expose a gemm submodule")
+    if not hasattr(hpc_module.gemm, "matmul"):
+        raise ValueError("hpc module does not expose gemm.matmul")
+    if not hasattr(hpc_module.gemm, "matmul_cutlass"):
+        raise ValueError("hpc module does not expose gemm.matmul_cutlass")
+
+    return lambda sizes: run_gemm_suite(
+        sizes,
+        hpc_module.gemm.matmul,
+        hpc_module.gemm.matmul_cutlass,
+        benchmark_fn=benchmark_fn,
+        tensor_factory=tensor_factory,
+    )
+
+
+def build_default_suite_runners(
+    hpc_module: Any,
+    benchmark_fn: Callable[..., BenchmarkResult] = benchmark_kernel,
+    tensor_factory: Optional[Callable[[int], Tuple[Any, Any, Any]]] = None,
+) -> Dict[str, Callable[[List[int]], List[BenchmarkResult]]]:
+    """Build the default suite runner map for the current shipped module surface."""
+    return {
+        "gemm": build_gemm_suite_runner(
+            hpc_module,
+            benchmark_fn=benchmark_fn,
+            tensor_factory=tensor_factory,
+        )
+    }
+
+
+def load_hpc_module() -> Any:
+    """Import the shipped Python bindings."""
+    import hpc_ai_opt
+
+    return hpc_ai_opt
+
+
+def default_gemm_tensor_factory(size: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Allocate the default square GEMM tensors on CUDA."""
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is required for the default GEMM benchmark runner")
+
+    a = torch.randn(size, size, device="cuda", dtype=torch.float32)
+    b = torch.randn(size, size, device="cuda", dtype=torch.float32)
+    c = torch.zeros(size, size, device="cuda", dtype=torch.float32)
+    return a, b, c
 
 
 class RooflineAnalyzer:
@@ -411,10 +589,15 @@ def generate_html_report(
 """
 
     if roofline_image and os.path.exists(roofline_image):
+        report_dir = os.path.dirname(os.path.abspath(output_path))
+        roofline_src = os.path.relpath(
+            os.path.abspath(roofline_image),
+            start=report_dir,
+        ).replace(os.sep, "/")
         html += f"""
         <h2>Roofline Analysis</h2>
         <div class="roofline">
-            <img src="{roofline_image}" alt="Roofline Plot">
+            <img src="{roofline_src}" alt="Roofline Plot">
         </div>
 """
 
@@ -476,24 +659,24 @@ def plot_speedup_chart(
     print(f"Speedup chart saved to {output_path}")
 
 
-def main():
-    """Main benchmark entry point."""
+def build_argument_parser() -> argparse.ArgumentParser:
+    """Build the benchmark CLI parser for the currently supported suites."""
     parser = argparse.ArgumentParser(
         description="HPC-AI-Optimization-Lab Benchmark Framework",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python benchmark.py --suite gemm --sizes 1024,2048,4096
-  python benchmark.py --suite all --output results.json --html report.html
-  python benchmark.py --roofline --output roofline.png
+  python3 python/benchmark/benchmark.py --suite gemm --sizes 1024,2048,4096
+  python3 python/benchmark/benchmark.py --suite all --output results.json --html report.html
+  python3 python/benchmark/benchmark.py --suite gemm --roofline --chart
         """,
     )
     parser.add_argument(
         "--suite",
         type=str,
         default="all",
-        choices=["all", "gemm", "elementwise", "reduction", "attention"],
-        help="Benchmark suite to run",
+        choices=["all", *DEFAULT_SUPPORTED_SUITES],
+        help="Benchmark suite to run (`all` expands to the currently wired real suites)",
     )
     parser.add_argument(
         "--sizes",
@@ -507,60 +690,19 @@ Examples:
         "--roofline", action="store_true", help="Generate roofline plot"
     )
     parser.add_argument("--chart", action="store_true", help="Generate speedup chart")
+    return parser
+
+
+def main():
+    """Main benchmark entry point."""
+    parser = build_argument_parser()
     args = parser.parse_args()
 
     print("=" * 60)
     print("HPC-AI-Optimization-Lab Benchmark Framework")
     print("=" * 60)
 
-    # Get device info
-    device_info = get_device_info()
-    print(f"\nDevice: {device_info.name}")
-    print(
-        f"Compute Capability: {device_info.compute_capability[0]}.{device_info.compute_capability[1]}"
-    )
-    print(f"Peak FP32: {device_info.peak_fp32_tflops:.1f} TFLOPS")
-    print(f"Peak Bandwidth: {device_info.peak_bandwidth_gb_s:.0f} GB/s")
-
-    # Parse sizes (will be used for actual benchmarks)
-    _sizes = [int(s) for s in args.sizes.split(",")]  # noqa: F841
-
-    # Placeholder for actual benchmarks
-    # In a real implementation, this would import and run the actual kernels
-    print("\nNote: Run specific benchmark scripts for detailed results:")
-    print("  - python benchmark/gemm_benchmark.py")
-    print("  - python benchmark/attention_benchmark.py")
-    print("  - python benchmark/elementwise_benchmark.py")
-
-    # Example results (placeholder)
-    results = []
-
-    if results:
-        print_results(results, device_info)
-
-        if args.output:
-            with open(args.output, "w") as f:
-                json.dump(
-                    {
-                        "device": asdict(device_info),
-                        "results": [asdict(r) for r in results],
-                        "timestamp": datetime.now().isoformat(),
-                    },
-                    f,
-                    indent=2,
-                )
-            print(f"Results saved to {args.output}")
-
-        if args.html:
-            roofline_img = "roofline.png" if args.roofline else None
-            generate_html_report(results, device_info, args.html, roofline_img)
-
-        if args.roofline:
-            analyzer = RooflineAnalyzer(device_info)
-            analyzer.plot_roofline(results)
-
-        if args.chart:
-            plot_speedup_chart(results)
+    run_benchmark_cli(args)
 
 
 if __name__ == "__main__":

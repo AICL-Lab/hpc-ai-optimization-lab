@@ -156,7 +156,7 @@ ctest --output-on-failure
 ./examples/gemm/gemm_benchmark
 
 # Python 示例（如果启用了绑定）
-python ../examples/python/basic_usage.py
+python3 ../examples/python/basic_usage.py
 ```
 
 <details>
@@ -279,13 +279,18 @@ hpc-ai-optimization-lab/
 #include "common/tensor.cuh"
 
 // 分配 GPU 张量
-auto A = hpc::common::make_tensor<float>({1024, 1024});
-auto B = hpc::common::make_tensor<float>({1024, 1024});
-auto C = hpc::common::make_tensor<float>({1024, 1024});
+constexpr int M = 1024;
+constexpr int N = 1024;
+constexpr int K = 1024;
 
-// 启动优化后的内核
-hpc::gemm::gemm<float, hpc::gemm::OptLevel::Advanced>(
-    A.data(), B.data(), C.data(), 1024, 1024, 1024);
+hpc::Tensor<float> A(M * K);
+hpc::Tensor<float> B(K * N);
+hpc::Tensor<float> C(M * N);
+C.zero();
+
+// 启动当前的共享内存分块 GEMM 路径
+hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(
+    A.data(), B.data(), C.data(), M, N, K);
 
 // 张量超出作用域时自动释放内存
 ```
@@ -294,18 +299,28 @@ hpc::gemm::gemm<float, hpc::gemm::OptLevel::Advanced>(
 
 ```python
 import hpc_ai_opt
-import numpy as np
+import torch
 
-# 创建输入数据
-A = np.random.randn(1024, 1024).astype(np.float32)
-B = np.random.randn(1024, 1024).astype(np.float32)
+# 创建 CUDA 张量
+a = torch.randn(128, 64, device="cuda", dtype=torch.float32)
+b = torch.randn(64, 96, device="cuda", dtype=torch.float32)
+c = torch.zeros(128, 96, device="cuda", dtype=torch.float32)
 
-# 执行优化的 GEMM
-C = hpc_ai_opt.gemm(A, B)
+# 调用当前已提供的 GEMM 绑定
+hpc_ai_opt.gemm.matmul(a, b, c, 128, 96, 64, 1.0, 0.0)
 
-print(f"结果形状: {C.shape}")
-print(f"性能: {hpc_ai_opt.last_tflops:.1f} TFLOPS")
+print(c.shape)
 ```
+
+当前 Python 绑定暴露 `elementwise`、`reduction` 和 `gemm`。
+
+当前阶段的 benchmark CLI：
+
+```bash
+python3 python/benchmark/benchmark.py --suite gemm --sizes 256,512 --output results.json
+```
+
+Python benchmark 入口当前默认只接通 GEMM suite，并且只会基于真实测量结果生成报告。
 
 ---
 
@@ -379,6 +394,8 @@ git push origin feature/my-optimization
 | 量化 | ✅ | ✅ | - | ✅ | 🚧 | 稳定 |
 
 🚧 = 部分支持 / 开发中
+
+支持矩阵描述的是 C++/CUDA 核心能力。在当前阶段，Python 绑定只覆盖 `elementwise`、`reduction` 和 `gemm`。
 
 ---
 

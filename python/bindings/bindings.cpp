@@ -8,7 +8,7 @@
 #include <string>
 
 #include <nanobind/nanobind.h>
-#include <nanobind/tensor.h>
+#include <nanobind/ndarray.h>
 
 #include "elementwise/relu.cuh"
 #include "elementwise/sigmoid.cuh"
@@ -23,12 +23,33 @@ namespace nb = nanobind;
 namespace {
 
 template <typename T>
-size_t require_non_empty(const nb::tensor<T, nb::device::cuda>& tensor, const char* name) {
+size_t require_non_empty(const nb::ndarray<T, nb::device::cuda>& tensor, const char* name) {
     const size_t size = tensor.size();
     if (size == 0) {
         throw std::invalid_argument(std::string(name) + " must not be empty");
     }
     return size;
+}
+
+template <typename T>
+void require_c_contiguous(const nb::ndarray<T, nb::device::cuda>& tensor, const char* name) {
+    size_t expected_stride = 1;
+    for (size_t axis = tensor.ndim(); axis > 0; --axis) {
+        const size_t index = axis - 1;
+        if (tensor.stride(index) != static_cast<int64_t>(expected_stride)) {
+            throw std::invalid_argument(std::string(name) + " must be contiguous in memory");
+        }
+        expected_stride *= tensor.shape(index);
+    }
+}
+
+template <typename T>
+void require_ndim(const nb::ndarray<T, nb::device::cuda>& tensor, size_t expected_ndim,
+                  const char* name) {
+    if (tensor.ndim() != expected_ndim) {
+        throw std::invalid_argument(std::string(name) + " must be a " +
+                                    std::to_string(expected_ndim) + "D CUDA ndarray");
+    }
 }
 
 inline void require_size(size_t actual, size_t expected, const char* name) {
@@ -59,83 +80,123 @@ inline void require_finite(float value, const char* name) {
     }
 }
 
+template <typename T>
+void require_matrix(const nb::ndarray<T, nb::device::cuda>& tensor, int rows, int cols,
+                    const char* name) {
+    require_ndim(tensor, 2, name);
+    require_c_contiguous(tensor, name);
+    if (tensor.shape(0) != static_cast<size_t>(rows) ||
+        tensor.shape(1) != static_cast<size_t>(cols)) {
+        throw std::invalid_argument(std::string(name) + " has unexpected shape");
+    }
+    require_size(tensor.size(), static_cast<size_t>(rows) * static_cast<size_t>(cols), name);
+}
+
+template <typename T>
+void require_vector(const nb::ndarray<T, nb::device::cuda>& tensor, int size, const char* name) {
+    require_ndim(tensor, 1, name);
+    require_c_contiguous(tensor, name);
+    require_size(tensor.size(), static_cast<size_t>(size), name);
+}
+
 }  // namespace
 
-void relu_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                  nb::tensor<float, nb::device::cuda>& output) {
+void relu_wrapper(nb::ndarray<float, nb::device::cuda>& input,
+                  nb::ndarray<float, nb::device::cuda>& output) {
     const size_t n = require_non_empty(input, "input");
+    require_c_contiguous(input, "input");
+    require_c_contiguous(output, "output");
     require_size(output.size(), n, "output");
     hpc::elementwise::relu<float, hpc::elementwise::OptLevel::GridStride>(
         input.data(), output.data(), n, nullptr);
 }
 
-void sigmoid_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                     nb::tensor<float, nb::device::cuda>& output) {
+void sigmoid_wrapper(nb::ndarray<float, nb::device::cuda>& input,
+                     nb::ndarray<float, nb::device::cuda>& output) {
     const size_t n = require_non_empty(input, "input");
+    require_c_contiguous(input, "input");
+    require_c_contiguous(output, "output");
     require_size(output.size(), n, "output");
     hpc::elementwise::sigmoid<float, hpc::elementwise::OptLevel::GridStride>(
         input.data(), output.data(), n, nullptr);
 }
 
-void transpose_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                       nb::tensor<float, nb::device::cuda>& output, int rows, int cols) {
+void transpose_wrapper(nb::ndarray<float, nb::device::cuda>& input,
+                       nb::ndarray<float, nb::device::cuda>& output, int rows, int cols) {
     const size_t expected = require_positive_product(rows, cols, "rows", "cols");
+    require_matrix(input, rows, cols, "input");
+    require_matrix(output, cols, rows, "output");
     require_size(input.size(), expected, "input");
     require_size(output.size(), expected, "output");
     hpc::elementwise::transpose<float, hpc::elementwise::TransposeOpt::SharedMemPadded>(
         input.data(), output.data(), rows, cols, nullptr);
 }
 
-void softmax_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                     nb::tensor<float, nb::device::cuda>& output, int batch, int seq_len) {
-    const size_t expected = require_positive_product(batch, seq_len, "batch", "seq_len");
-    require_size(input.size(), expected, "input");
-    require_size(output.size(), expected, "output");
+void softmax_wrapper(nb::ndarray<float, nb::device::cuda>& input,
+                     nb::ndarray<float, nb::device::cuda>& output, int batch, int seq_len) {
+    require_positive_product(batch, seq_len, "batch", "seq_len");
+    require_matrix(input, batch, seq_len, "input");
+    require_matrix(output, batch, seq_len, "output");
     hpc::reduction::softmax<float, hpc::reduction::SoftmaxOpt::OnlineSoftmax>(
         input.data(), output.data(), batch, seq_len, nullptr);
 }
 
-void layer_norm_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                        nb::tensor<float, nb::device::cuda>& gamma,
-                        nb::tensor<float, nb::device::cuda>& beta,
-                        nb::tensor<float, nb::device::cuda>& output, int batch, int hidden_size,
+void layer_norm_wrapper(nb::ndarray<float, nb::device::cuda>& input,
+                        nb::ndarray<float, nb::device::cuda>& gamma,
+                        nb::ndarray<float, nb::device::cuda>& beta,
+                        nb::ndarray<float, nb::device::cuda>& output, int batch, int hidden_size,
                         float eps) {
-    const size_t expected = require_positive_product(batch, hidden_size, "batch", "hidden_size");
+    require_positive_product(batch, hidden_size, "batch", "hidden_size");
     require_finite_positive(eps, "eps");
-    require_size(input.size(), expected, "input");
-    require_size(output.size(), expected, "output");
-    require_size(gamma.size(), static_cast<size_t>(hidden_size), "gamma");
-    require_size(beta.size(), static_cast<size_t>(hidden_size), "beta");
+    require_matrix(input, batch, hidden_size, "input");
+    require_matrix(output, batch, hidden_size, "output");
+    require_vector(gamma, hidden_size, "gamma");
+    require_vector(beta, hidden_size, "beta");
     hpc::reduction::layer_norm<float>(input.data(), gamma.data(), beta.data(), output.data(), batch,
                                       hidden_size, eps, nullptr);
 }
 
-void rms_norm_wrapper(nb::tensor<float, nb::device::cuda>& input,
-                      nb::tensor<float, nb::device::cuda>& gamma,
-                      nb::tensor<float, nb::device::cuda>& output, int batch, int hidden_size,
+void rms_norm_wrapper(nb::ndarray<float, nb::device::cuda>& input,
+                      nb::ndarray<float, nb::device::cuda>& gamma,
+                      nb::ndarray<float, nb::device::cuda>& output, int batch, int hidden_size,
                       float eps) {
-    const size_t expected = require_positive_product(batch, hidden_size, "batch", "hidden_size");
+    require_positive_product(batch, hidden_size, "batch", "hidden_size");
     require_finite_positive(eps, "eps");
-    require_size(input.size(), expected, "input");
-    require_size(output.size(), expected, "output");
-    require_size(gamma.size(), static_cast<size_t>(hidden_size), "gamma");
+    require_matrix(input, batch, hidden_size, "input");
+    require_matrix(output, batch, hidden_size, "output");
+    require_vector(gamma, hidden_size, "gamma");
     hpc::reduction::rms_norm<float>(input.data(), gamma.data(), output.data(), batch, hidden_size,
                                     eps, nullptr);
 }
 
-void matmul_wrapper(nb::tensor<float, nb::device::cuda>& A, nb::tensor<float, nb::device::cuda>& B,
-                    nb::tensor<float, nb::device::cuda>& C, int M, int N, int K, float alpha,
+void matmul_wrapper(nb::ndarray<float, nb::device::cuda>& A, nb::ndarray<float, nb::device::cuda>& B,
+                    nb::ndarray<float, nb::device::cuda>& C, int M, int N, int K, float alpha,
                     float beta) {
-    const size_t a_expected = require_positive_product(M, K, "M", "K");
-    const size_t b_expected = require_positive_product(K, N, "K", "N");
-    const size_t c_expected = require_positive_product(M, N, "M", "N");
+    require_positive_product(M, K, "M", "K");
+    require_positive_product(K, N, "K", "N");
+    require_positive_product(M, N, "M", "N");
     require_finite(alpha, "alpha");
     require_finite(beta, "beta");
-    require_size(A.size(), a_expected, "A");
-    require_size(B.size(), b_expected, "B");
-    require_size(C.size(), c_expected, "C");
+    require_matrix(A, M, K, "A");
+    require_matrix(B, K, N, "B");
+    require_matrix(C, M, N, "C");
     hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(A.data(), B.data(), C.data(), M, N,
                                                                 K, alpha, beta, nullptr);
+}
+
+void matmul_cutlass_wrapper(nb::ndarray<float, nb::device::cuda>& A,
+                            nb::ndarray<float, nb::device::cuda>& B,
+                            nb::ndarray<float, nb::device::cuda>& C, int M, int N, int K,
+                            float alpha, float beta) {
+    require_positive_product(M, K, "M", "K");
+    require_positive_product(K, N, "K", "N");
+    require_positive_product(M, N, "M", "N");
+    require_finite(alpha, "alpha");
+    require_finite(beta, "beta");
+    require_matrix(A, M, K, "A");
+    require_matrix(B, K, N, "B");
+    require_matrix(C, M, N, "C");
+    hpc::gemm::gemm_cutlass<float>(A.data(), B.data(), C.data(), M, N, K, alpha, beta, nullptr);
 }
 
 NB_MODULE(hpc_ai_opt, m) {
@@ -153,4 +214,6 @@ NB_MODULE(hpc_ai_opt, m) {
 
     auto gemm = m.def_submodule("gemm", "Matrix multiplication");
     gemm.def("matmul", &matmul_wrapper, "Matrix multiplication");
+    gemm.def("matmul_cutlass", &matmul_cutlass_wrapper,
+             "CUTLASS-backed matrix multiplication baseline");
 }

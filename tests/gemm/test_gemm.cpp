@@ -222,3 +222,45 @@ TEST(GemmTest, TensorCorePathsRejectInvalidShapes) {
                      d_A.data(), d_B.data(), d_C.data(), M, N, K)),
                  std::invalid_argument);
 }
+
+TEST(GemmTest, CutlassFloatBaselineMatchesReference) {
+    constexpr int M = 32;
+    constexpr int N = 32;
+    constexpr int K = 32;
+    const auto A = hpc::test::random_vector<float>(M * K, -1.0f, 1.0f);
+    const auto B = hpc::test::random_vector<float>(K * N, -1.0f, 1.0f);
+    std::vector<float> C_cpu(M * N, 0.0f);
+
+    cpu_gemm(A.data(), B.data(), C_cpu.data(), M, N, K, 1.0f, 0.0f);
+
+    hpc::Tensor<float> d_A(M * K);
+    hpc::Tensor<float> d_B(K * N);
+    hpc::Tensor<float> d_C(M * N);
+    d_A.copy_from_host(A);
+    d_B.copy_from_host(B);
+    d_C.zero();
+
+    hpc::gemm::gemm_cutlass<float>(d_A.data(), d_B.data(), d_C.data(), M, N, K);
+    cudaDeviceSynchronize();
+
+    const auto cutlass = d_C.to_host();
+    EXPECT_TRUE(hpc::test::vectors_almost_equal(cutlass, C_cpu, 1e-3f, 1e-4f));
+}
+
+TEST(GemmTest, CutlassRejectsUnsupportedHalfBaseline) {
+    constexpr int M = 32;
+    constexpr int N = 32;
+    constexpr int K = 32;
+    std::vector<__half> A(M * K, __float2half(1.0f));
+    std::vector<__half> B(K * N, __float2half(1.0f));
+
+    hpc::Tensor<__half> d_A(M * K);
+    hpc::Tensor<__half> d_B(K * N);
+    hpc::Tensor<__half> d_C(M * N);
+    d_A.copy_from_host(A);
+    d_B.copy_from_host(B);
+    d_C.zero();
+
+    EXPECT_THROW((hpc::gemm::gemm_cutlass<__half>(d_A.data(), d_B.data(), d_C.data(), M, N, K)),
+                 std::invalid_argument);
+}
