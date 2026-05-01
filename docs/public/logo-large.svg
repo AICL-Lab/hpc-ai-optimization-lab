@@ -1,58 +1,137 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <defs>
-    <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#76B900;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#5FD85F;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#00D4AA;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5a8f00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00599C;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#161B22;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0D1117;stop-opacity:1" />
+    <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
     </linearGradient>
-    <filter id="heroShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.4"/>
-    </filter>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
       <feMerge>
         <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
   </defs>
-  <!-- Background -->
-  <rect width="400" height="400" fill="url(#bgGrad)" rx="48"/>
   
-  <!-- Outer ring -->
-  <circle cx="200" cy="180" r="130" fill="none" stroke="url(#heroGrad)" stroke-width="4" opacity="0.3"/>
-  <circle cx="200" cy="180" r="120" fill="none" stroke="url(#heroGrad)" stroke-width="2" opacity="0.5"/>
+  <!-- Background Circle -->
+  <circle cx="200" cy="200" r="180" fill="#f8fafc" filter="url(#shadow)"/>
+  <circle cx="200" cy="200" r="175" fill="none" stroke="url(#logoGrad)" stroke-width="4"/>
   
-  <!-- Main GPU icon -->
-  <g transform="translate(200, 180)" filter="url(#heroShadow)">
-    <!-- Chip body -->
-    <rect x="-70" y="-55" width="140" height="110" rx="12" fill="#21262D" stroke="#30363D" stroke-width="2"/>
+  <!-- GPU Chip -->
+  <g transform="translate(200, 180)">
+    <!-- Main GPU Body -->
+    <rect x="-80" y="-80" width="160" height="160" fill="url(#gpuGrad)" rx="10" filter="url(#shadow)"/>
     
-    <!-- Inner chip -->
-    <rect x="-50" y="-40" width="100" height="80" rx="8" fill="url(#heroGrad)" filter="url(#glow)"/>
+    <!-- GPU Pins -->
+    <g fill="#64748b">
+      <!-- Top pins -->
+      <rect x="-70" y="-95" width="8" height="20" rx="1"/>
+      <rect x="-50" y="-95" width="8" height="20" rx="1"/>
+      <rect x="-30" y="-95" width="8" height="20" rx="1"/>
+      <rect x="-10" y="-95" width="8" height="20" rx="1"/>
+      <rect x="10" y="-95" width="8" height="20" rx="1"/>
+      <rect x="30" y="-95" width="8" height="20" rx="1"/>
+      <rect x="50" y="-95" width="8" height="20" rx="1"/>
+      <rect x="70" y="-95" width="8" height="20" rx="1"/>
+      
+      <!-- Bottom pins -->
+      <rect x="-70" y="75" width="8" height="20" rx="1"/>
+      <rect x="-50" y="75" width="8" height="20" rx="1"/>
+      <rect x="-30" y="75" width="8" height="20" rx="1"/>
+      <rect x="-10" y="75" width="8" height="20" rx="1"/>
+      <rect x="10" y="75" width="8" height="20" rx="1"/>
+      <rect x="30" y="75" width="8" height="20" rx="1"/>
+      <rect x="50" y="75" width="8" height="20" rx="1"/>
+      <rect x="70" y="75" width="8" height="20" rx="1"/>
+      
+      <!-- Left pins -->
+      <rect x="-95" y="-70" width="20" height="8" rx="1"/>
+      <rect x="-95" y="-50" width="20" height="8" rx="1"/>
+      <rect x="-95" y="-30" width="20" height="8" rx="1"/>
+      <rect x="-95" y="-10" width="20" height="8" rx="1"/>
+      <rect x="-95" y="10" width="20" height="8" rx="1"/>
+      <rect x="-95" y="30" width="20" height="8" rx="1"/>
+      <rect x="-95" y="50" width="20" height="8" rx="1"/>
+      <rect x="-95" y="70" width="20" height="8" rx="1"/>
+      
+      <!-- Right pins -->
+      <rect x="75" y="-70" width="20" height="8" rx="1"/>
+      <rect x="75" y="-50" width="20" height="8" rx="1"/>
+      <rect x="75" y="-30" width="20" height="8" rx="1"/>
+      <rect x="75" y="-10" width="20" height="8" rx="1"/>
+      <rect x="75" y="10" width="20" height="8" rx="1"/>
+      <rect x="75" y="30" width="20" height="8" rx="1"/>
+      <rect x="75" y="50" width="20" height="8" rx="1"/>
+      <rect x="75" y="70" width="20" height="8" rx="1"/>
+    </g>
     
-    <!-- Core grid -->
-    <rect x="-25" y="-20" width="20" height="20" rx="4" fill="#ffffff" opacity="0.9"/>
-    <rect x="5" y="-20" width="20" height="20" rx="4" fill="#ffffff" opacity="0.9"/>
-    <rect x="-25" y="5" width="20" height="20" rx="4" fill="#ffffff" opacity="0.9"/>
-    <rect x="5" y="5" width="20" height="20" rx="4" fill="#ffffff" opacity="0.9"/>
+    <!-- GPU Die -->
+    <rect x="-55" y="-55" width="110" height="110" fill="#1e293b" rx="5"/>
     
-    <!-- Connection lines -->
-    <rect x="-70" y="-25" width="20" height="6" rx="2" fill="#76B900"/>
-    <rect x="-70" y="5" width="20" height="6" rx="2" fill="#76B900"/>
-    <rect x="50" y="-25" width="20" height="6" rx="2" fill="#76B900"/>
-    <rect x="50" y="5" width="20" height="6" rx="2" fill="#76B900"/>
-    <rect x="-25" y="-55" width="12" height="20" rx="2" fill="#76B900"/>
-    <rect x="13" y="-55" width="12" height="20" rx="2" fill="#76B900"/>
-    <rect x="-25" y="40" width="12" height="20" rx="2" fill="#76B900"/>
-    <rect x="13" y="40" width="12" height="20" rx="2" fill="#76B900"/>
+    <!-- Tensor Cores Grid -->
+    <g fill="#76B900" opacity="0.8">
+      <!-- Row 1 -->
+      <rect x="-45" y="-45" width="18" height="18" rx="2"/>
+      <rect x="-20" y="-45" width="18" height="18" rx="2"/>
+      <rect x="5" y="-45" width="18" height="18" rx="2"/>
+      <rect x="30" y="-45" width="18" height="18" rx="2"/>
+      
+      <!-- Row 2 -->
+      <rect x="-45" y="-20" width="18" height="18" rx="2"/>
+      <rect x="-20" y="-20" width="18" height="18" rx="2"/>
+      <rect x="5" y="-20" width="18" height="18" rx="2"/>
+      <rect x="30" y="-20" width="18" height="18" rx="2"/>
+      
+      <!-- Row 3 -->
+      <rect x="-45" y="5" width="18" height="18" rx="2"/>
+      <rect x="-20" y="5" width="18" height="18" rx="2"/>
+      <rect x="5" y="5" width="18" height="18" rx="2"/>
+      <rect x="30" y="5" width="18" height="18" rx="2"/>
+      
+      <!-- Row 4 -->
+      <rect x="-45" y="30" width="18" height="18" rx="2"/>
+      <rect x="-20" y="30" width="18" height="18" rx="2"/>
+      <rect x="5" y="30" width="18" height="18" rx="2"/>
+      <rect x="30" y="30" width="18" height="18" rx="2"/>
+    </g>
+    
+    <!-- Highlight -->
+    <rect x="-55" y="-55" width="110" height="55" fill="white" opacity="0.05" rx="5"/>
   </g>
   
-  <!-- Brand text -->
-  <text x="200" y="340" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="32" font-weight="700" fill="#76B900" text-anchor="middle" letter-spacing="-0.5">FastGPU Lab</text>
-  <text x="200" y="370" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="500" fill="#8B949E" text-anchor="middle" letter-spacing="0.5">CUDA KERNEL OPTIMIZATION</text>
+  <!-- Performance Arrow -->
+  <g transform="translate(200, 80)" filter="url(#glow)">
+    <path d="M-60 0 L60 0" stroke="url(#arrowGrad)" stroke-width="4" stroke-linecap="round"/>
+    <polygon points="70,0 55,-8 55,8" fill="url(#arrowGrad)"/>
+    <text x="0" y="-15" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#f59e0b">
+      140× Faster
+    </text>
+  </g>
+  
+  <!-- AI Optimization Text -->
+  <g transform="translate(200, 330)">
+    <text x="0" y="0" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="url(#logoGrad)">
+      HPC-AI-OPT
+    </text>
+    <text x="0" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748b">
+      CUDA Kernel Optimization Lab
+    </text>
+  </g>
+  
+  <!-- Tagline -->
+  <text x="200" y="370" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="#94a3b8">
+    From First Principles to Production
+  </text>
 </svg>
