@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+    inputs:
+      cuda_build:
+        description: 'Run CUDA compilation test'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -74,3 +80,27 @@ jobs:
 
       - name: Build VitePress site
         run: npm --prefix docs run docs:build
+
+  # CUDA compilation test - manually triggered or on workflow_dispatch
+  cuda-build:
+    name: CUDA Build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.cuda_build == true }}
+    container:
+      image: nvidia/cuda:12.4.0-devel-ubuntu22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install CMake
+        run: |
+          apt-get update
+          apt-get install -y cmake
+
+      - name: Configure CMake
+        run: cmake --preset default
+        env:
+          CXX: g++
+
+      - name: Build
+        run: cmake --build --preset default -j$(nproc)

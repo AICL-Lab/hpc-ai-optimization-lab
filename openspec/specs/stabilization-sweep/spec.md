@@ -1,3 +1,9 @@
+---
+Status: Active
+Phase: Implemented
+Last Updated: 2026-05-01
+---
+
 ## ADDED Requirements
 
 ### Requirement: Runtime-surface trust issues are treated as stabilization work

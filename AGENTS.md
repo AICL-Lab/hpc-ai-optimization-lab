@@ -6,6 +6,13 @@ Shared repository guidance for AI assistants.
 
 This project is in **stabilization / close-out mode**. Prefer simplification, consolidation, and trustworthiness over feature expansion. Delete or archive low-value material once a stronger canonical replacement exists.
 
+## Project-specific context
+
+- **Implementation status**: GEMM Steps 1-5 are fully implemented. Step 6 (MMA PTX) delegates to Step 5 for stability. Step 7 (Software Pipelining) is planned for future implementation.
+- **Type support**: CUTLASS baseline only supports float. INT8 GEMM has complete SharedMemTiling optimization; other optimization levels delegate to SharedMemTiling.
+- **Python bindings**: Currently expose `elementwise`, `reduction`, and `gemm` only. Not all C++ modules have Python bindings.
+- **CI limitation**: GPU validation requires local execution or self-hosted infrastructure; GitHub-hosted runners do not provide CUDA support.
+
 ## Canonical sources of truth
 
 - **Active work**: `openspec/changes/<change>/`
@@ -58,6 +65,13 @@ ctest --preset default
 ```
 
 If the configured build tree exposes zero tests or stale results, reconfigure before trusting it.
+
+## Code style and conventions
+
+- **CUDA kernel organization**: One kernel per file under `src/<module>/`
+- **Error handling**: Use `CUDA_CHECK` macro for all CUDA API calls; throw `std::invalid_argument` for invalid parameters
+- **Documentation sync**: When updating code, ensure README, docs, and API reference reflect the changes
+- **Performance claims**: Only state TFLOPS numbers that have been measured; mark projected or estimated values clearly
 
 ## Tooling and automation posture
 

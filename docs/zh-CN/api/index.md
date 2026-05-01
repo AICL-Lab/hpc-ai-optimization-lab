@@ -380,9 +380,9 @@ enum class GemmOpt {
     SharedMemTiling,  // 步骤 2: 共享内存分块
     DoubleBuffer,     // 步骤 3: 双缓冲
     RegisterTiling,   // 步骤 4: 寄存器分块
-    TensorCoreWMMA,   // 步骤 5: WMMA API
-    TensorCoreMMA,    // 步骤 6: MMA PTX
-    SoftwarePipeline  // 步骤 7: 软件流水线
+    TensorCoreWMMA,   // 步骤 5: WMMA API ✅
+    TensorCoreMMA,    // 步骤 6: MMA PTX（委托给步骤 5）🚧
+    SoftwarePipeline  // 步骤 7: 软件流水线（计划中）🚧
 };
 
 template <typename T, GemmOpt Opt = GemmOpt::SharedMemTiling>
@@ -394,8 +394,26 @@ void gemm(const T* A, const T* B, T* C,
           float alpha = 1.0f, float beta = 0.0f,
           cudaStream_t stream = nullptr);
 
+// CUTLASS 基准测试（仅 float，实验性）
+template <typename T>
+void gemm_cutlass(const T* A, const T* B, T* C,
+                  int M, int N, int K,
+                  float alpha = 1.0f, float beta = 0.0f,
+                  cudaStream_t stream = nullptr);
+
 } // namespace hpc::gemm
 ```
+
+**类型支持矩阵**:
+
+| 类型 | 步骤 1-4 | 步骤 5 (WMMA) | 步骤 6 (MMA) | 步骤 7 (流水线) | CUTLASS |
+|------|----------|---------------|--------------|-----------------|---------|
+| `float` | ✅ | ✅ | ✅† | 🚧 | ✅ |
+| `__half` | ✅ | ✅ | ✅† | 🚧 | 🚧 |
+| `int8_t` | ✅‡ | ✅ | ✅† | 🚧 | 🚧 |
+
+† 步骤 6 当前为稳定性考虑委托给步骤 5  
+‡ INT8 GEMM 当前仅 SharedMemTiling 优化完全实现；其他优化级别委托给 SharedMemTiling
 
 **示例**:
 
@@ -419,6 +437,10 @@ hpc::Tensor<__half> C_h(M * N);
 
 hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
     A_h.data(), B_h.data(), C_h.data(), M, N, K);
+
+// CUTLASS 基准测试（仅 float）
+hpc::gemm::gemm_cutlass<float>(
+    A.data(), B.data(), C.data(), M, N, K);
 ```
 
 ---

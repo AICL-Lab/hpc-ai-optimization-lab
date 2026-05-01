@@ -1,3 +1,9 @@
+---
+Status: Active
+Phase: Implemented
+Last Updated: 2026-05-01
+---
+
 ## Requirements
 
 ### Requirement: The repository defines a primary LSP path

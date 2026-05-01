@@ -186,17 +186,20 @@ See [Troubleshooting Guide](docs/en/guide/troubleshooting.md) for more.
 
 FP32 matrix multiplication (4096×4096) on NVIDIA A100:
 
-| Step | Technique | Performance | Speedup |
-|:----:|-----------|-------------|:-------:|
-| 1 | Naive implementation | 0.5 TFLOPS | 1× |
-| 2 | Shared memory tiling | 2.0 TFLOPS | 4× |
-| 3 | Double buffering | 3.5 TFLOPS | 7× |
-| 4 | Register tiling | 6.0 TFLOPS | 12× |
-| 5 | **Tensor Core (WMMA)** | **50+ TFLOPS** | **100×** |
-| 6 | Tensor Core (MMA PTX) | 60+ TFLOPS | 120× |
-| 7 | Software pipelining | 70+ TFLOPS | 140× |
+| Step | Technique | Performance | Speedup | Status |
+|:----:|-----------|-------------|:-------:|:------:|
+| 1 | Naive implementation | 0.5 TFLOPS | 1× | ✅ |
+| 2 | Shared memory tiling | 2.0 TFLOPS | 4× | ✅ |
+| 3 | Double buffering | 3.5 TFLOPS | 7× | ✅ |
+| 4 | Register tiling | 6.0 TFLOPS | 12× | ✅ |
+| 5 | **Tensor Core (WMMA)** | **50+ TFLOPS** | **100×** | ✅ |
+| 6 | Tensor Core (MMA PTX)* | ~60 TFLOPS† | ~120× | 🚧 |
+| 7 | Software pipelining* | ~70 TFLOPS† | ~140× | 🚧 |
 
 > 💡 The progression from Step 1 to Step 5 demonstrates why modern AI hardware achieves remarkable speedups through specialized units.
+> 
+> *Step 6 currently delegates to Step 5 for stability. Step 7 is planned for future implementation.  
+> †Performance values are projected estimates.
 
 ### Module Status
 
