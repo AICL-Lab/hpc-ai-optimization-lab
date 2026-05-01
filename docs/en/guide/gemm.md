@@ -283,7 +283,11 @@ Tensor Core (multiple per SM):
 
 ---
 
-## Step 6: Tensor Core (MMA PTX)
+## Step 6: Tensor Core (MMA PTX) 🚧
+
+> **Status**: In Development
+> 
+> Step 6 currently delegates to Step 5 (WMMA) for stability. Full MMA PTX implementation requires extensive register management and warp-level coordination that is planned for future development.
 
 ### Optimization Strategy
 
@@ -306,14 +310,18 @@ __device__ __forceinline__ void mma_m16n8k16_fp16(
 }
 ```
 
-### Performance Gains
+### Projected Performance Gains
 
 - **More fine-grained register control**
-- **TFLOPS**: ~60+
+- **Projected TFLOPS**: ~60+ (estimated)
 
 ---
 
-## Step 7: Software Pipelining
+## Step 7: Software Pipelining 🚧
+
+> **Status**: Planned for Future Implementation
+> 
+> Step 7 is planned for future development and not yet implemented in the current version.
 
 ### Optimization Strategy
 
@@ -364,15 +372,19 @@ Stage 2:                   |--Load--|--Compute--|--Load--|--Compute--|
 
 ## Performance Comparison Summary
 
-| Step | Optimization | TFLOPS (FP32) | Relative Speedup |
-|------|--------------|---------------|------------------|
-| 1 | Naive | 0.5 | 1.0× |
-| 2 | Shared Memory Tiling | 2.0 | 4.0× |
-| 3 | Double Buffering | 3.5 | 7.0× |
-| 4 | Register Tiling | 6.0 | 12.0× |
-| 5 | WMMA | 50+ | 100× |
-| 6 | MMA PTX | 60+ | 120× |
-| 7 | Software Pipelining | 70+ | 140× |
+| Step | Optimization | TFLOPS (FP32) | Relative Speedup | Status |
+|------|--------------|---------------|------------------|--------|
+| 1 | Naive | 0.5 | 1.0× | ✅ Implemented |
+| 2 | Shared Memory Tiling | 2.0 | 4.0× | ✅ Implemented |
+| 3 | Double Buffering | 3.5 | 7.0× | ✅ Implemented |
+| 4 | Register Tiling | 6.0 | 12.0× | ✅ Implemented |
+| 5 | WMMA | 50+ | 100× | ✅ Implemented |
+| 6 | MMA PTX | ~60† | ~120× | 🚧 In Development |
+| 7 | Software Pipelining | ~70† | ~140× | 🚧 Planned |
+
+† Projected estimates
+
+> **Note**: Steps 1-5 are fully implemented and tested. Step 6 currently delegates to Step 5 for stability. Step 7 is planned for future development.
 
 ## References
 

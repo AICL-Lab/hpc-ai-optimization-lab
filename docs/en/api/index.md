@@ -380,9 +380,9 @@ enum class GemmOpt {
     SharedMemTiling,  // Step 2: Shared memory tiling
     DoubleBuffer,     // Step 3: Double buffering
     RegisterTiling,   // Step 4: Register tiling
-    TensorCoreWMMA,   // Step 5: WMMA API
-    TensorCoreMMA,    // Step 6: MMA PTX
-    SoftwarePipeline  // Step 7: Software pipelining
+    TensorCoreWMMA,   // Step 5: WMMA API ✅
+    TensorCoreMMA,    // Step 6: MMA PTX (delegates to Step 5) 🚧
+    SoftwarePipeline  // Step 7: Software pipelining (planned) 🚧
 };
 
 template <typename T, GemmOpt Opt = GemmOpt::SharedMemTiling>
@@ -394,8 +394,26 @@ void gemm(const T* A, const T* B, T* C,
           float alpha = 1.0f, float beta = 0.0f,
           cudaStream_t stream = nullptr);
 
+// CUTLASS baseline (float only, experimental)
+template <typename T>
+void gemm_cutlass(const T* A, const T* B, T* C,
+                  int M, int N, int K,
+                  float alpha = 1.0f, float beta = 0.0f,
+                  cudaStream_t stream = nullptr);
+
 } // namespace hpc::gemm
 ```
+
+**Type Support Matrix**:
+
+| Type | Steps 1-4 | Step 5 (WMMA) | Step 6 (MMA) | Step 7 (Pipeline) | CUTLASS |
+|------|-----------|---------------|--------------|-------------------|---------|
+| `float` | ✅ | ✅ | ✅† | 🚧 | ✅ |
+| `__half` | ✅ | ✅ | ✅† | 🚧 | 🚧 |
+| `int8_t` | ✅‡ | ✅ | ✅† | 🚧 | 🚧 |
+
+† Step 6 currently delegates to Step 5 for stability  
+‡ INT8 GEMM currently only has SharedMemTiling optimization fully implemented; other optimization levels delegate to SharedMemTiling
 
 **Example**:
 
@@ -419,6 +437,10 @@ hpc::Tensor<__half> C_h(M * N);
 
 hpc::gemm::gemm<__half, hpc::gemm::GemmOpt::TensorCoreWMMA>(
     A_h.data(), B_h.data(), C_h.data(), M, N, K);
+
+// CUTLASS baseline (float only)
+hpc::gemm::gemm_cutlass<float>(
+    A.data(), B.data(), C.data(), M, N, K);
 ```
 
 ---

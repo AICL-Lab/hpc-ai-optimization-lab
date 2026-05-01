@@ -1,3 +1,9 @@
+---
+Status: Active
+Phase: Implemented
+Last Updated: 2026-05-01
+---
+
 ## ADDED Requirements
 
 ### Requirement: GEMM baseline path is executable through a CUTLASS-backed implementation

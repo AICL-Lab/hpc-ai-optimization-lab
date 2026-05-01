@@ -36,7 +36,9 @@ void gemm_cutlass(const T* A, const T* B, T* C, int M, int N, int K, float alpha
     (void)alpha;
     (void)beta;
     (void)stream;
-    throw std::invalid_argument("gemm_cutlass currently supports float only");
+    throw std::invalid_argument("gemm_cutlass currently supports float only. "
+                                "Half-precision and int8_t specializations are planned for future "
+                                "implementation.");
 }
 
 template void gemm_cutlass<__half>(const __half* A, const __half* B, __half* C, int M, int N, int K,
@@ -569,8 +571,10 @@ __global__ void gemm_mma_ptx_kernel(const __half* __restrict__ A, const __half* 
 template <>
 void gemm<__half, GemmOpt::TensorCoreMMA>(const __half* A, const __half* B, __half* C, int M, int N,
                                           int K, float alpha, float beta, cudaStream_t stream) {
-    // For now, fall back to WMMA implementation
-    // Full MMA PTX implementation requires extensive register management
+    // NOTE: MMA PTX delegates to WMMA for stability in this close-out version.
+    // Full MMA assembly (mma.m16n8k16 PTX) requires extensive register management
+    // and careful warp-level coordination that was not completed.
+    // Future work: Implement true mma.m16n8k16 PTX for maximum Tensor Core performance.
     gemm<__half, GemmOpt::TensorCoreWMMA>(A, B, C, M, N, K, alpha, beta, stream);
 }
 
@@ -796,15 +800,24 @@ void gemm<int8_t, GemmOpt::SharedMemTiling>(const int8_t* A, const int8_t* B, in
 }
 
 // Default implementations for other int8 optimization levels
+// NOTE: INT8 GEMM currently only has SharedMemTiling optimization implemented.
+// Other optimization levels (Naive, DoubleBuffer, RegisterTiling) delegate to SharedMemTiling
+// for consistency and stability. Full INT8 optimization path is planned for future implementation.
 template <>
 void gemm<int8_t, GemmOpt::Naive>(const int8_t* A, const int8_t* B, int8_t* C, int M, int N, int K,
-                                  float alpha, float beta, cudaStream_t stream) {
+                                   float alpha, float beta, cudaStream_t stream) {
     gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
 }
 
 template <>
 void gemm<int8_t, GemmOpt::DoubleBuffer>(const int8_t* A, const int8_t* B, int8_t* C, int M, int N,
-                                         int K, float alpha, float beta, cudaStream_t stream) {
+                                          int K, float alpha, float beta, cudaStream_t stream) {
+    gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+}
+
+template <>
+void gemm<int8_t, GemmOpt::RegisterTiling>(const int8_t* A, const int8_t* B, int8_t* C, int M, int N,
+                                           int K, float alpha, float beta, cudaStream_t stream) {
     gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
 }
 
