@@ -1,4 +1,6 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
+import llmstxt from 'vitepress-plugin-llms'
 import { head, search } from './configs/index.mts'
 import enConfig from './configs/en.mts'
 import zhCNConfig from './configs/zh-CN.mts'
@@ -7,7 +9,7 @@ const BASE_URL = '/hpc-ai-optimization-lab/'
 const SITE_URL = 'https://lessup.github.io'
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid(defineConfig({
   // Site Metadata
   lang: 'en-US',
   title: 'HPC-AI-Optimization-Lab',
@@ -142,6 +144,13 @@ export default defineConfig({
   
   // Vite Configuration
   vite: {
+    plugins: [
+      llmstxt({
+        domain: `${SITE_URL}${BASE_URL}`,
+        title: 'HPC-AI-Optimization-Lab',
+        description: 'CUDA kernel optimization lab for GEMM, FlashAttention, quantization, and GPU performance learning.',
+      })
+    ],
     server: {
       port: 5173,
       host: true
@@ -151,16 +160,16 @@ export default defineConfig({
     }
   },
   
-  // Transform Page Data
+	  // Transform Page Data
   transformPageData: (pageData) => {
     pageData.frontmatter.head ??= []
-    
+
     // Open Graph URL
     pageData.frontmatter.head.push([
       'meta',
       { property: 'og:url', content: `${SITE_URL}${BASE_URL}${pageData.relativePath.replace(/\.md$/, '.html')}` }
     ])
-    
+
     // Article modified time
     if (pageData.frontmatter.lastUpdated) {
       pageData.frontmatter.head.push([
@@ -169,4 +178,4 @@ export default defineConfig({
       ])
     }
   }
-})
+}))
