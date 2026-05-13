@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this project, please cite it as below."
+title: "HPC-AI-Optimization-Lab"
+version: 0.3.0
+date-released: 2024-01-01
+url: "https://github.com/LessUp/hpc-ai-optimization-lab"
+repository-code: "https://github.com/LessUp/hpc-ai-optimization-lab"
+authors:
+  - name: "LessUp"
+keywords:
+  - cuda
+  - gpu
+  - optimization
+  - gemm
+  - flash-attention
+  - quantization
+  - tensor-core
+  - high-performance-computing
+  - ai-inference
+abstract: "A progressive learning platform for CUDA kernel optimization, featuring a 7-step GEMM journey from naive implementation (0.5 TFLOPS) to Tensor Core acceleration (70+ TFLOPS). Includes FlashAttention, RoPE, INT8/FP8 quantization, and modern CUDA 12.4+ features for Hopper architecture."
+license: Apache-2.0

@@ -3,50 +3,223 @@ layout: home
 
 hero:
   name: HPC-AI-Optimization-Lab
-  text: CUDA kernel optimization lab
-  tagline: Explore GEMM, FlashAttention, quantization, and GPU performance learning from one focused repository.
+  text: From Principles to Peak Optimization
+  tagline: Master CUDA kernel optimization through progressive GEMM, FlashAttention, and quantization implementations — from 0.5 TFLOPS to 70+ TFLOPS
   image:
     src: /logo-large.svg
-    alt: HPC-AI-Optimization-Lab logo
+    alt: HPC-AI-Optimization-Lab
   actions:
     - theme: brand
-      text: Start with the guide
-      link: /en/guide/
+      text: Start Learning
+      link: /en/guide/quick-start
     - theme: alt
-      text: Read the API reference
-      link: /en/api/index
+      text: GEMM Journey
+      link: /en/guide/gemm
     - theme: alt
-      text: View on GitHub
+      text: GitHub
       link: https://github.com/LessUp/hpc-ai-optimization-lab
-
-features:
-  - icon: 📚
-    title: Progressive learning
-    details: Follow the documentation from foundational memory patterns to more advanced GPU kernels and architecture-specific notes.
-  - icon: 🧭
-    title: Focused project surface
-    details: Start from the guides, examples, and architecture notes without having to dig through a duplicated docs surface.
-  - icon: 🧪
-    title: Code plus context
-    details: Use the guides, examples, architecture notes, and API pages together instead of treating the site as a README mirror.
 ---
 
-## What this project is for
+<script setup>
+import PerformanceChart from '../.vitepress/theme/components/PerformanceChart.vue'
+import QuickStart from '../.vitepress/theme/components/QuickStart.vue'
+import CitationBlock from '../.vitepress/theme/components/CitationBlock.vue'
+import FeatureGrid from '../.vitepress/theme/components/FeatureGrid.vue'
+</script>
 
-- learning how CUDA kernel optimization techniques build on one another
-- reading a compact codebase that covers multiple AI/HPC kernel categories
-- understanding how the repository is organized, documented, and validated
+<style>
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #76B900 30%, #00599C);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #76B90050 50%, #00599C50 50%);
+  --vp-home-hero-image-filter: blur(44px);
+}
+</style>
 
-## Recommended starting points
+<div class="home-content">
 
-| Goal | Start here |
-| --- | --- |
-| Set up and build the project | [/en/guide/installation](/en/guide/installation) |
-| Run a first example | [/en/guide/quick-start](/en/guide/quick-start) |
-| Study optimization patterns | [/en/guide/memory](/en/guide/memory) |
-| Jump straight to matrix multiplication | [/en/guide/gemm](/en/guide/gemm) |
-| See architecture notes | [/en/api/architecture](/en/api/architecture) |
+<!-- Performance Banner -->
+<div class="performance-banner">
+  <span class="metric">🚀 <strong>140×</strong> Speedup</span>
+  <span class="metric">⚡ <strong>70+</strong> TFLOPS</span>
+  <span class="metric">🎯 <strong>A100</strong> Verified</span>
+</div>
 
-## Why this docs site exists
+<!-- Quick Start -->
+<QuickStart />
 
-This site is a compact landing layer for the repository. Use it to choose a learning path, jump into examples, and find the right architecture or API reference page without treating the site as a README mirror.
+<!-- Performance Chart -->
+<PerformanceChart />
+
+<!-- Feature Grid -->
+<FeatureGrid />
+
+<!-- Who is this for -->
+## 👥 Who is this for?
+
+<div class="audience-grid">
+  <div class="audience-card">
+    <span class="icon">🎓</span>
+    <h3>Students</h3>
+    <p>Learn CUDA optimization from first principles, understand GPU architecture and performance bottlenecks.</p>
+  </div>
+  <div class="audience-card">
+    <span class="icon">🔬</span>
+    <h3>Researchers</h3>
+    <p>Quickly prototype new kernel optimization ideas, use production-grade baselines for comparison experiments.</p>
+  </div>
+  <div class="audience-card">
+    <span class="icon">🏭</span>
+    <h3>Engineers</h3>
+    <p>Get production-ready kernel implementations for AI inference acceleration.</p>
+  </div>
+</div>
+
+<!-- Learning Path -->
+## 📚 Learning Path
+
+<div class="learning-path">
+  <div class="path-level beginner">
+    <h4>🌱 Beginner (1-2 weeks)</h4>
+    <ul>
+      <li><a href="/en/guide/installation">Installation & Setup</a></li>
+      <li><a href="/en/guide/quick-start">Quick Start</a></li>
+      <li><a href="/en/guide/memory">Memory Optimization Patterns</a></li>
+      <li><a href="/en/guide/reduction">Reduction Algorithms</a></li>
+      <li>GEMM Steps 1-4</li>
+    </ul>
+  </div>
+  <div class="path-level intermediate">
+    <h4>🚀 Intermediate (2-4 weeks)</h4>
+    <ul>
+      <li>GEMM Steps 5-7 (Tensor Cores)</li>
+      <li><a href="/en/guide/flash-attention">FlashAttention Implementation</a></li>
+      <li><a href="/en/guide/profiling">Profiling & Tuning</a></li>
+    </ul>
+  </div>
+  <div class="path-level advanced">
+    <h4>🏆 Advanced (ongoing)</h4>
+    <ul>
+      <li><a href="/en/guide/cuda13">CUDA 13 Hopper Features</a></li>
+      <li>CUTLASS Deep Dive</li>
+      <li>Research Implementations</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Citation -->
+<CitationBlock />
+
+</div>
+
+<style scoped>
+.home-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.performance-banner {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px;
+  background: var(--vp-c-bg-soft);
+  border-radius: 16px;
+  margin: 48px 0;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.125rem;
+  color: var(--vp-c-text-1);
+}
+
+.metric strong {
+  color: var(--vp-c-brand-1);
+  font-size: 1.5rem;
+}
+
+.audience-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+
+.audience-card {
+  padding: 24px;
+  background: var(--vp-c-bg-soft);
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
+  text-align: center;
+}
+
+.audience-card .icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.audience-card h3 {
+  margin: 0 0 12px;
+  font-size: 1.125rem;
+}
+
+.audience-card p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+}
+
+.learning-path {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+
+.path-level {
+  padding: 24px;
+  background: var(--vp-c-bg-soft);
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.path-level h4 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+}
+
+.path-level ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.path-level li {
+  padding: 8px 0;
+  color: var(--vp-c-text-2);
+}
+
+.path-level li a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+}
+
+.path-level li a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .performance-banner {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+}
+</style>
