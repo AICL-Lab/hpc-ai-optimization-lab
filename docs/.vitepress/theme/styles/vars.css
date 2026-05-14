@@ -41,11 +41,11 @@
    Dark Mode (Default) - Academic Blue-Green Theme
    ═══════════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Primary Brand - Academic Navy Blue */
-  --vp-c-brand-1: #63b3ed;      /* Bright tech blue */
-  --vp-c-brand-2: #4299e1;      /* Secondary blue */
+  /* Primary Brand - Academic Blue */
+  --vp-c-brand-1: #79c0ff;      /* Bright sky blue for dark mode */
+  --vp-c-brand-2: #58a6ff;      /* Secondary blue */
   --vp-c-brand-3: #4fd1c5;      /* Teal accent */
-  --vp-c-brand-soft: rgba(99, 179, 237, 0.15);
+  --vp-c-brand-soft: rgba(121, 192, 255, 0.15);
 
   /* Secondary - Teal */
   --vp-c-secondary-1: #4fd1c5;

@@ -22,9 +22,9 @@ body {
    Navigation
    ─────────────────────────────────────────────────────────────────────────────── */
 .VPNav {
-  background: rgba(13, 17, 23, 0.85) !important;
+  background: rgba(22, 27, 34, 0.92) !important;
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--vp-c-divider);
+  border-bottom: 1px solid var(--vp-c-border);
 }
 
 .VPNav .VPNavBarTitle .title {
@@ -33,7 +33,7 @@ body {
 }
 
 .VPNav .VPNavBarTitle .title span {
-  background: linear-gradient(135deg, var(--vp-c-brand-2), var(--vp-c-brand-1));
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-secondary-1));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -56,8 +56,19 @@ body {
 }
 
 /* Light mode navigation */
-html[data-theme='light'] .VPNav {
-  background: rgba(255, 255, 255, 0.9) !important;
+html:not(.dark) .VPNav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid var(--vp-c-border);
+  box-shadow: var(--vp-shadow-1);
+}
+
+html:not(.dark) .VPNavBarMenuLink,
+html:not(.dark) .VPNavBarMenuGroup .button {
+  color: var(--vp-c-text-1);
+}
+
+html:not(.dark) .VPNav .VPNavBarTitle .title {
+  color: var(--vp-c-brand-1);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────────
