@@ -2,56 +2,13 @@
 
 #include <gtest/gtest.h>
 
+#include "../reference/reference_kernels.hpp"
 #include "../test_utils.hpp"
 #include "common/tensor.cuh"
 #include "convolution/conv_implicit_gemm.cuh"
 #include "convolution/conv_winograd.cuh"
 
-namespace {
-
-std::vector<float> cpu_conv2d(const std::vector<float>& input, const std::vector<float>& weight,
-                              const hpc::convolution::ConvParams& p) {
-    const int out_h =
-        (p.in_height + 2 * p.pad_h - p.dilation_h * (p.kernel_h - 1) - 1) / p.stride_h + 1;
-    const int out_w =
-        (p.in_width + 2 * p.pad_w - p.dilation_w * (p.kernel_w - 1) - 1) / p.stride_w + 1;
-    std::vector<float> output(p.batch * p.out_channels * out_h * out_w, 0.0f);
-
-    for (int b = 0; b < p.batch; ++b) {
-        for (int oc = 0; oc < p.out_channels; ++oc) {
-            for (int oh = 0; oh < out_h; ++oh) {
-                for (int ow = 0; ow < out_w; ++ow) {
-                    float sum = 0.0f;
-                    for (int ic = 0; ic < p.in_channels; ++ic) {
-                        for (int kh = 0; kh < p.kernel_h; ++kh) {
-                            for (int kw = 0; kw < p.kernel_w; ++kw) {
-                                const int ih = oh * p.stride_h - p.pad_h + kh * p.dilation_h;
-                                const int iw = ow * p.stride_w - p.pad_w + kw * p.dilation_w;
-                                if (ih < 0 || ih >= p.in_height || iw < 0 || iw >= p.in_width) {
-                                    continue;
-                                }
-                                const int input_idx =
-                                    b * (p.in_channels * p.in_height * p.in_width) +
-                                    ic * (p.in_height * p.in_width) + ih * p.in_width + iw;
-                                const int weight_idx =
-                                    oc * (p.in_channels * p.kernel_h * p.kernel_w) +
-                                    ic * (p.kernel_h * p.kernel_w) + kh * p.kernel_w + kw;
-                                sum += input[input_idx] * weight[weight_idx];
-                            }
-                        }
-                    }
-                    const int output_idx = b * (p.out_channels * out_h * out_w) +
-                                           oc * (out_h * out_w) + oh * out_w + ow;
-                    output[output_idx] = sum;
-                }
-            }
-        }
-    }
-
-    return output;
-}
-
-}  // namespace
+using hpc::reference::cpu_conv2d;
 
 TEST(ConvolutionTest, ImplicitGemmMatchesReference) {
     const hpc::convolution::ConvParams params{

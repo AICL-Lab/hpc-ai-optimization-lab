@@ -4,22 +4,20 @@
 #include <rapidcheck.h>
 #include <rapidcheck/gtest.h>
 
+#include "../reference/reference_kernels.hpp"
 #include "../test_utils.hpp"
 #include "common/tensor.cuh"
 #include "elementwise/relu.cuh"
+
+using hpc::reference::cpu_relu;
 
 // Feature: hpc-ai-optimization-lab, Property 3: Elementwise Operation Correctness
 RC_GTEST_PROP(ReluTest, Correctness, ()) {
     auto size = *rc::gen::inRange<size_t>(1, 1024 * 64);
     auto input = *rc::gen::container<std::vector<float>>(size, rc::gen::arbitrary<float>());
 
-    // CPU reference
-    std::vector<float> expected(size);
-    for (size_t i = 0; i < size; ++i) {
-        expected[i] = std::max(0.0f, input[i]);
-    }
+    const auto expected = cpu_relu(input);
 
-    // GPU implementation
     hpc::Tensor<float> d_input(size);
     hpc::Tensor<float> d_output(size);
     d_input.copy_from_host(input);
@@ -37,7 +35,7 @@ RC_GTEST_PROP(ReluTest, Correctness, ()) {
 
 TEST(ReluTest, BasicTest) {
     std::vector<float> input = {-1.0f, 0.0f, 1.0f, -0.5f, 0.5f};
-    std::vector<float> expected = {0.0f, 0.0f, 1.0f, 0.0f, 0.5f};
+    const auto expected = cpu_relu(input);
 
     hpc::Tensor<float> d_input(input.size());
     hpc::Tensor<float> d_output(input.size());

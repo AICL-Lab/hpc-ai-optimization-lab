@@ -3,10 +3,6 @@
 
 #include <cuda_runtime.h>
 
-#include <cmath>
-#include <stdexcept>
-#include <string>
-
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 
@@ -18,125 +14,45 @@
 #include "reduction/rmsnorm.cuh"
 #include "reduction/softmax.cuh"
 
+#include "validation.hpp"
+
 namespace nb = nanobind;
 
 namespace {
 
-template <typename T>
-size_t require_non_empty(const nb::ndarray<T, nb::device::cuda>& tensor, const char* name) {
-    const size_t size = tensor.size();
-    if (size == 0) {
-        throw std::invalid_argument(std::string(name) + " must not be empty");
-    }
-    return size;
-}
-
-template <typename T>
-void require_c_contiguous(const nb::ndarray<T, nb::device::cuda>& tensor, const char* name) {
-    size_t expected_stride = 1;
-    for (size_t axis = tensor.ndim(); axis > 0; --axis) {
-        const size_t index = axis - 1;
-        if (tensor.stride(index) != static_cast<int64_t>(expected_stride)) {
-            throw std::invalid_argument(std::string(name) + " must be contiguous in memory");
-        }
-        expected_stride *= tensor.shape(index);
-    }
-}
-
-template <typename T>
-void require_ndim(const nb::ndarray<T, nb::device::cuda>& tensor, size_t expected_ndim,
-                  const char* name) {
-    if (tensor.ndim() != expected_ndim) {
-        throw std::invalid_argument(std::string(name) + " must be a " +
-                                    std::to_string(expected_ndim) + "D CUDA ndarray");
-    }
-}
-
-inline void require_size(size_t actual, size_t expected, const char* name) {
-    if (actual != expected) {
-        throw std::invalid_argument(std::string(name) + " has unexpected size: expected " +
-                                    std::to_string(expected) + ", got " + std::to_string(actual));
-    }
-}
-
-inline size_t require_positive_product(int lhs, int rhs, const char* lhs_name,
-                                       const char* rhs_name) {
-    if (lhs <= 0 || rhs <= 0) {
-        throw std::invalid_argument(std::string(lhs_name) + " and " + rhs_name +
-                                    " must be positive");
-    }
-    return static_cast<size_t>(lhs) * static_cast<size_t>(rhs);
-}
-
-inline void require_finite_positive(float value, const char* name) {
-    if (!std::isfinite(value) || value <= 0.0f) {
-        throw std::invalid_argument(std::string(name) + " must be finite and positive");
-    }
-}
-
-inline void require_finite(float value, const char* name) {
-    if (!std::isfinite(value)) {
-        throw std::invalid_argument(std::string(name) + " must be finite");
-    }
-}
-
-template <typename T>
-void require_matrix(const nb::ndarray<T, nb::device::cuda>& tensor, int rows, int cols,
-                    const char* name) {
-    require_ndim(tensor, 2, name);
-    require_c_contiguous(tensor, name);
-    if (tensor.shape(0) != static_cast<size_t>(rows) ||
-        tensor.shape(1) != static_cast<size_t>(cols)) {
-        throw std::invalid_argument(std::string(name) + " has unexpected shape");
-    }
-    require_size(tensor.size(), static_cast<size_t>(rows) * static_cast<size_t>(cols), name);
-}
-
-template <typename T>
-void require_vector(const nb::ndarray<T, nb::device::cuda>& tensor, int size, const char* name) {
-    require_ndim(tensor, 1, name);
-    require_c_contiguous(tensor, name);
-    require_size(tensor.size(), static_cast<size_t>(size), name);
-}
+using hpc::bindings::GemmOperands;
+using hpc::bindings::NormOperands;
+using hpc::bindings::SoftmaxOperands;
+using hpc::bindings::validate_elementwise_io;
+using hpc::bindings::validate_transpose_io;
 
 }  // namespace
 
 void relu_wrapper(nb::ndarray<float, nb::device::cuda>& input,
                   nb::ndarray<float, nb::device::cuda>& output) {
-    const size_t n = require_non_empty(input, "input");
-    require_c_contiguous(input, "input");
-    require_c_contiguous(output, "output");
-    require_size(output.size(), n, "output");
+    const size_t n = validate_elementwise_io(input, output);
     hpc::elementwise::relu<float, hpc::elementwise::OptLevel::GridStride>(
         input.data(), output.data(), n, nullptr);
 }
 
 void sigmoid_wrapper(nb::ndarray<float, nb::device::cuda>& input,
                      nb::ndarray<float, nb::device::cuda>& output) {
-    const size_t n = require_non_empty(input, "input");
-    require_c_contiguous(input, "input");
-    require_c_contiguous(output, "output");
-    require_size(output.size(), n, "output");
+    const size_t n = validate_elementwise_io(input, output);
     hpc::elementwise::sigmoid<float, hpc::elementwise::OptLevel::GridStride>(
         input.data(), output.data(), n, nullptr);
 }
 
 void transpose_wrapper(nb::ndarray<float, nb::device::cuda>& input,
                        nb::ndarray<float, nb::device::cuda>& output, int rows, int cols) {
-    const size_t expected = require_positive_product(rows, cols, "rows", "cols");
-    require_matrix(input, rows, cols, "input");
-    require_matrix(output, cols, rows, "output");
-    require_size(input.size(), expected, "input");
-    require_size(output.size(), expected, "output");
+    validate_transpose_io(input, output, rows, cols);
     hpc::elementwise::transpose<float, hpc::elementwise::TransposeOpt::SharedMemPadded>(
         input.data(), output.data(), rows, cols, nullptr);
 }
 
 void softmax_wrapper(nb::ndarray<float, nb::device::cuda>& input,
                      nb::ndarray<float, nb::device::cuda>& output, int batch, int seq_len) {
-    require_positive_product(batch, seq_len, "batch", "seq_len");
-    require_matrix(input, batch, seq_len, "input");
-    require_matrix(output, batch, seq_len, "output");
+    SoftmaxOperands op(batch, seq_len);
+    op.validate_tensors(input, output);
     hpc::reduction::softmax<float, hpc::reduction::SoftmaxOpt::OnlineSoftmax>(
         input.data(), output.data(), batch, seq_len, nullptr);
 }
@@ -146,12 +62,8 @@ void layer_norm_wrapper(nb::ndarray<float, nb::device::cuda>& input,
                         nb::ndarray<float, nb::device::cuda>& beta,
                         nb::ndarray<float, nb::device::cuda>& output, int batch, int hidden_size,
                         float eps) {
-    require_positive_product(batch, hidden_size, "batch", "hidden_size");
-    require_finite_positive(eps, "eps");
-    require_matrix(input, batch, hidden_size, "input");
-    require_matrix(output, batch, hidden_size, "output");
-    require_vector(gamma, hidden_size, "gamma");
-    require_vector(beta, hidden_size, "beta");
+    NormOperands op(batch, hidden_size, eps);
+    op.validate_io_with_beta(input, output, gamma, beta);
     hpc::reduction::layer_norm<float>(input.data(), gamma.data(), beta.data(), output.data(), batch,
                                       hidden_size, eps, nullptr);
 }
@@ -160,11 +72,8 @@ void rms_norm_wrapper(nb::ndarray<float, nb::device::cuda>& input,
                       nb::ndarray<float, nb::device::cuda>& gamma,
                       nb::ndarray<float, nb::device::cuda>& output, int batch, int hidden_size,
                       float eps) {
-    require_positive_product(batch, hidden_size, "batch", "hidden_size");
-    require_finite_positive(eps, "eps");
-    require_matrix(input, batch, hidden_size, "input");
-    require_matrix(output, batch, hidden_size, "output");
-    require_vector(gamma, hidden_size, "gamma");
+    NormOperands op(batch, hidden_size, eps);
+    op.validate_io(input, output, gamma);
     hpc::reduction::rms_norm<float>(input.data(), gamma.data(), output.data(), batch, hidden_size,
                                     eps, nullptr);
 }
@@ -172,30 +81,18 @@ void rms_norm_wrapper(nb::ndarray<float, nb::device::cuda>& input,
 void matmul_wrapper(nb::ndarray<float, nb::device::cuda>& A, nb::ndarray<float, nb::device::cuda>& B,
                     nb::ndarray<float, nb::device::cuda>& C, int M, int N, int K, float alpha,
                     float beta) {
-    require_positive_product(M, K, "M", "K");
-    require_positive_product(K, N, "K", "N");
-    require_positive_product(M, N, "M", "N");
-    require_finite(alpha, "alpha");
-    require_finite(beta, "beta");
-    require_matrix(A, M, K, "A");
-    require_matrix(B, K, N, "B");
-    require_matrix(C, M, N, "C");
-    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::SharedMemTiling>(A.data(), B.data(), C.data(), M, N,
-                                                                K, alpha, beta, nullptr);
+    GemmOperands op(M, N, K, alpha, beta);
+    op.validate_tensors(A, B, C);
+    hpc::gemm::gemm<float, hpc::gemm::GemmOpt::Auto>(
+        A.data(), B.data(), C.data(), M, N, K, alpha, beta, nullptr);
 }
 
 void matmul_cutlass_wrapper(nb::ndarray<float, nb::device::cuda>& A,
                             nb::ndarray<float, nb::device::cuda>& B,
                             nb::ndarray<float, nb::device::cuda>& C, int M, int N, int K,
                             float alpha, float beta) {
-    require_positive_product(M, K, "M", "K");
-    require_positive_product(K, N, "K", "N");
-    require_positive_product(M, N, "M", "N");
-    require_finite(alpha, "alpha");
-    require_finite(beta, "beta");
-    require_matrix(A, M, K, "A");
-    require_matrix(B, K, N, "B");
-    require_matrix(C, M, N, "C");
+    GemmOperands op(M, N, K, alpha, beta);
+    op.validate_tensors(A, B, C);
     hpc::gemm::gemm_cutlass<float>(A.data(), B.data(), C.data(), M, N, K, alpha, beta, nullptr);
 }
 

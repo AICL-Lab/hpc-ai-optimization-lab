@@ -821,4 +821,75 @@ void gemm<int8_t, GemmOpt::RegisterTiling>(const int8_t* A, const int8_t* B, int
     gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
 }
 
+// ---------------------------------------------------------------------------
+// Runtime optimization selection seam
+// ---------------------------------------------------------------------------
+
+namespace {
+
+GemmOpt select_gemm_opt_float(int M, int N, int K) {
+    if (M <= 32 && N <= 32 && K <= 32) return GemmOpt::Naive;
+    return GemmOpt::SharedMemTiling;
+}
+
+GemmOpt select_gemm_opt_half(int M, int N, int K) {
+    if ((M % 16) == 0 && (N % 16) == 0 && (K % 16) == 0) return GemmOpt::TensorCoreWMMA;
+    return GemmOpt::SharedMemTiling;
+}
+
+GemmOpt select_gemm_opt_int8(int M, int N, int K) {
+    (void)M;
+    (void)N;
+    (void)K;
+    return GemmOpt::SharedMemTiling;
+}
+
+}  // namespace
+
+template <>
+void gemm<float, GemmOpt::Auto>(const float* A, const float* B, float* C, int M, int N, int K,
+                                float alpha, float beta, cudaStream_t stream) {
+    const GemmOpt opt = select_gemm_opt_float(M, N, K);
+    switch (opt) {
+        case GemmOpt::Naive:
+            return gemm<float, GemmOpt::Naive>(A, B, C, M, N, K, alpha, beta, stream);
+        case GemmOpt::SharedMemTiling:
+            return gemm<float, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+        case GemmOpt::DoubleBuffer:
+            return gemm<float, GemmOpt::DoubleBuffer>(A, B, C, M, N, K, alpha, beta, stream);
+        case GemmOpt::RegisterTiling:
+            return gemm<float, GemmOpt::RegisterTiling>(A, B, C, M, N, K, alpha, beta, stream);
+        case GemmOpt::SoftwarePipeline:
+            return gemm<float, GemmOpt::SoftwarePipeline>(A, B, C, M, N, K, alpha, beta, stream);
+        default:
+            return gemm<float, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+    }
+}
+
+template <>
+void gemm<__half, GemmOpt::Auto>(const __half* A, const __half* B, __half* C, int M, int N, int K,
+                                 float alpha, float beta, cudaStream_t stream) {
+    const GemmOpt opt = select_gemm_opt_half(M, N, K);
+    switch (opt) {
+        case GemmOpt::TensorCoreWMMA:
+            return gemm<__half, GemmOpt::TensorCoreWMMA>(A, B, C, M, N, K, alpha, beta, stream);
+        case GemmOpt::SharedMemTiling:
+            return gemm<__half, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+        default:
+            return gemm<__half, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+    }
+}
+
+template <>
+void gemm<int8_t, GemmOpt::Auto>(const int8_t* A, const int8_t* B, int8_t* C, int M, int N, int K,
+                                float alpha, float beta, cudaStream_t stream) {
+    const GemmOpt opt = select_gemm_opt_int8(M, N, K);
+    switch (opt) {
+        case GemmOpt::SharedMemTiling:
+            return gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+        default:
+            return gemm<int8_t, GemmOpt::SharedMemTiling>(A, B, C, M, N, K, alpha, beta, stream);
+    }
+}
+
 }  // namespace hpc::gemm
