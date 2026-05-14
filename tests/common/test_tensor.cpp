@@ -46,3 +46,55 @@ TEST(TensorTest, ZeroFill) {
         EXPECT_EQ(val, 0.0f);
     }
 }
+
+TEST(TensorTest, MultiDimConstruction) {
+    hpc::Tensor<float> tensor({2, 3, 4});
+    EXPECT_EQ(tensor.size(), 24);
+    EXPECT_EQ(tensor.ndim(), 3);
+    EXPECT_EQ(tensor.dim(0), 2);
+    EXPECT_EQ(tensor.dim(1), 3);
+    EXPECT_EQ(tensor.dim(2), 4);
+    EXPECT_TRUE(tensor.has_shape());
+}
+
+TEST(TensorTest, ShapeRoundTrip) {
+    hpc::Tensor<float> tensor({4, 5});
+    auto shape = tensor.shape();
+    EXPECT_EQ(shape.ndim(), 2);
+    EXPECT_EQ(shape[0], 4);
+    EXPECT_EQ(shape[1], 5);
+}
+
+TEST(TensorTest, ReshapeValid) {
+    hpc::Tensor<float> tensor(24);
+    tensor.reshape({2, 3, 4});
+    EXPECT_EQ(tensor.ndim(), 3);
+    EXPECT_EQ(tensor.dim(0), 2);
+    EXPECT_EQ(tensor.dim(1), 3);
+    EXPECT_EQ(tensor.dim(2), 4);
+}
+
+TEST(TensorTest, ReshapeRejectsMismatchedSize) {
+    hpc::Tensor<float> tensor(24);
+    EXPECT_THROW(tensor.reshape({5, 5}), std::invalid_argument);
+}
+
+TEST(TensorTest, OffsetCalculation) {
+    hpc::Tensor<float> tensor({3, 4, 5});
+    // row-major layout: index(i,j,k) = ((i * 4) + j) * 5 + k
+    EXPECT_EQ(tensor.offset({0, 0, 0}), 0);
+    EXPECT_EQ(tensor.offset({0, 0, 1}), 1);
+    EXPECT_EQ(tensor.offset({0, 1, 0}), 5);
+    EXPECT_EQ(tensor.offset({1, 0, 0}), 20);
+    EXPECT_EQ(tensor.offset({1, 2, 3}), 1 * 20 + 2 * 5 + 3);
+}
+
+TEST(TensorTest, OneDFallbackShape) {
+    hpc::Tensor<float> tensor(100);
+    EXPECT_FALSE(tensor.has_shape());
+    EXPECT_EQ(tensor.ndim(), 1);
+    EXPECT_EQ(tensor.dim(0), 100);
+    auto shape = tensor.shape();
+    EXPECT_EQ(shape.ndim(), 1);
+    EXPECT_EQ(shape[0], 100);
+}

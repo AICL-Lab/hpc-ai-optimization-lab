@@ -14,7 +14,8 @@ enum class GemmOpt {
     RegisterTiling,   // Step 4: Register tiling
     TensorCoreWMMA,   // Step 5: WMMA API
     TensorCoreMMA,    // Step 6: MMA PTX
-    SoftwarePipeline  // Step 7: Software pipelining
+    SoftwarePipeline, // Step 7: Software pipelining
+    Auto              // Runtime selection based on problem shape
 };
 
 // C = alpha * A * B + beta * C
