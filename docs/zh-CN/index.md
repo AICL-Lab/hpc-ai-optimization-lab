@@ -25,13 +25,15 @@ import PerformanceChart from '../.vitepress/theme/components/PerformanceChart.vu
 import QuickStart from '../.vitepress/theme/components/QuickStart.vue'
 import CitationBlock from '../.vitepress/theme/components/CitationBlock.vue'
 import FeatureGrid from '../.vitepress/theme/components/FeatureGrid.vue'
+import ArchitectureDiagram from '../.vitepress/theme/components/ArchitectureDiagram.vue'
+import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vue'
 </script>
 
 <style>
 :root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #76B900 30%, #00599C);
-  --vp-home-hero-image-background-image: linear-gradient(-45deg, #76B90050 50%, #00599C50 50%);
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #1a365d 30%, #38b2ac);
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, #1a365d50 50%, #38b2ac50 50%);
   --vp-home-hero-image-filter: blur(44px);
 }
 </style>
@@ -44,6 +46,12 @@ import FeatureGrid from '../.vitepress/theme/components/FeatureGrid.vue'
   <span class="metric">⚡ <strong>70+</strong> TFLOPS</span>
   <span class="metric">🎯 <strong>A100</strong> 验证</span>
 </div>
+
+<!-- 性能指标 -->
+<MetricsDashboard lang="zh-CN" />
+
+<!-- 系统架构 -->
+<ArchitectureDiagram lang="zh-CN" />
 
 <!-- 快速入门 -->
 <QuickStart />
