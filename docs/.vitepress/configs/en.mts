@@ -1,4 +1,5 @@
 import type { DefaultTheme } from 'vitepress'
+import { SITE_CONFIG } from './site-config'
 
 const enConfig: DefaultTheme.Config = {
   nav: [
@@ -25,8 +26,8 @@ const enConfig: DefaultTheme.Config = {
     {
       text: 'Project',
       items: [
-        { text: 'GitHub', link: 'https://github.com/LessUp/hpc-ai-optimization-lab' },
-        { text: 'Releases', link: 'https://github.com/LessUp/hpc-ai-optimization-lab/releases' }
+        { text: 'GitHub', link: SITE_CONFIG.repo.url },
+        { text: 'Releases', link: SITE_CONFIG.repo.releases }
       ]
     }
   ],

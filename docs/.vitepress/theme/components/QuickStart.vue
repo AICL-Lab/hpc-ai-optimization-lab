@@ -1,26 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useData } from 'vitepress'
+import { getQuickStartData } from '../../data/loader'
 
-const steps = [
-  {
-    number: 1,
-    title: 'Clone Repository',
-    code: 'git clone https://github.com/LessUp/hpc-ai-optimization-lab.git\ncd hpc-ai-optimization-lab',
-    copied: false
-  },
-  {
-    number: 2,
-    title: 'Build Project',
-    code: 'cmake --preset default\ncmake --build --preset default',
-    copied: false
-  },
-  {
-    number: 3,
-    title: 'Run Example',
-    code: './build/examples/elementwise/relu_example',
-    copied: false
-  }
-]
+const { lang } = useData()
+const locale = computed(() => lang.value as 'en-US' | 'zh-CN')
+const data = computed(() => getQuickStartData(locale.value))
 
 const copyStates = ref([false, false, false])
 
@@ -40,13 +25,13 @@ const copyCode = async (index: number, code: string) => {
 <template>
   <div class="quick-start">
     <h2 class="section-title">
-      <span class="gradient-text">Quick Start</span>
-      <span class="subtitle">Get up and running in 3 simple steps</span>
+      <span class="gradient-text">{{ data.labels.title }}</span>
+      <span class="subtitle">{{ data.labels.subtitle }}</span>
     </h2>
 
     <div class="steps-container">
       <div
-        v-for="(step, index) in steps"
+        v-for="(step, index) in data.steps"
         :key="step.number"
         class="step-card"
       >
@@ -62,18 +47,22 @@ const copyCode = async (index: number, code: string) => {
             @click="copyCode(index, step.code)"
             :class="{ copied: copyStates[index] }"
           >
-            <span v-if="copyStates[index]">✓ Copied!</span>
-            <span v-else>Copy</span>
+            <span v-if="copyStates[index]">✓ {{ data.labels.copied }}</span>
+            <span v-else>{{ data.labels.copy }}</span>
           </button>
         </div>
       </div>
     </div>
 
     <div class="requirements">
-      <span class="req-label">Requirements:</span>
-      <span class="req-item">CUDA 12.4+</span>
-      <span class="req-item">CMake 3.24+</span>
-      <span class="req-item">C++20</span>
+      <span class="req-label">{{ data.labels.requirements }}:</span>
+      <span
+        v-for="req in data.requirements"
+        :key="req"
+        class="req-item"
+      >
+        {{ req }}
+      </span>
     </div>
   </div>
 </template>

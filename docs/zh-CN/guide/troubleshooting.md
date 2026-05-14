@@ -407,10 +407,10 @@ nsys-ui timeline.nsys-rep
 
 如果您的问题未在此处涵盖：
 
-1. **搜索现有问题**：[GitHub Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
+1. **搜索现有问题**：[GitHub Issues](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues)
 2. **查阅文档**：[文档](https://lessup.github.io/hpc-ai-optimization-lab/)
-3. **在讨论中提问**：[GitHub Discussions](https://github.com/LessUp/hpc-ai-optimization-lab/discussions)
-4. **报告 bug**：使用 [Bug 报告模板](https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/.github/ISSUE_TEMPLATE/bug_report.md)
+3. **在讨论中提问**：[GitHub Discussions](https://github.com/AICL-Lab/hpc-ai-optimization-lab/discussions)
+4. **报告 bug**：使用 [Bug 报告模板](https://github.com/AICL-Lab/hpc-ai-optimization-lab/blob/master/.github/ISSUE_TEMPLATE/bug_report.md)
 
 报告时请包含：
 - 操作系统和版本
@@ -454,4 +454,4 @@ hpc_ai_opt.elementwise.relu(x, y)
 
 ---
 
-还有问题？[提交一个 issue](https://github.com/LessUp/hpc-ai-optimization-lab/issues/new)，我们会帮助您！
+还有问题？[提交一个 issue](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues/new)，我们会帮助您！

@@ -1,0 +1,42 @@
+# Quick Start Component Data
+# Multi-language support for QuickStart.vue
+
+steps:
+  - number: 1
+    title:
+      en-US: Clone Repository
+      zh-CN: 克隆仓库
+    code: |
+      git clone https://github.com/AICL-Lab/hpc-ai-optimization-lab.git
+      cd hpc-ai-optimization-lab
+  - number: 2
+    title:
+      en-US: Build Project
+      zh-CN: 构建项目
+    code: |
+      cmake --preset default
+      cmake --build --preset default
+  - number: 3
+    title:
+      en-US: Run Example
+      zh-CN: 运行示例
+    code: ./build/examples/elementwise/relu_example
+
+requirements:
+  - CUDA 12.4+
+  - CMake 3.24+
+  - C++20
+
+labels:
+  en-US:
+    title: Quick Start
+    subtitle: Get up and running in 3 simple steps
+    requirements: Requirements
+    copy: Copy
+    copied: Copied!
+  zh-CN:
+    title: 快速开始
+    subtitle: 3 步快速上手
+    requirements: 系统要求
+    copy: 复制
+    copied: 已复制!

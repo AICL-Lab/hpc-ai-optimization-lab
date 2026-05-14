@@ -1,6 +1,7 @@
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import './custom.css'
+import './styles/home.css'
 
 // Custom components
 import PerformanceChart from './components/PerformanceChart.vue'

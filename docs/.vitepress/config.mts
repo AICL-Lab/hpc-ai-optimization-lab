@@ -4,17 +4,17 @@ import llmstxt from 'vitepress-plugin-llms'
 import { head, search } from './configs/index.mts'
 import enConfig from './configs/en.mts'
 import zhCNConfig from './configs/zh-CN.mts'
+import { SITE_CONFIG, BASE_URL, PAGES_URL } from './configs/site-config'
 
-const BASE_URL = '/hpc-ai-optimization-lab/'
-const SITE_URL = 'https://lessup.github.io'
+const SITE_URL = PAGES_URL
 
 // https://vitepress.dev/reference/site-config
 export default withMermaid(defineConfig({
   // Site Metadata
   lang: 'en-US',
-  title: 'HPC-AI-Optimization-Lab',
-  titleTemplate: ':title | HPC-AI-Optimization-Lab',
-  description: 'CUDA kernel optimization lab for GEMM, FlashAttention, quantization, and GPU performance learning.',
+  title: SITE_CONFIG.title,
+  titleTemplate: `:title | ${SITE_CONFIG.title}`,
+  description: SITE_CONFIG.description,
   
   // Base Configuration
   base: BASE_URL,
@@ -75,12 +75,12 @@ export default withMermaid(defineConfig({
     
     // Social Links
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/LessUp/hpc-ai-optimization-lab' }
+      { icon: 'github', link: SITE_CONFIG.repo.url }
     ],
-    
+
     // Edit Link
     editLink: {
-      pattern: 'https://github.com/LessUp/hpc-ai-optimization-lab/edit/master/docs/:path',
+      pattern: `${SITE_CONFIG.repo.url}/edit/master/docs/:path`,
       text: 'Edit on GitHub'
     },
     
@@ -146,9 +146,9 @@ export default withMermaid(defineConfig({
   vite: {
     plugins: [
       llmstxt({
-        domain: `${SITE_URL}${BASE_URL}`,
-        title: 'HPC-AI-Optimization-Lab',
-        description: 'CUDA kernel optimization lab for GEMM, FlashAttention, quantization, and GPU performance learning.',
+        domain: SITE_URL + BASE_URL,
+        title: SITE_CONFIG.title,
+        description: SITE_CONFIG.description,
       })
     ],
     server: {

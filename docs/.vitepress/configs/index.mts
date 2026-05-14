@@ -1,6 +1,7 @@
 import type { HeadConfig, DefaultTheme } from 'vitepress'
+import { PAGES_URL, BASE_URL } from './site-config'
 
-const SITE_URL = 'https://lessup.github.io/hpc-ai-optimization-lab'
+const SITE_URL = PAGES_URL + BASE_URL
 
 // Head Configuration
 export function head(): HeadConfig[] {

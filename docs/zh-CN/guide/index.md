@@ -25,7 +25,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+git clone https://github.com/AICL-Lab/hpc-ai-optimization-lab.git
 cd hpc-ai-optimization-lab
 
 # 配置并构建

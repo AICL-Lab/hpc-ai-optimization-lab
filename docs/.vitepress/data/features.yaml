@@ -1,0 +1,72 @@
+# Feature Grid Data
+# Multi-language support for FeatureGrid.vue
+
+features:
+  - icon: 📈
+    title:
+      en-US: Progressive Learning
+      zh-CN: 渐进式学习
+    description:
+      en-US: 7-step GEMM optimization from naive to Tensor Core, each step with clear performance gains and explanations.
+      zh-CN: 从朴素到 Tensor Core 的 7 步 GEMM 优化，每一步都有清晰的性能提升和解释。
+    tags:
+      - GEMM
+      - 140× Speedup
+  - icon: 🎯
+    title:
+      en-US: Production Quality
+      zh-CN: 生产级质量
+    description:
+      en-US: All kernels tested and benchmarked, following NVIDIA best practices. Clean API design for learning and production.
+      zh-CN: 所有内核经过测试和基准测试，遵循 NVIDIA 最佳实践。清晰的 API 设计，适合学习和生产。
+    tags:
+      - Tested
+      - Benchmarked
+  - icon: ⚡
+    title:
+      en-US: Modern GPU Features
+      zh-CN: 现代 GPU 特性
+    description:
+      en-US: CUDA 12.4+, Hopper architecture (TMA, Clusters), FP8/INT8 quantization, FlashAttention 2.
+      zh-CN: CUDA 12.4+，Hopper 架构 (TMA, Clusters)，FP8/INT8 量化，FlashAttention 2。
+    tags:
+      - CUDA 12.4
+      - Hopper
+  - icon: 🌍
+    title:
+      en-US: Dual Language Docs
+      zh-CN: 双语文档
+    description:
+      en-US: Complete English and Chinese documentation with installation guides, tutorials, and API references.
+      zh-CN: 完整的中英文文档，包含安装指南、教程和 API 参考。
+    tags:
+      - EN
+      - 中文
+  - icon: 🔬
+    title:
+      en-US: Core Scenarios
+      zh-CN: 核心场景
+    description:
+      en-US: From basic elementwise/reduction to complex GEMM/FlashAttention, covering AI inference critical operators.
+      zh-CN: 从基础的逐元素/归约到复杂的 GEMM/FlashAttention，覆盖 AI 推理关键算子。
+    tags:
+      - Attention
+      - Quantization
+  - icon: 🐍
+    title:
+      en-US: Python Bindings
+      zh-CN: Python 绑定
+    description:
+      en-US: Clean Python API via nanobind, integrate directly into PyTorch workflows. C++ performance + Python ease.
+      zh-CN: 通过 nanobind 提供清晰的 Python API，直接集成到 PyTorch 工作流。C++ 性能 + Python 易用性。
+    tags:
+      - Python
+      - PyTorch
+
+labels:
+  en-US:
+    title: Key Features
+    subtitle: What makes this project unique
+  zh-CN:
+    title: 核心特性
+    subtitle: 项目的独特之处

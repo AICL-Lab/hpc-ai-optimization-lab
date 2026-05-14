@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useData } from 'vitepress'
+import { getCitationData } from '../../data/loader'
+import { SITE_CONFIG, PAGES_URL } from '../../configs/site-config'
+
+const { lang } = useData()
+const locale = computed(() => lang.value as 'en-US' | 'zh-CN')
+const data = computed(() => getCitationData(locale.value))
 
 const bibtex = `@software{hpc_ai_optimization_lab,
   title = {HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform},
-  author = {LessUp},
+  author = {${SITE_CONFIG.repo.owner}},
   year = {2024},
-  url = {https://github.com/LessUp/hpc-ai-optimization-lab},
-  version = {0.3.0},
+  url = {${SITE_CONFIG.repo.url}},
+  version = {${SITE_CONFIG.version}},
   note = {GEMM, FlashAttention, Quantization implementations}
 }`
 
-const apa = `LessUp. (2024). HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform (Version 0.3.0). https://github.com/LessUp/hpc-ai-optimization-lab`
+const apa = `${SITE_CONFIG.repo.owner}. (2024). HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform (Version ${SITE_CONFIG.version}). ${SITE_CONFIG.repo.url}`
 
 const formats = [
   { name: 'BibTeX', code: bibtex },
@@ -36,8 +43,8 @@ const copyCitation = async () => {
 <template>
   <div class="citation-block">
     <h2 class="section-title">
-      <span class="gradient-text">Citation</span>
-      <span class="subtitle">If you use this project in your research, please cite</span>
+      <span class="gradient-text">{{ data.labels.title }}</span>
+      <span class="subtitle">{{ data.labels.subtitle }}</span>
     </h2>
 
     <div class="citation-container">
@@ -60,24 +67,24 @@ const copyCitation = async () => {
           @click="copyCitation"
           :class="{ copied: copied }"
         >
-          <span v-if="copied">✓ Copied!</span>
-          <span v-else>Copy Citation</span>
+          <span v-if="copied">✓ {{ data.labels.copied }}</span>
+          <span v-else>{{ data.labels.copyCitation }}</span>
         </button>
       </div>
     </div>
 
     <div class="citation-links">
-      <a href="https://github.com/LessUp/hpc-ai-optimization-lab" class="citation-link">
+      <a :href="SITE_CONFIG.repo.url" class="citation-link">
         <span class="icon">📦</span>
-        <span>GitHub Repository</span>
+        <span>{{ data.labels.links.repo }}</span>
       </a>
-      <a href="https://github.com/LessUp/hpc-ai-optimization-lab/issues" class="citation-link">
+      <a :href="SITE_CONFIG.repo.issues" class="citation-link">
         <span class="icon">🐛</span>
-        <span>Report Issue</span>
+        <span>{{ data.labels.links.issue }}</span>
       </a>
-      <a href="https://lessup.github.io/hpc-ai-optimization-lab/" class="citation-link">
+      <a :href="PAGES_URL" class="citation-link">
         <span class="icon">📚</span>
-        <span>Documentation</span>
+        <span>{{ data.labels.links.docs }}</span>
       </a>
     </div>
   </div>

@@ -21,7 +21,7 @@ This guide walks you through setting up the development environment for HPC-AI-O
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+git clone https://github.com/AICL-Lab/hpc-ai-optimization-lab.git
 cd hpc-ai-optimization-lab
 ```
 

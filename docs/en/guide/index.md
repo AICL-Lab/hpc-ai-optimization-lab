@@ -25,7 +25,7 @@ This documentation covers the full spectrum of CUDA kernel optimization, from fu
 
 ```bash
 # Clone the repository
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+git clone https://github.com/AICL-Lab/hpc-ai-optimization-lab.git
 cd hpc-ai-optimization-lab
 
 # Configure and build

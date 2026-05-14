@@ -1,54 +1,23 @@
 <script setup lang="ts">
-const features = [
-  {
-    icon: '📈',
-    title: 'Progressive Learning',
-    description: '7-step GEMM optimization from naive to Tensor Core, each step with clear performance gains and explanations.',
-    tags: ['GEMM', '140× Speedup']
-  },
-  {
-    icon: '🎯',
-    title: 'Production Quality',
-    description: 'All kernels tested and benchmarked, following NVIDIA best practices. Clean API design for learning and production.',
-    tags: ['Tested', 'Benchmarked']
-  },
-  {
-    icon: '⚡',
-    title: 'Modern GPU Features',
-    description: 'CUDA 12.4+, Hopper architecture (TMA, Clusters), FP8/INT8 quantization, FlashAttention 2.',
-    tags: ['CUDA 12.4', 'Hopper']
-  },
-  {
-    icon: '🌍',
-    title: 'Dual Language Docs',
-    description: 'Complete English and Chinese documentation with installation guides, tutorials, and API references.',
-    tags: ['EN', '中文']
-  },
-  {
-    icon: '🔬',
-    title: 'Core Scenarios',
-    description: 'From basic elementwise/reduction to complex GEMM/FlashAttention, covering AI inference critical operators.',
-    tags: ['Attention', 'Quantization']
-  },
-  {
-    icon: '🐍',
-    title: 'Python Bindings',
-    description: 'Clean Python API via nanobind, integrate directly into PyTorch workflows. C++ performance + Python ease.',
-    tags: ['Python', 'PyTorch']
-  }
-]
+import { computed } from 'vue'
+import { useData } from 'vitepress'
+import { getFeaturesData } from '../../data/loader'
+
+const { lang } = useData()
+const locale = computed(() => lang.value as 'en-US' | 'zh-CN')
+const data = computed(() => getFeaturesData(locale.value))
 </script>
 
 <template>
   <div class="feature-grid-section">
     <h2 class="section-title">
-      <span class="gradient-text">Key Features</span>
-      <span class="subtitle">What makes this project unique</span>
+      <span class="gradient-text">{{ data.labels.title }}</span>
+      <span class="subtitle">{{ data.labels.subtitle }}</span>
     </h2>
 
     <div class="feature-grid">
       <div
-        v-for="feature in features"
+        v-for="feature in data.features"
         :key="feature.title"
         class="feature-card"
       >
