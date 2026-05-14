@@ -407,10 +407,10 @@ nsys-ui timeline.nsys-rep
 
 If your issue isn't covered here:
 
-1. **Search existing issues**: [GitHub Issues](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
+1. **Search existing issues**: [GitHub Issues](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues)
 2. **Check documentation**: [Documentation](https://lessup.github.io/hpc-ai-optimization-lab/)
-3. **Ask in discussions**: [GitHub Discussions](https://github.com/LessUp/hpc-ai-optimization-lab/discussions)
-4. **Report a bug**: Use the [Bug Report Template](https://github.com/LessUp/hpc-ai-optimization-lab/blob/master/.github/ISSUE_TEMPLATE/bug_report.md)
+3. **Ask in discussions**: [GitHub Discussions](https://github.com/AICL-Lab/hpc-ai-optimization-lab/discussions)
+4. **Report a bug**: Use the [Bug Report Template](https://github.com/AICL-Lab/hpc-ai-optimization-lab/blob/master/.github/ISSUE_TEMPLATE/bug_report.md)
 
 When reporting, please include:
 - OS and version
@@ -454,4 +454,4 @@ hpc_ai_opt.elementwise.relu(x, y)
 
 ---
 
-Still stuck? [Open an issue](https://github.com/LessUp/hpc-ai-optimization-lab/issues/new) and we'll help!
+Still stuck? [Open an issue](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues/new) and we'll help!

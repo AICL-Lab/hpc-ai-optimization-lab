@@ -102,9 +102,9 @@ If you use this project in your research or find it helpful, please cite:
 ```bibtex
 @software{hpc_ai_optimization_lab,
   title = {HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform},
-  author = {LessUp},
+  author = {AICL-Lab},
   year = {2024},
-  url = {https://github.com/LessUp/hpc-ai-optimization-lab},
+  url = {https://github.com/AICL-Lab/hpc-ai-optimization-lab},
   version = {0.3.0},
   note = {Progressive GEMM, FlashAttention, and quantization implementations}
 }
@@ -112,12 +112,12 @@ If you use this project in your research or find it helpful, please cite:
 
 Or in APA format:
 
-> LessUp. (2024). HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform (Version 0.3.0). https://github.com/LessUp/hpc-ai-optimization-lab
+> AICL-Lab. (2024). HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform (Version 0.3.0). https://github.com/AICL-Lab/hpc-ai-optimization-lab
 
 ---
 
 ## 🔗 Quick Links
 
-- [GitHub Repository](https://github.com/LessUp/hpc-ai-optimization-lab)
+- [GitHub Repository](https://github.com/AICL-Lab/hpc-ai-optimization-lab)
 - [Documentation](https://lessup.github.io/hpc-ai-optimization-lab/)
-- [Issue Tracker](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
+- [Issue Tracker](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues)

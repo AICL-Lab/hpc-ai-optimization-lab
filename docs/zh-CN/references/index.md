@@ -102,9 +102,9 @@ description: CUDA 内核优化的学术论文、开源项目和学习资源
 ```bibtex
 @software{hpc_ai_optimization_lab,
   title = {HPC-AI-Optimization-Lab: CUDA Kernel Optimization Learning Platform},
-  author = {LessUp},
+  author = {AICL-Lab},
   year = {2024},
-  url = {https://github.com/LessUp/hpc-ai-optimization-lab},
+  url = {https://github.com/AICL-Lab/hpc-ai-optimization-lab},
   version = {0.3.0},
   note = {渐进式 GEMM、FlashAttention 和量化实现}
 }
@@ -114,6 +114,6 @@ description: CUDA 内核优化的学术论文、开源项目和学习资源
 
 ## 🔗 快速链接
 
-- [GitHub 仓库](https://github.com/LessUp/hpc-ai-optimization-lab)
+- [GitHub 仓库](https://github.com/AICL-Lab/hpc-ai-optimization-lab)
 - [文档站点](https://lessup.github.io/hpc-ai-optimization-lab/)
-- [问题追踪](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
+- [问题追踪](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues)

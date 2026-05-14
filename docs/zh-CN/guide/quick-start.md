@@ -15,7 +15,7 @@ This quick start will show you how to:
 
 ```bash
 # Clone and enter the repository
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+git clone https://github.com/AICL-Lab/hpc-ai-optimization-lab.git
 cd hpc-ai-optimization-lab
 
 # Create and enter build directory
@@ -124,4 +124,4 @@ pip install -e python/
 
 - **Documentation**: Browse the [Guides](index.md)
 - **Issues**: Check [Troubleshooting](troubleshooting.md)
-- **Community**: Open a [GitHub Issue](https://github.com/LessUp/hpc-ai-optimization-lab/issues)
+- **Community**: Open a [GitHub Issue](https://github.com/AICL-Lab/hpc-ai-optimization-lab/issues)

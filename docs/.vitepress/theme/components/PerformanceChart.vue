@@ -1,42 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
+import { useData } from 'vitepress'
+import { getGemmStepsData, formatTflops, getSpeedup } from '../../data/loader'
 
-const gemmSteps = [
-  { step: 1, name: 'Naive', tflops: 0.5, color: 'low' },
-  { step: 2, name: 'Shared Mem', tflops: 2.0, color: 'low' },
-  { step: 3, name: 'Double Buffer', tflops: 3.5, color: 'low' },
-  { step: 4, name: 'Register Tile', tflops: 6.0, color: 'medium' },
-  { step: 5, name: 'Tensor Core', tflops: 50.0, color: 'high' },
-  { step: 6, name: 'MMA PTX', tflops: 60.0, color: 'high', planned: true },
-  { step: 7, name: 'Pipelining', tflops: 70.0, color: 'high', planned: true },
-]
-
-const maxTflops = 70
+const { lang } = useData()
+const locale = computed(() => lang.value as 'en-US' | 'zh-CN')
+const data = computed(() => getGemmStepsData(locale.value))
 
 const getBarWidth = (tflops: number) => {
-  return `${(tflops / maxTflops) * 100}%`
-}
-
-const formatTflops = (tflops: number) => {
-  if (tflops >= 50) return `${tflops}+ TFLOPS`
-  return `${tflops} TFLOPS`
-}
-
-const getSpeedup = (tflops: number) => {
-  return `${Math.round(tflops / 0.5)}×`
+  return `${(tflops / data.value.maxTflops) * 100}%`
 }
 </script>
 
 <template>
   <div class="performance-chart">
     <h2 class="chart-title">
-      <span class="gradient-text">GEMM Optimization Journey</span>
-      <span class="subtitle">FP32 Matrix Multiplication (4096×4096) on NVIDIA A100</span>
+      <span class="gradient-text">{{ data.labels.title }}</span>
+      <span class="subtitle">{{ data.labels.subtitle }}</span>
     </h2>
 
     <div class="chart-container">
       <div
-        v-for="item in gemmSteps"
+        v-for="item in data.steps"
         :key="item.step"
         class="chart-row"
         :class="{ planned: item.planned }"
@@ -44,7 +29,7 @@ const getSpeedup = (tflops: number) => {
         <div class="step-label">
           <span class="step-number">Step {{ item.step }}</span>
           <span class="step-name">{{ item.name }}</span>
-          <span v-if="item.planned" class="planned-badge">Planned</span>
+          <span v-if="item.planned" class="planned-badge">{{ data.labels.planned }}</span>
         </div>
 
         <div class="bar-container">
@@ -66,21 +51,20 @@ const getSpeedup = (tflops: number) => {
     <div class="chart-legend">
       <div class="legend-item">
         <span class="legend-color low"></span>
-        <span>Baseline (&lt;10 TFLOPS)</span>
+        <span>{{ data.labels.legend.low }}</span>
       </div>
       <div class="legend-item">
         <span class="legend-color medium"></span>
-        <span>Optimized (10-50 TFLOPS)</span>
+        <span>{{ data.labels.legend.medium }}</span>
       </div>
       <div class="legend-item">
         <span class="legend-color high"></span>
-        <span>Tensor Core (&gt;50 TFLOPS)</span>
+        <span>{{ data.labels.legend.high }}</span>
       </div>
     </div>
 
     <div class="chart-note">
-      <strong>Key Insight:</strong> Step 5 (Tensor Core) achieves 100× speedup over naive implementation,
-      demonstrating the power of modern GPU specialized compute units.
+      <strong>Key Insight:</strong> {{ data.labels.keyInsight }}
     </div>
   </div>
 </template>

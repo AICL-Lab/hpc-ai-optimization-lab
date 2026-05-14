@@ -26,7 +26,7 @@ Before installing, ensure your system meets the following requirements:
 
 ```bash
 # Clone the repository
-git clone https://github.com/LessUp/hpc-ai-optimization-lab.git
+git clone https://github.com/AICL-Lab/hpc-ai-optimization-lab.git
 cd hpc-ai-optimization-lab
 
 # Create build directory
@@ -103,4 +103,4 @@ For more help, see the [Troubleshooting Guide](troubleshooting.md).
 
 - Follow the [Quick Start Guide](quick-start.md) for your first kernel
 - Explore the [API Documentation](../api/index.md)
-- Check out [Examples](https://github.com/LessUp/hpc-ai-optimization-lab/tree/master/examples)
+- Check out [Examples](https://github.com/AICL-Lab/hpc-ai-optimization-lab/tree/master/examples)

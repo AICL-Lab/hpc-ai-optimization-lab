@@ -1,0 +1,75 @@
+# GEMM Performance Chart Data
+# Multi-language support for PerformanceChart.vue
+
+maxTflops: 70
+
+steps:
+  - step: 1
+    name:
+      en-US: Naive
+      zh-CN: 朴素实现
+    tflops: 0.5
+    color: low
+    planned: false
+  - step: 2
+    name:
+      en-US: Shared Mem
+      zh-CN: 共享内存
+    tflops: 2.0
+    color: low
+    planned: false
+  - step: 3
+    name:
+      en-US: Double Buffer
+      zh-CN: 双缓冲
+    tflops: 3.5
+    color: low
+    planned: false
+  - step: 4
+    name:
+      en-US: Register Tile
+      zh-CN: 寄存器分块
+    tflops: 6.0
+    color: medium
+    planned: false
+  - step: 5
+    name:
+      en-US: Tensor Core
+      zh-CN: Tensor Core
+    tflops: 50.0
+    color: high
+    planned: false
+  - step: 6
+    name:
+      en-US: MMA PTX
+      zh-CN: MMA PTX
+    tflops: 60.0
+    color: high
+    planned: true
+  - step: 7
+    name:
+      en-US: Pipelining
+      zh-CN: 软件流水线
+    tflops: 70.0
+    color: high
+    planned: true
+
+labels:
+  en-US:
+    title: GEMM Optimization Journey
+    subtitle: FP32 Matrix Multiplication (4096×4096) on NVIDIA A100
+    planned: Planned
+    keyInsight: "Step 5 (Tensor Core) achieves 100× speedup over naive implementation, demonstrating the power of modern GPU specialized compute units."
+    legend:
+      low: Baseline (<10 TFLOPS)
+      medium: Optimized (10-50 TFLOPS)
+      high: Tensor Core (>50 TFLOPS)
+  zh-CN:
+    title: GEMM 优化之旅
+    subtitle: FP32 矩阵乘法 (4096×4096) 在 NVIDIA A100 上
+    planned: 计划中
+    keyInsight: "第 5 步 (Tensor Core) 实现了 100 倍加速，展示了现代 GPU 专用计算单元的强大能力。"
+    legend:
+      low: 基线 (<10 TFLOPS)
+      medium: 优化 (10-50 TFLOPS)
+      high: Tensor Core (>50 TFLOPS)

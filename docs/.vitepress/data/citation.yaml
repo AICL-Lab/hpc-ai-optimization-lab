@@ -1,0 +1,28 @@
+# Citation Block Data
+# Multi-language support for CitationBlock.vue
+
+labels:
+  en-US:
+    title: Citation
+    subtitle: If you use this project in your research, please cite
+    copyCitation: Copy Citation
+    copied: Copied!
+    formatTabs:
+      - BibTeX
+      - APA
+    links:
+      repo: GitHub Repository
+      issue: Report Issue
+      docs: Documentation
+  zh-CN:
+    title: 引用
+    subtitle: 如果你在研究中使用了本项目，请引用
+    copyCitation: 复制引用
+    copied: 已复制!
+    formatTabs:
+      - BibTeX
+      - APA
+    links:
+      repo: GitHub 仓库
+      issue: 报告问题
+      docs: 文档
