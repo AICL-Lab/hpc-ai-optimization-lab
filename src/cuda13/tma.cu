@@ -10,6 +10,64 @@ namespace hpc::cuda13 {
 
 namespace cg = cooperative_groups;
 
+namespace {
+
+template <typename T, int NUM_CHANNELS>
+__global__ void tma_copy_kernel(const T* __restrict__ src, T* __restrict__ dst, int rows, int cols);
+
+template <typename T>
+__global__ void async_copy_kernel(const T* __restrict__ src, T* __restrict__ dst, int rows,
+                                  int cols);
+
+struct TMACopyPlan {
+    bool use_native_path;
+    dim3 block;
+    dim3 grid;
+    size_t shared_memory_bytes;
+};
+
+void validate_tma_copy_args(const float* src, const float* dst, int rows, int cols,
+                            const TMAConfig& config) {
+    if (src == nullptr || dst == nullptr) {
+        throw std::invalid_argument("tma_copy_2d expects non-null src and dst pointers");
+    }
+    if (rows <= 0 || cols <= 0) {
+        throw std::invalid_argument("tma_copy_2d expects positive rows and cols");
+    }
+    if (config.cluster_width <= 0 || config.cluster_height <= 0 || config.pipeline_depth <= 0) {
+        throw std::invalid_argument(
+            "tma_copy_2d expects positive cluster_width, cluster_height, and pipeline_depth");
+    }
+}
+
+TMACopyPlan build_tma_copy_plan(int rows, int cols, const TMAConfig& config) {
+    constexpr int kNumChannels = 8;
+    const bool use_native_path =
+        config.use_tma && is_hopper_architecture() && config.cluster_width == 1 &&
+        config.cluster_height == 1 && config.pipeline_depth == 2;
+    return {
+        use_native_path,
+        dim3(128),
+        dim3((cols + kNumChannels - 1) / kNumChannels, rows),
+        sizeof(float) * kNumChannels * 2,
+    };
+}
+
+void launch_tma_copy(const float* src, float* dst, int rows, int cols, const TMACopyPlan& plan,
+                     cudaStream_t stream) {
+    tma_copy_kernel<float, 8>
+        <<<plan.grid, plan.block, plan.shared_memory_bytes, stream>>>(src, dst, rows, cols);
+}
+
+void launch_tma_copy_fallback(const float* src, float* dst, int rows, int cols,
+                              cudaStream_t stream) {
+    dim3 block(256);
+    dim3 grid((cols + block.x - 1) / block.x, rows);
+    async_copy_kernel<float><<<grid, block, 0, stream>>>(src, dst, rows, cols);
+}
+
+}  // namespace
+
 // Simplified async copy kernel using cuda::memcpy_async (available in CUDA 11+)
 template <typename T, int NUM_CHANNELS>
 __global__ void tma_copy_kernel(const T* __restrict__ src, T* __restrict__ dst, int rows,
@@ -50,23 +108,13 @@ __global__ void async_copy_kernel(const T* __restrict__ src, T* __restrict__ dst
 template <>
 void tma_copy_2d<float, 8>(const float* src, float* dst, int rows, int cols,
                            const TMAConfig& config, cudaStream_t stream) {
-    if (src == nullptr || dst == nullptr) {
-        throw std::invalid_argument("tma_copy_2d expects non-null src and dst pointers");
-    }
-    if (rows <= 0 || cols <= 0) {
-        throw std::invalid_argument("tma_copy_2d expects positive rows and cols");
-    }
+    validate_tma_copy_args(src, dst, rows, cols, config);
+    const auto plan = build_tma_copy_plan(rows, cols, config);
 
-    if (config.use_tma && is_hopper_architecture()) {
-        constexpr int NUM_CHANNELS = 8;
-        dim3 block(128);
-        dim3 grid((cols + NUM_CHANNELS - 1) / NUM_CHANNELS, rows);
-        size_t smem_size = sizeof(float) * NUM_CHANNELS * 2;
-
-        tma_copy_kernel<float, NUM_CHANNELS>
-            <<<grid, block, smem_size, stream>>>(src, dst, rows, cols);
+    if (plan.use_native_path) {
+        launch_tma_copy(src, dst, rows, cols, plan, stream);
     } else {
-        tma_copy_2d_fallback(src, dst, rows, cols, stream);
+        launch_tma_copy_fallback(src, dst, rows, cols, stream);
     }
     CUDA_CHECK_LAST();
 }
@@ -80,9 +128,8 @@ void tma_copy_2d<float>(const float* src, float* dst, int rows, int cols, const 
 template <>
 void tma_copy_2d_fallback<float>(const float* src, float* dst, int rows, int cols,
                                  cudaStream_t stream) {
-    dim3 block(256);
-    dim3 grid((cols + block.x - 1) / block.x, rows);
-    async_copy_kernel<float><<<grid, block, 0, stream>>>(src, dst, rows, cols);
+    validate_tma_copy_args(src, dst, rows, cols, TMAConfig{});
+    launch_tma_copy_fallback(src, dst, rows, cols, stream);
     CUDA_CHECK_LAST();
 }
 

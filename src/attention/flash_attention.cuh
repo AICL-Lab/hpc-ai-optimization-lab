@@ -17,7 +17,7 @@ struct FlashAttnConfig {
 };
 
 template <typename T>
-    requires std::is_same_v<T, float> || std::is_same_v<T, __half>
+    requires std::is_same_v<T, float>
 void flash_attention_forward(const T* Q, const T* K, const T* V, T* O,
                              const FlashAttnConfig& config, cudaStream_t stream = nullptr);
 

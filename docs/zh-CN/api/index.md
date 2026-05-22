@@ -542,6 +542,8 @@ void flash_attention_forward(const T* Q, const T* K, const T* V,
 } // namespace hpc::attention
 ```
 
+当前已交付实现仅特化 `float`，并要求 `head_dim == 64`。
+
 **示例**:
 
 ```cpp
@@ -702,9 +704,9 @@ namespace hpc::cuda13 {
 enum class FP8Format { e4m3, e5m2 };
 
 struct FP8GEMMConfig {
-    int tile_m = 16;
-    int tile_n = 16;
-    int tile_k = 16;
+    int tile_m = 128;
+    int tile_n = 128;
+    int tile_k = 64;
     FP8Format format_a = FP8Format::e4m3;
     FP8Format format_b = FP8Format::e4m3;
     float scale_a = 1.0f;

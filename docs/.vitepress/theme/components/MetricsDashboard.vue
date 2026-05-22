@@ -18,31 +18,28 @@ const lang = computed(() => props.lang || 'en')
 
 const metrics: Metric[] = [
   {
-    value: 140,
-    suffix: '×',
-    label: 'Speedup',
-    labelZh: '加速比',
+    value: 5,
+    suffix: '/7',
+    label: 'GEMM steps shipped',
+    labelZh: 'GEMM 已交付步骤',
     color: '#2f855a'
   },
   {
-    value: 70,
-    suffix: '+',
-    label: 'TFLOPS',
-    labelZh: 'TFLOPS',
+    value: 3,
+    label: 'Python modules',
+    labelZh: 'Python 模块',
     color: '#38b2ac'
   },
   {
-    value: 8,
-    suffix: '-bit',
-    label: 'FP8 Support',
-    labelZh: 'FP8 支持',
+    value: 2,
+    label: 'Docs languages',
+    labelZh: '文档语言',
     color: '#3b82f6'
   },
   {
-    value: 100,
-    suffix: '%',
-    label: 'A100 Verified',
-    labelZh: 'A100 验证',
+    value: 1,
+    label: 'Benchmark suite',
+    labelZh: '基准套件',
     color: '#8b5cf6'
   }
 ]
@@ -128,10 +125,10 @@ const formatValue = (value: number, metric: Metric) => {
 
     <div class="metrics-note">
       <span v-if="lang === 'zh-CN'">
-        基于 FP32 GEMM 优化旅程，在 NVIDIA A100 上实测
+        指标描述当前已交付仓库表面；未来步骤与实验分支不计入这里
       </span>
       <span v-else>
-        Based on FP32 GEMM optimization journey, measured on NVIDIA A100
+        Counters describe the current shipped repository surface; planned future steps stay out of these totals
       </span>
     </div>
   </div>
