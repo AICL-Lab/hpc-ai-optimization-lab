@@ -47,3 +47,20 @@ TEST(ClusterTest, FallbackReduceMatchesReference) {
     auto result = d_output.to_host();
     EXPECT_NEAR(result[0], static_cast<float>(n), 1e-3f);
 }
+
+TEST(ClusterTest, DirectFallbackZeroesOutputBeforeAccumulation) {
+    size_t n = 256;
+    std::vector<float> input(n, 1.0f);
+
+    hpc::Tensor<float> d_input(n);
+    hpc::Tensor<float> d_output(1);
+    d_input.copy_from_host(input);
+    d_output.copy_from_host(std::vector<float>{5.0f});
+
+    hpc::cuda13::ClusterConfig config{{1, 1, 1}, {1, 1, 1}, {256, 1, 1}};
+    hpc::cuda13::cluster_reduce_fallback<float>(d_input.data(), d_output.data(), n, config);
+    cudaDeviceSynchronize();
+
+    auto result = d_output.to_host();
+    EXPECT_NEAR(result[0], static_cast<float>(n), 1e-3f);
+}

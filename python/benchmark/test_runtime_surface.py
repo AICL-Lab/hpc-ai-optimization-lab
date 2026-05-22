@@ -13,8 +13,10 @@ BENCHMARK_PATH = REPO_ROOT / "python" / "benchmark" / "benchmark.py"
 README_PATH = REPO_ROOT / "README.md"
 README_ZH_PATH = REPO_ROOT / "README.zh-CN.md"
 PYTHON_EXAMPLE_PATH = REPO_ROOT / "examples" / "python" / "basic_usage.py"
+ADVANCED_PYTHON_EXAMPLE_PATH = REPO_ROOT / "examples" / "python" / "advanced_usage.py"
 GEMM_HEADER_PATH = REPO_ROOT / "src" / "gemm" / "gemm.cuh"
 BINDINGS_PATH = REPO_ROOT / "python" / "bindings" / "bindings.cpp"
+VALIDATION_HEADER_PATH = REPO_ROOT / "python" / "bindings" / "validation.hpp"
 
 
 def load_benchmark_module():
@@ -146,18 +148,20 @@ class RuntimeSurfaceContractTest(unittest.TestCase):
 
     def test_bindings_require_contiguous_cuda_ndarrays(self) -> None:
         bindings = BINDINGS_PATH.read_text(encoding="utf-8")
+        validation = VALIDATION_HEADER_PATH.read_text(encoding="utf-8")
 
-        self.assertIn("must be contiguous in memory", bindings)
-        self.assertIn('std::to_string(expected_ndim) + "D CUDA ndarray"', bindings)
-        self.assertIn("require_ndim(tensor, 2, name);", bindings)
-        self.assertIn("require_ndim(tensor, 1, name);", bindings)
-        self.assertIn('require_positive_product(batch, seq_len, "batch", "seq_len");', bindings)
+        self.assertIn('#include "validation.hpp"', bindings)
+        self.assertIn("must be contiguous in memory", validation)
+        self.assertIn('std::to_string(expected_ndim) + "D CUDA ndarray"', validation)
+        self.assertIn("validate_ndim(tensor, 2, name);", validation)
+        self.assertIn("validate_ndim(tensor, 1, name);", validation)
+        self.assertIn('validate_positive_product(batch, seq_len, "batch", "seq_len");', validation)
         self.assertIn(
-            'require_positive_product(batch, hidden_size, "batch", "hidden_size");',
-            bindings,
+            'validate_positive_product(batch, hidden_size, "batch", "hidden_size");',
+            validation,
         )
-        self.assertIn(".stride(", bindings)
-        self.assertIn(".ndim()", bindings)
+        self.assertIn(".stride(", validation)
+        self.assertIn(".ndim()", validation)
 
     def test_benchmark_kernel_docstring_scopes_to_overwrite_only_kernels(self) -> None:
         benchmark = load_benchmark_module()
@@ -280,6 +284,12 @@ class RuntimeSurfaceContractTest(unittest.TestCase):
             'c = torch.empty(m, n, device=device, dtype=torch.float32)',
             example,
         )
+
+    def test_advanced_python_example_stays_within_shipped_float32_surface(self) -> None:
+        example = ADVANCED_PYTHON_EXAMPLE_PATH.read_text(encoding="utf-8")
+
+        self.assertNotIn("dtype=torch.float16", example)
+        self.assertIn("Current shipped Python bindings accept float32 CUDA tensors only.", example)
 
     def test_supported_benchmark_suite_runs_injected_runner(self) -> None:
         benchmark = load_benchmark_module()

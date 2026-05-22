@@ -34,3 +34,19 @@ TEST(FP8GemmTest, BasicTest) {
     auto C = d_C.to_host();
     EXPECT_EQ(C.size(), M * N);
 }
+
+TEST(FP8GemmTest, RejectsUnsupportedNativeTileShape) {
+    int M = 32, N = 32, K = 32;
+    hpc::Tensor<__half> d_A(M * K);
+    hpc::Tensor<__half> d_B(K * N);
+    hpc::Tensor<__half> d_C(M * N);
+    d_A.zero();
+    d_B.zero();
+    d_C.zero();
+
+    hpc::cuda13::FP8GEMMConfig config{};
+    config.tile_m = 64;
+
+    EXPECT_THROW(hpc::cuda13::fp8_gemm(d_A.data(), d_B.data(), d_C.data(), M, N, K, config),
+                 std::invalid_argument);
+}

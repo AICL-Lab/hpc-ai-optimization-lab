@@ -3,18 +3,21 @@ layout: home
 
 hero:
   name: HPC-AI-Optimization-Lab
-  text: From Principles to Peak Optimization
-  tagline: Master CUDA kernel optimization through progressive GEMM, FlashAttention, and quantization implementations — from 0.5 TFLOPS to 70+ TFLOPS
+  text: Progressive CUDA kernel lab
+  tagline: Learn GEMM, FlashAttention, quantization, and CUDA optimization from shipped implementations and measured documentation.
   image:
     src: /logo-large.svg
     alt: HPC-AI-Optimization-Lab
   actions:
     - theme: brand
-      text: Start Learning
-      link: /en/guide/quick-start
+      text: Guide Index
+      link: /en/guide/
     - theme: alt
-      text: GEMM Journey
-      link: /en/guide/gemm
+      text: API Reference
+      link: /en/api/index
+    - theme: alt
+      text: Examples
+      link: /en/examples/index
 ---
 
 <script setup>
@@ -33,15 +36,58 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
   --vp-home-hero-image-background-image: linear-gradient(-45deg, #1a365d50 50%, #38b2ac50 50%);
   --vp-home-hero-image-filter: blur(44px);
 }
+
+.home-content {
+  display: grid;
+  gap: 24px;
+}
+
+.route-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.route-card {
+  display: block;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-soft);
+}
+
+.route-card:hover {
+  border-color: var(--vp-c-brand-1);
+  text-decoration: none;
+}
+
+.route-card strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.status-note {
+  padding: 16px 18px;
+  border-left: 4px solid var(--vp-c-brand-1);
+  border-radius: 12px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-2);
+}
+
+@media (max-width: 768px) {
+  .route-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>
 
 <div class="home-content">
 
-<!-- Performance Banner -->
+<!-- Status Banner -->
 <div class="performance-banner">
-  <span class="metric">🚀 <strong>140×</strong> Speedup</span>
-  <span class="metric">⚡ <strong>70+</strong> TFLOPS</span>
-  <span class="metric">🎯 <strong>A100</strong> Verified</span>
+  <span class="metric">✅ <strong>Steps 1-5</strong> shipped</span>
+  <span class="metric">🐍 <strong>3</strong> Python modules shipped</span>
+  <span class="metric">🧪 <strong>1</strong> benchmark suite wired</span>
 </div>
 
 <!-- Metrics Dashboard -->
@@ -59,28 +105,51 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
 <!-- Feature Grid -->
 <FeatureGrid />
 
-<!-- Who is this for -->
+## 🧭 Where to go next
+
+<div class="route-grid">
+  <a class="route-card" href="/en/guide/quick-start">
+    <strong>Run something first</strong>
+    Start with installation and quick start before deeper optimization topics.
+  </a>
+  <a class="route-card" href="/en/guide/gemm">
+    <strong>Trace the GEMM journey</strong>
+    Follow the measured path from naive kernels through Tensor Core WMMA.
+  </a>
+  <a class="route-card" href="/en/api/architecture">
+    <strong>Read architecture context</strong>
+    See how examples, Python bindings, kernels, and common infrastructure connect.
+  </a>
+  <a class="route-card" href="/en/examples/index">
+    <strong>Browse runnable examples</strong>
+    Jump to concrete API shapes before theory-heavy guides.
+  </a>
+</div>
+
+<div class="status-note">
+  Public docs track shipped behavior. Step 6 currently delegates to Step 5 for stability, Step 7 remains planned, and Python bindings cover <code>elementwise</code>, <code>reduction</code>, and <code>gemm</code> only.
+</div>
+
 ## 👥 Who is this for?
 
 <div class="audience-grid">
   <div class="audience-card">
     <span class="icon">🎓</span>
     <h3>Students</h3>
-    <p>Learn CUDA optimization from first principles, understand GPU architecture and performance bottlenecks.</p>
+    <p>Learn CUDA optimization from first principles and connect guide material to runnable kernels.</p>
   </div>
   <div class="audience-card">
     <span class="icon">🔬</span>
     <h3>Researchers</h3>
-    <p>Quickly prototype new kernel optimization ideas, use production-grade baselines for comparison experiments.</p>
+    <p>Prototype kernel ideas against a repository that exposes measured baselines and architecture notes.</p>
   </div>
   <div class="audience-card">
     <span class="icon">🏭</span>
     <h3>Engineers</h3>
-    <p>Get production-ready kernel implementations for AI inference acceleration.</p>
+    <p>Study concrete CUDA and Python integration seams before adapting kernels into production systems.</p>
   </div>
 </div>
 
-<!-- Learning Path -->
 ## 📚 Learning Path
 
 <div class="learning-path">
@@ -97,7 +166,7 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
   <div class="path-level intermediate">
     <h4>🚀 Intermediate (2-4 weeks)</h4>
     <ul>
-      <li>GEMM Steps 5-7 (Tensor Cores)</li>
+      <li>GEMM Step 5 (Tensor Core WMMA)</li>
       <li><a href="/en/guide/flash-attention">FlashAttention Implementation</a></li>
       <li><a href="/en/guide/profiling">Profiling & Tuning</a></li>
     </ul>
@@ -106,13 +175,12 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
     <h4>🏆 Advanced (ongoing)</h4>
     <ul>
       <li><a href="/en/guide/cuda13">CUDA 13 Hopper Features</a></li>
-      <li>CUTLASS Deep Dive</li>
-      <li>Research Implementations</li>
+      <li>Review Step 6/7 plans with the implementation status notes in guides</li>
+      <li>Use architecture + API reference when preparing local GPU experiments</li>
     </ul>
   </div>
 </div>
 
-<!-- Citation -->
 <CitationBlock />
 
 </div>

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include <mma.h>
 
@@ -8,6 +9,74 @@
 namespace hpc::cuda13 {
 
 using namespace nvcuda;
+
+namespace {
+
+__global__ void fp8_gemm_naive_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                      __half* __restrict__ C, int M, int N, int K, float scale_a,
+                                      float scale_b);
+
+__global__ void fp8_gemm_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
+                                __half* __restrict__ C, int M, int N, int K, float scale_a,
+                                float scale_b);
+
+constexpr int kSupportedTileM = 128;
+constexpr int kSupportedTileN = 128;
+constexpr int kSupportedTileK = 64;
+
+struct FP8GemmPlan {
+    bool use_native_path;
+    dim3 block;
+    dim3 grid;
+};
+
+void validate_fp8_gemm_args(const __half* A, const __half* B, __half* C, int M, int N, int K,
+                            const FP8GEMMConfig& config) {
+    if (A == nullptr || B == nullptr || C == nullptr) {
+        throw std::invalid_argument("fp8_gemm expects non-null A, B, C pointers");
+    }
+    if (M <= 0 || N <= 0 || K <= 0) {
+        throw std::invalid_argument("fp8_gemm expects positive M, N, K");
+    }
+    if (!std::isfinite(config.scale_a) || !std::isfinite(config.scale_b) || config.scale_a <= 0.0f ||
+        config.scale_b <= 0.0f) {
+        throw std::invalid_argument("fp8_gemm expects finite positive scale_a and scale_b");
+    }
+    if (config.tile_m <= 0 || config.tile_n <= 0 || config.tile_k <= 0) {
+        throw std::invalid_argument("fp8_gemm expects positive tile_m, tile_n, and tile_k");
+    }
+    if (config.use_fp8 && (config.tile_m != kSupportedTileM || config.tile_n != kSupportedTileN ||
+                           config.tile_k != kSupportedTileK)) {
+        throw std::invalid_argument(
+            "fp8_gemm expects tile_m/tile_n/tile_k == 128/128/64 when use_fp8 is enabled");
+    }
+}
+
+FP8GemmPlan build_fp8_gemm_plan(int M, int N, const FP8GEMMConfig& config) {
+    return {
+        config.use_fp8 && is_hopper_architecture(),
+        dim3(256, 1, 1),
+        dim3((M + kSupportedTileM - 1) / kSupportedTileM,
+             (N + kSupportedTileN - 1) / kSupportedTileN, 1),
+    };
+}
+
+void launch_fp8_gemm(const __half* A, const __half* B, __half* C, int M, int N, int K,
+                     const FP8GemmPlan& plan, const FP8GEMMConfig& config, cudaStream_t stream) {
+    fp8_gemm_kernel<<<plan.grid, plan.block, 0, stream>>>(A, B, C, M, N, K, config.scale_a,
+                                                           config.scale_b);
+}
+
+void launch_fp8_gemm_fallback(const __half* A, const __half* B, __half* C, int M, int N, int K,
+                              const FP8GEMMConfig& config, cudaStream_t stream) {
+    dim3 block(16, 16);
+    dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
+
+    fp8_gemm_naive_kernel<<<grid, block, 0, stream>>>(A, B, C, M, N, K, config.scale_a,
+                                                       config.scale_b);
+}
+
+}  // namespace
 
 // Naive GEMM kernel for half precision (fallback)
 __global__ void fp8_gemm_naive_kernel(const __half* __restrict__ A, const __half* __restrict__ B,
@@ -107,35 +176,21 @@ __global__ void fp8_gemm_kernel(const __half* __restrict__ A, const __half* __re
 
 void fp8_gemm(const __half* A, const __half* B, __half* C, int M, int N, int K,
               const FP8GEMMConfig& config, cudaStream_t stream) {
-    if (A == nullptr || B == nullptr || C == nullptr) {
-        throw std::invalid_argument("fp8_gemm expects non-null A, B, C pointers");
-    }
-    if (M <= 0 || N <= 0 || K <= 0) {
-        throw std::invalid_argument("fp8_gemm expects positive M, N, K");
-    }
+    validate_fp8_gemm_args(A, B, C, M, N, K, config);
+    const auto plan = build_fp8_gemm_plan(M, N, config);
 
-    if (config.use_fp8 && is_hopper_architecture()) {
-        constexpr int BM = 128;
-        constexpr int BN = 128;
-
-        dim3 block(256, 1, 1);
-        dim3 grid((M + BM - 1) / BM, (N + BN - 1) / BN, 1);
-
-        fp8_gemm_kernel<<<grid, block, 0, stream>>>(A, B, C, M, N, K, config.scale_a,
-                                                    config.scale_b);
+    if (plan.use_native_path) {
+        launch_fp8_gemm(A, B, C, M, N, K, plan, config, stream);
     } else {
-        fp8_gemm_fallback(A, B, C, M, N, K, config, stream);
+        launch_fp8_gemm_fallback(A, B, C, M, N, K, config, stream);
     }
     CUDA_CHECK_LAST();
 }
 
 void fp8_gemm_fallback(const __half* A, const __half* B, __half* C, int M, int N, int K,
                        const FP8GEMMConfig& config, cudaStream_t stream) {
-    dim3 block(16, 16);
-    dim3 grid((N + block.x - 1) / block.x, (M + block.y - 1) / block.y);
-
-    fp8_gemm_naive_kernel<<<grid, block, 0, stream>>>(A, B, C, M, N, K, config.scale_a,
-                                                      config.scale_b);
+    validate_fp8_gemm_args(A, B, C, M, N, K, config);
+    launch_fp8_gemm_fallback(A, B, C, M, N, K, config, stream);
     CUDA_CHECK_LAST();
 }
 

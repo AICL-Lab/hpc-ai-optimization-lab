@@ -2,7 +2,7 @@
 Advanced Python Usage Examples for HPC-AI-Optimization-Lab
 
 This script demonstrates advanced usage patterns including:
-- Mixed precision operations
+- Current shipped Python bindings accept float32 CUDA tensors only.
 - Batch processing
 - Performance profiling
 - Integration with PyTorch workflows
@@ -35,7 +35,7 @@ def profile_operation(func, args, name: str, warmup: int = 10, iterations: int =
 
 
 def example_elementwise_operations():
-    """Demonstrate elementwise operations with different data types."""
+    """Demonstrate elementwise operations on the shipped float32 surface."""
     print("\n" + "="*70)
     print("Example 1: Elementwise Operations")
     print("="*70)
@@ -47,12 +47,6 @@ def example_elementwise_operations():
     y_f32 = torch.empty_like(x_f32)
     hpc_ai_opt.elementwise.relu(x_f32, y_f32)
     print(f"✓ ReLU (float32): output range [{y_f32.min():.3f}, {y_f32.max():.3f}]")
-    
-    # Float16
-    x_f16 = torch.randn(size, device='cuda', dtype=torch.float16)
-    y_f16 = torch.empty_like(x_f16)
-    hpc_ai_opt.elementwise.relu(x_f16, y_f16)
-    print(f"✓ ReLU (float16): output range [{y_f16.min():.3f}, {y_f16.max():.3f}]")
     
     # Sigmoid
     hpc_ai_opt.elementwise.sigmoid(x_f32, y_f32)
