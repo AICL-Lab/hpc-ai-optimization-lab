@@ -1,6 +1,4 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from 'vitepress-plugin-mermaid'
-import llmstxt from 'vitepress-plugin-llms'
 import { head, search } from './configs/index.mts'
 import enConfig from './configs/en.mts'
 import zhCNConfig from './configs/zh-CN.mts'
@@ -9,7 +7,7 @@ import { SITE_CONFIG, BASE_URL, PAGES_URL } from './configs/site-config'
 const SITE_URL = PAGES_URL
 
 // https://vitepress.dev/reference/site-config
-export default withMermaid(defineConfig({
+export default defineConfig({
   // Site Metadata
   lang: 'en-US',
   title: SITE_CONFIG.title,
@@ -144,13 +142,6 @@ export default withMermaid(defineConfig({
   
   // Vite Configuration
   vite: {
-    plugins: [
-      llmstxt({
-        domain: SITE_URL + BASE_URL,
-        title: SITE_CONFIG.title,
-        description: SITE_CONFIG.description,
-      })
-    ],
     server: {
       port: 5173,
       host: true
@@ -178,4 +169,4 @@ export default withMermaid(defineConfig({
       ])
     }
   }
-}))
+})

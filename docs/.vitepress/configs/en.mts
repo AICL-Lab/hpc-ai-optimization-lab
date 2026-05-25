@@ -11,8 +11,7 @@ const enConfig: DefaultTheme.Config = {
         { text: 'Memory Optimization', link: '/en/guide/memory' },
         { text: 'Reduction', link: '/en/guide/reduction' },
         { text: 'GEMM', link: '/en/guide/gemm' },
-        { text: 'FlashAttention', link: '/en/guide/flash-attention' },
-        { text: 'CUDA 13', link: '/en/guide/cuda13' }
+        { text: 'FlashAttention', link: '/en/guide/flash-attention' }
       ]
     },
     {
@@ -50,8 +49,7 @@ const enConfig: DefaultTheme.Config = {
           { text: 'Memory Optimization', link: '/en/guide/memory' },
           { text: 'Reduction', link: '/en/guide/reduction' },
           { text: 'GEMM', link: '/en/guide/gemm' },
-          { text: 'FlashAttention', link: '/en/guide/flash-attention' },
-          { text: 'CUDA 13', link: '/en/guide/cuda13' }
+          { text: 'FlashAttention', link: '/en/guide/flash-attention' }
         ]
       },
       {

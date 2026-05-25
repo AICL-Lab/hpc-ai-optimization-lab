@@ -10,7 +10,6 @@ This documentation covers the full spectrum of CUDA kernel optimization, from fu
 - **Reduction Operations** - Warp shuffle, block reduction, online algorithms
 - **GEMM Optimization** - 7-step journey from naive kernels to Tensor Core-oriented implementations
 - **FlashAttention** - IO-aware attention mechanism
-- **CUDA 13 Features** - Experimental Hopper architecture features
 
 ## Prerequisites
 
@@ -62,7 +61,6 @@ python examples/python/basic_usage.py
 | [Reduction Optimization](reduction) | Warp shuffle, online softmax, LayerNorm | ⭐⭐⭐ |
 | [GEMM Optimization](gemm) | 7-step matrix multiplication journey | ⭐⭐⭐⭐ |
 | [FlashAttention](flash-attention) | IO-aware attention mechanism | ⭐⭐⭐⭐ |
-| [CUDA 13 Features](cuda13) | Hopper architecture: TMA, Clusters, FP8 | ⭐⭐⭐⭐⭐ |
 
 ## API References
 
@@ -75,4 +73,4 @@ Choose your learning path:
 
 - **Beginner** → Start with [Memory Optimization](memory)
 - **Intermediate** → Jump to [GEMM Optimization](gemm)
-- **Advanced** → Explore [FlashAttention](flash-attention) or [CUDA 13 Features](cuda13)
+- **Advanced** → Explore [FlashAttention](flash-attention) and the architecture/API reference

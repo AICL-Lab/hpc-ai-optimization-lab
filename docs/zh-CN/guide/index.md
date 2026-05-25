@@ -10,7 +10,6 @@
 - **归约操作** - 线程束洗牌、块级归约、在线算法
 - **GEMM 优化** - 从朴素实现到面向 Tensor Core 的 7 步演进
 - **FlashAttention** - 基于 IO 感知的注意力机制
-- **CUDA 13 特性** - 实验性 Hopper 架构特性
 
 ## 前置要求
 
@@ -62,7 +61,6 @@ python examples/python/basic_usage.py
 | [归约优化](reduction) | 线程束洗牌、在线 Softmax、LayerNorm | ⭐⭐⭐ |
 | [GEMM 优化](gemm) | 7 步矩阵乘法之旅 | ⭐⭐⭐⭐ |
 | [FlashAttention](flash-attention) | 基于 IO 感知的注意力机制 | ⭐⭐⭐⭐ |
-| [CUDA 13 特性](cuda13) | Hopper 架构：TMA、集群、FP8 | ⭐⭐⭐⭐⭐ |
 
 ## API 参考
 
@@ -75,4 +73,4 @@ python examples/python/basic_usage.py
 
 - **初学者** → 从 [访存优化](memory) 开始
 - **进阶** → 跳转到 [GEMM 优化](gemm)
-- **专家** → 探索 [FlashAttention](flash-attention) 或 [CUDA 13 特性](cuda13)
+- **专家** → 深入 [FlashAttention](flash-attention) 与架构 / API 参考

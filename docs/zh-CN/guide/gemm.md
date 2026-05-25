@@ -285,9 +285,9 @@ Tensor Core (每个 SM 有多个):
 
 ## Step 6: Tensor Core (MMA PTX) 🚧
 
-> **状态**: 开发中
+> **状态**: 以 Step 5 为回退包装
 > 
-> Step 6 当前为稳定性考虑委托给 Step 5 (WMMA)。完整的 MMA PTX 实现需要大量的寄存器管理和 warp 级协调，计划在未来开发中完成。
+> Step 6 当前为稳定性考虑委托给 Step 5 (WMMA)。保留这个枚举项是为了让优化阶梯保持完整，但当前交付行为就是 WMMA fallback。
 
 ### 优化思路
 
@@ -317,11 +317,11 @@ __device__ __forceinline__ void mma_m16n8k16_fp16(
 
 ---
 
-## Step 7: Software Pipelining 🚧
+## Step 7: Software Pipelining ✅
 
-> **状态**: 计划未来实现
+> **状态**: 已实现
 > 
-> Step 7 计划在未来开发中实现，当前版本尚未完成。
+> Step 7 已在当前版本中作为 `float` 与 `__half` 的维护中软件流水线路径交付。
 
 ### 优化思路
 
@@ -379,12 +379,12 @@ Stage 2:                   |--Load--|--Compute--|--Load--|--Compute--|
 | 3 | Double Buffer | 3.5 | 7.0× | ✅ 已实现 |
 | 4 | Register Tiling | 6.0 | 12.0× | ✅ 已实现 |
 | 5 | WMMA | 50+ | 100× | ✅ 已实现 |
-| 6 | MMA PTX | ~60† | ~120× | 🚧 开发中 |
-| 7 | Pipeline | ~70† | ~140× | 🚧 计划中 |
+| 6 | MMA PTX | ~60† | ~120× | 🚧 WMMA fallback |
+| 7 | Pipeline | ~70† | ~140× | ✅ 已实现 |
 
 † 预估数值
 
-> **注意**: Step 1-5 已完整实现并测试。Step 6 当前为稳定性考虑委托给 Step 5。Step 7 计划在未来开发中实现。
+> **注意**: Step 1-5 已完整实现并测试。Step 6 当前为稳定性考虑委托给 Step 5。Step 7 已作为当前交付的软件流水线路径实现。
 
 ## 参考资料
 

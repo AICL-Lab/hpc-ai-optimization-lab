@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Removed the repository's OpenSpec and tool-specific AI workflow scaffolding to return the project to a simpler contributor model.
 - Consolidated changelog history back to this root file and removed duplicated changelog pages, sync scripts, and side directories.
 - Refocused GitHub Pages on guides, examples, and architecture instead of mirroring repository change history.
+- Removed the experimental `src/cuda13` module, its examples, and its tests so the shipped CUDA surface matches the maintained modules only.
+- Removed the experimental Winograd convolution branch and kept convolution centered on the validated implicit GEMM implementation.
+- Dropped the VitePress LLM/Mermaid plugin bundle and tightened Pages navigation and reference docs around the retained core surface.
 
 ## [0.3.0] - 2026-04-16
 

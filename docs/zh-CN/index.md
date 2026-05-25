@@ -127,7 +127,7 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
 </div>
 
 <div class="status-note">
-  公共文档只描述当前已交付行为。Step 6 目前为稳定性委托到 Step 5，Step 7 仍属计划项；Python 绑定当前仅覆盖 <code>elementwise</code>、<code>reduction</code> 与 <code>gemm</code>。
+  公共文档只描述当前已交付行为。Step 6 目前为稳定性委托到 Step 5，Step 7 已作为当前维护的软件流水线路径交付；Python 绑定当前仅覆盖 <code>elementwise</code>、<code>reduction</code> 与 <code>gemm</code>。
 </div>
 
 ## 👥 适合谁？
@@ -174,8 +174,8 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
   <div class="path-level advanced">
     <h4>🏆 高级（持续）</h4>
     <ul>
-      <li><a href="/zh-CN/guide/cuda13">CUDA 13 Hopper 特性</a></li>
-      <li>结合实现状态说明阅读 Step 6 / Step 7 规划</li>
+      <li>结合 CUTLASS 基线与公开 benchmark 对比已交付内核</li>
+      <li>对照 Step 6 fallback 说明理解当前已交付的 Step 7 路径</li>
       <li>准备本地 GPU 实验时同步参考架构页与 API 参考</li>
     </ul>
   </div>

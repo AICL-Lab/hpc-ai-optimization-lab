@@ -197,6 +197,8 @@ FP32 矩阵乘法（4096×4096）在 NVIDIA A100 上的表现：
 | 7 | 软件流水线 | 70+ TFLOPS | 140× |
 
 > 💡 从步骤 1 到步骤 5 的飞跃展示了现代 AI 硬件如何通过专用计算单元实现惊人的加速。
+>
+> 说明：Step 6 当前仍为稳定性考虑委托到 Step 5；Step 7 已作为当前维护的软件流水线路径交付。性能数值仍以实验参考值为主。
 
 ### 模块状态
 
@@ -241,8 +243,8 @@ FP32 矩阵乘法（4096×4096）在 NVIDIA A100 上的表现：
 └── 性能分析与调优
 
 🏆 高级（持续学习）
-├── CUDA 13 Hopper 特性
-├── CUTLASS 深入研究
+├── CUTLASS 基线对比
+├── 本地 GPU Profiling 与验证
 └── 论文复现
 ```
 
@@ -259,8 +261,7 @@ hpc-ai-optimization-lab/
 │   ├── gemm/               # 7步 GEMM 优化
 │   ├── attention/          # FlashAttention、RoPE
 │   ├── convolution/        # 隐式 GEMM
-│   ├── quantization/       # INT8/FP8
-│   └── cuda13/             # Hopper 专属特性
+│   └── quantization/       # INT8/FP8
 ├── tests/                  # 测试套件（GoogleTest + RapidCheck）
 ├── examples/               # 独立示例
 ├── python/                 # Python 绑定

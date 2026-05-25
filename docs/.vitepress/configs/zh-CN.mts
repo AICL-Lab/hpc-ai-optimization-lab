@@ -11,8 +11,7 @@ const zhCNConfig: DefaultTheme.Config = {
         { text: '访存优化', link: '/zh-CN/guide/memory' },
         { text: '归约', link: '/zh-CN/guide/reduction' },
         { text: 'GEMM', link: '/zh-CN/guide/gemm' },
-        { text: 'FlashAttention', link: '/zh-CN/guide/flash-attention' },
-        { text: 'CUDA 13', link: '/zh-CN/guide/cuda13' }
+        { text: 'FlashAttention', link: '/zh-CN/guide/flash-attention' }
       ]
     },
     {
@@ -50,8 +49,7 @@ const zhCNConfig: DefaultTheme.Config = {
           { text: '访存优化', link: '/zh-CN/guide/memory' },
           { text: '归约', link: '/zh-CN/guide/reduction' },
           { text: 'GEMM', link: '/zh-CN/guide/gemm' },
-          { text: 'FlashAttention', link: '/zh-CN/guide/flash-attention' },
-          { text: 'CUDA 13', link: '/zh-CN/guide/cuda13' }
+          { text: 'FlashAttention', link: '/zh-CN/guide/flash-attention' }
         ]
       },
       {

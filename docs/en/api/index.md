@@ -13,7 +13,6 @@ This document provides comprehensive API documentation for all public interfaces
 - [Module 04: Convolution](#module-04-convolution)
 - [Module 05: Attention](#module-05-attention)
 - [Module 06: Quantization](#module-06-quantization)
-- [Module 07: CUDA 13 Features](#module-07-cuda-13-features)
 - [Python API](#python-api)
 
 ---
@@ -382,7 +381,7 @@ enum class GemmOpt {
     RegisterTiling,   // Step 4: Register tiling
     TensorCoreWMMA,   // Step 5: WMMA API ✅
     TensorCoreMMA,    // Step 6: MMA PTX (delegates to Step 5) 🚧
-    SoftwarePipeline  // Step 7: Software pipelining (planned) 🚧
+    SoftwarePipeline  // Step 7: Software pipelining ✅
 };
 
 template <typename T, GemmOpt Opt = GemmOpt::SharedMemTiling>
@@ -408,9 +407,9 @@ void gemm_cutlass(const T* A, const T* B, T* C,
 
 | Type | Steps 1-4 | Step 5 (WMMA) | Step 6 (MMA) | Step 7 (Pipeline) | CUTLASS |
 |------|-----------|---------------|--------------|-------------------|---------|
-| `float` | ✅ | ✅ | ✅† | 🚧 | ✅ |
-| `__half` | ✅ | ✅ | ✅† | 🚧 | 🚧 |
-| `int8_t` | ✅‡ | ✅ | ✅† | 🚧 | 🚧 |
+| `float` | ✅ | ✅ | ✅† | ✅ | ✅ |
+| `__half` | ✅ | ✅ | ✅† | ✅ | 🚧 |
+| `int8_t` | ✅‡ | 🚧 | 🚧 | 🚧 | 🚧 |
 
 † Step 6 currently delegates to Step 5 for stability  
 ‡ INT8 GEMM currently only has SharedMemTiling optimization fully implemented; other optimization levels delegate to SharedMemTiling
@@ -481,34 +480,6 @@ void conv2d_implicit_gemm(const T* input, const T* weight, T* output,
 
 } // namespace hpc::convolution
 ```
-
----
-
-### Winograd Convolution
-
-Optimized 3×3 convolution (experimental).
-
-**Header**: `convolution/conv_winograd.cuh`
-
-```cpp
-#include "convolution/conv_winograd.cuh"
-
-namespace hpc::convolution {
-
-struct WinogradConfig {
-    int tile_size = 4;
-    bool use_winograd = true;
-};
-
-void conv2d_winograd(const float* input, const float* weight, float* output,
-                     const ConvParams& params,
-                     const WinogradConfig& config = {},
-                     cudaStream_t stream = nullptr);
-
-} // namespace hpc::convolution
-```
-
----
 
 ## Module 05: Attention
 
@@ -632,97 +603,6 @@ void dequantize_int8(const int8_t* input, const float* scale,
 
 } // namespace hpc::quantization
 ```
-
----
-
-## Module 07: CUDA 13 Features
-
-### TMA Copy
-
-Tensor Memory Accelerator utilities.
-
-**Header**: `cuda13/tma.cuh`
-
-```cpp
-#include "cuda13/tma.cuh"
-
-namespace hpc::cuda13 {
-
-struct TMAConfig {
-    int cluster_width = 1;
-    int cluster_height = 1;
-    int pipeline_depth = 2;
-    bool use_tma = true;
-};
-
-template <typename T, int NUM_CHANNELS = 8>
-void tma_copy_2d(const T* src, T* dst,
-                 int rows, int cols,
-                 const TMAConfig& config,
-                 cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
----
-
-### Thread Block Clusters
-
-**Header**: `cuda13/cluster.cuh`
-
-```cpp
-#include "cuda13/cluster.cuh"
-
-namespace hpc::cuda13 {
-
-struct ClusterConfig {
-    dim3 cluster_dims;
-    dim3 grid_dims;
-    dim3 block_dims;
-    bool use_cluster = true;
-};
-
-template <typename T>
-void cluster_reduce(const T* input, T* output, size_t n,
-                    const ClusterConfig& config,
-                    cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
----
-
-### FP8 GEMM
-
-**Header**: `cuda13/fp8_gemm.cuh`
-
-```cpp
-#include "cuda13/fp8_gemm.cuh"
-
-namespace hpc::cuda13 {
-
-enum class FP8Format { e4m3, e5m2 };
-
-struct FP8GEMMConfig {
-    int tile_m = 128;
-    int tile_n = 128;
-    int tile_k = 64;
-    FP8Format format_a = FP8Format::e4m3;
-    FP8Format format_b = FP8Format::e4m3;
-    float scale_a = 1.0f;
-    float scale_b = 1.0f;
-    bool use_fp8 = true;
-};
-
-void fp8_gemm(const __half* A, const __half* B, __half* C,
-              int M, int N, int K,
-              const FP8GEMMConfig& config,
-              cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
----
 
 ## Python API
 

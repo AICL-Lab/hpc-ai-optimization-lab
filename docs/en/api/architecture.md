@@ -31,8 +31,7 @@ hpc-ai-optimization-lab/
 │   ├── gemm/            # Module 3: Matrix multiplication
 │   ├── convolution/     # Module 4: Convolution operations
 │   ├── attention/       # Module 5: Attention mechanisms
-│   ├── quantization/    # Module 6: Quantization utilities
-│   └── cuda13/ # Module 7: Experimental features
+│   └── quantization/    # Module 6: Quantization utilities
 ├── tests/                  # Test suites
 ├── examples/               # Runnable examples
 ├── python/                 # Python bindings
@@ -234,7 +233,6 @@ void kernel_name<float, OptLevel::Advanced>(...) {
 | Operation | Description |
 |-----------|-------------|
 | Implicit GEMM | Production-ready, validated |
-| Winograd | Experimental, falls back to implicit GEMM |
 
 ### Module 05: Attention
 
@@ -255,18 +253,6 @@ void kernel_name<float, OptLevel::Advanced>(...) {
 | INT8 Quantize | Per-row scaling |
 | INT8 Dequantize | Restore from quantized |
 | FP8 Scaling | Placeholder for Hopper |
-
-### Module 07: CUDA 13 Features
-
-**Purpose**: Experimental Hopper architecture features.
-
-| Feature | Status |
-|---------|--------|
-| TMA | Async copy fallback |
-| Clusters | Block reduction fallback |
-| FP8 GEMM | Scaled FP16 demo |
-
----
 
 ## Build System
 
@@ -308,7 +294,6 @@ hpc_elementwise  hpc_reduction  hpc_gemm  hpc_attention
      └─────────────────┴─────────────┴───────────┘
                        │
                        ▼
-                  hpc_cuda13
 ```
 
 ---
@@ -326,8 +311,7 @@ tests/
 ├── gemm/
 ├── attention/
 ├── quantization/
-├── convolution/
-└── cuda13/
+└── convolution/
 ```
 
 ### Test Utilities
