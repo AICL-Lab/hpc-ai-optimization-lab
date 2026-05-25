@@ -365,11 +365,11 @@ git push origin feature/my-optimization
 
 ## 路线图
 
-仓库当前处于收尾与加固阶段。
+仓库当前处于精简与加固阶段。
 
 ### 当前重点
 
-- 清理仓库结构并完成 OpenSpec 对齐
+- 精简仓库结构并降低流程负担
 - 降低 workflow 与文档噪音
 - 改进 GitHub Pages 与仓库对外展示
 - 修复文档、工具链与自动化中的失真和不一致问题
@@ -378,7 +378,7 @@ git push origin feature/my-optimization
 
 - 大范围新增功能
 - 没有边界的未来版本承诺
-- 未经活跃 bounded change 支撑的大型新集成面
+- 缺乏明确近期落地价值的大型新集成面
 
 ---
 

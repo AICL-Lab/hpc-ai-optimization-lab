@@ -368,11 +368,11 @@ git push origin feature/my-optimization
 
 ## Roadmap
 
-The repository is in a finishing-and-hardening phase.
+The repository is in a simplify-and-harden phase.
 
 ### Current focus
 
-- clean up repository structure and OpenSpec alignment
+- simplify repository structure and reduce process overhead
 - reduce workflow and documentation noise
 - improve GitHub Pages and repository presentation
 - fix trust-reducing inconsistencies across docs, tooling, and automation
@@ -381,7 +381,7 @@ The repository is in a finishing-and-hardening phase.
 
 - broad new feature expansion
 - speculative future release promises
-- large new integration surfaces not already backed by an active bounded change
+- large new integration surfaces without clear near-term implementation value
 
 ---
 

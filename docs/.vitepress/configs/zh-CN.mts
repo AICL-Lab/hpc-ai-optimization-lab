@@ -19,8 +19,7 @@ const zhCNConfig: DefaultTheme.Config = {
       text: '参考',
       items: [
         { text: 'API 参考', link: '/zh-CN/api/index' },
-        { text: '架构概览', link: '/zh-CN/api/architecture' },
-        { text: '更新日志', link: '/zh-CN/changelog' }
+        { text: '架构概览', link: '/zh-CN/api/architecture' }
       ]
     },
     {
@@ -70,8 +69,7 @@ const zhCNConfig: DefaultTheme.Config = {
         collapsed: true,
         items: [
           { text: 'API 参考', link: '/zh-CN/api/index' },
-          { text: '架构概览', link: '/zh-CN/api/architecture' },
-          { text: '更新日志', link: '/zh-CN/changelog' }
+          { text: '架构概览', link: '/zh-CN/api/architecture' }
         ]
       }
     ]

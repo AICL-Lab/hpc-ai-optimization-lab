@@ -1,43 +1,38 @@
 # Architecture Overview
 
-This directory keeps high-level architecture context for the current codebase. Active repository workflow and cleanup requirements now live under `openspec/`, while earlier design decisions are preserved in `openspec/archive/`.
+This directory keeps high-level repository architecture context for maintainers.
 
----
+Public, reader-facing architecture references live in:
 
-## Historical design records
-
-- `openspec/archive/2026-04-17-core-architecture/`
-- `openspec/archive/2026-04-17-quality-standards/`
-
-These archives preserve the earlier architecture and quality-standard design work that was previously linked through the removed legacy `specs/` tree.
+- `docs/en/api/architecture.md`
+- `docs/zh-CN/api/architecture.md`
 
 ---
 
 ## System architecture (high level)
 
 ```text
-Applications / examples / benchmarks
-                |
-                v
-      Python bindings (nanobind)
-                |
-                v
-  CUDA kernels (elementwise / reduction / gemm /
-   convolution / attention / quantization / cuda13)
-                |
-                v
-Common infrastructure (tensor / timer / cuda checks /
-types / reduction helpers / launch helpers)
-                |
-                v
-Build and runtime layer (CMake / FetchContent / CUDA / Docker)
+Examples / benchmarks / tests
+              |
+              v
+    Python bindings (nanobind)
+              |
+              v
+ CUDA kernels (elementwise / reduction / gemm /
+  convolution / attention / quantization / cuda13)
+              |
+              v
+ Shared infrastructure (tensor / timer / CUDA checks /
+ types / reduction helpers / launch helpers)
+              |
+              v
+ Build + runtime layer (CMake / FetchContent / CUDA / Docker)
 ```
 
 ---
 
-## Core patterns
+## Maintainer guidance
 
-1. Unified module interfaces for optimized kernel families
-2. RAII-based GPU resource management
-3. Thin Python bindings over the C++/CUDA core
-4. CMake-driven build graph with optional bindings and docs surfaces
+1. Keep architecture notes tied to shipped code paths, not repository process history.
+2. Prefer the bilingual API architecture pages for public explanation and this directory for lightweight maintainer context only.
+3. Rewrite or remove stale architecture claims instead of layering new notes over old ones.

@@ -115,8 +115,8 @@ hero:
     <strong>I want architecture context</strong>
     Review module layout, current seams, and implementation boundaries.
   </a>
-  <a class="entry-card" href="/en/changelog">
-    <strong>I want recent changes</strong>
-    Read changelog before comparing docs against older clones or screenshots.
+  <a class="entry-card" href="/en/guide/troubleshooting">
+    <strong>I need troubleshooting help</strong>
+    Jump straight to the known build, CUDA, and environment pitfalls before digging deeper.
   </a>
 </div>

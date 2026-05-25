@@ -19,8 +19,7 @@ const enConfig: DefaultTheme.Config = {
       text: 'Reference',
       items: [
         { text: 'API Reference', link: '/en/api/index' },
-        { text: 'Architecture', link: '/en/api/architecture' },
-        { text: 'Changelog', link: '/en/changelog' }
+        { text: 'Architecture', link: '/en/api/architecture' }
       ]
     },
     {
@@ -70,8 +69,7 @@ const enConfig: DefaultTheme.Config = {
         collapsed: true,
         items: [
           { text: 'API Reference', link: '/en/api/index' },
-          { text: 'Architecture', link: '/en/api/architecture' },
-          { text: 'Changelog', link: '/en/changelog' }
+          { text: 'Architecture', link: '/en/api/architecture' }
         ]
       }
     ]

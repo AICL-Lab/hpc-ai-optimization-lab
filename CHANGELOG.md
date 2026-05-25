@@ -1,21 +1,23 @@
 # Changelog
 
-This file records the high-level release history of **HPC-AI-Optimization-Lab**. Detailed notes, one-off summaries, and supporting release material belong under `changelog/`.
+This file is the single authoritative changelog for **HPC-AI-Optimization-Lab**.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but the active surface is intentionally kept concise for this repository's stabilization phase.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and kept intentionally concise for the repository's stabilization phase.
 
 ## [Unreleased]
 
 ### Changed
 
-- Ongoing repository stabilization: OpenSpec realignment, assistant-guidance cleanup, documentation reduction, and workflow hardening.
+- Removed the repository's OpenSpec and tool-specific AI workflow scaffolding to return the project to a simpler contributor model.
+- Consolidated changelog history back to this root file and removed duplicated changelog pages, sync scripts, and side directories.
+- Refocused GitHub Pages on guides, examples, and architecture instead of mirroring repository change history.
 
 ## [0.3.0] - 2026-04-16
 
 ### Changed
 
 - Promoted the bilingual documentation surface and refreshed the repository presentation.
-- Consolidated release-note material under `changelog/`.
+- Consolidated the public documentation and release presentation for the 0.3.0 stabilization milestone.
 
 ## [0.2.0] - 2025-01-15
 
