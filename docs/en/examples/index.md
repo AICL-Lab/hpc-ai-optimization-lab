@@ -21,7 +21,6 @@ cmake --build . -j$(nproc)
 | [Convolution Example](#conv) | Convolution kernel example | Convolution |
 | [FlashAttention Example](#attention) | Attention kernel example | Attention |
 | [Quantization Example](#quant) | INT8 quantization example | Quantization |
-| [CUDA 13 Example](#cuda13) | Hopper features example | CUDA 13 |
 
 ## Running Examples
 

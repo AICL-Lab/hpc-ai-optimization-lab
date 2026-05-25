@@ -285,9 +285,9 @@ Tensor Core (multiple per SM):
 
 ## Step 6: Tensor Core (MMA PTX) 🚧
 
-> **Status**: In Development
+> **Status**: Fallback wrapper over Step 5
 > 
-> Step 6 currently delegates to Step 5 (WMMA) for stability. Full MMA PTX implementation requires extensive register management and warp-level coordination that is planned for future development.
+> Step 6 currently delegates to Step 5 (WMMA) for stability. The enum entry is retained to keep the optimization ladder explicit, but the shipped close-out behavior is the WMMA fallback.
 
 ### Optimization Strategy
 
@@ -317,11 +317,11 @@ __device__ __forceinline__ void mma_m16n8k16_fp16(
 
 ---
 
-## Step 7: Software Pipelining 🚧
+## Step 7: Software Pipelining ✅
 
-> **Status**: Planned for Future Implementation
+> **Status**: Implemented
 > 
-> Step 7 is planned for future development and not yet implemented in the current version.
+> Step 7 ships in the current version as the maintained software-pipelined GEMM path for `float` and `__half`.
 
 ### Optimization Strategy
 
@@ -379,12 +379,12 @@ Stage 2:                   |--Load--|--Compute--|--Load--|--Compute--|
 | 3 | Double Buffering | 3.5 | 7.0× | ✅ Implemented |
 | 4 | Register Tiling | 6.0 | 12.0× | ✅ Implemented |
 | 5 | WMMA | 50+ | 100× | ✅ Implemented |
-| 6 | MMA PTX | ~60† | ~120× | 🚧 In Development |
-| 7 | Software Pipelining | ~70† | ~140× | 🚧 Planned |
+| 6 | MMA PTX | ~60† | ~120× | 🚧 WMMA fallback |
+| 7 | Software Pipelining | ~70† | ~140× | ✅ Implemented |
 
 † Projected estimates
 
-> **Note**: Steps 1-5 are fully implemented and tested. Step 6 currently delegates to Step 5 for stability. Step 7 is planned for future development.
+> **Note**: Steps 1-5 are fully implemented and tested. Step 6 currently delegates to Step 5 for stability. Step 7 is implemented as the shipped software-pipelined path.
 
 ## References
 

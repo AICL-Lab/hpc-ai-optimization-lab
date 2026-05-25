@@ -194,11 +194,11 @@ FP32 matrix multiplication (4096×4096) on NVIDIA A100:
 | 4 | Register tiling | 6.0 TFLOPS | 12× | ✅ |
 | 5 | **Tensor Core (WMMA)** | **50+ TFLOPS** | **100×** | ✅ |
 | 6 | Tensor Core (MMA PTX)* | ~60 TFLOPS† | ~120× | 🚧 |
-| 7 | Software pipelining* | ~70 TFLOPS† | ~140× | 🚧 |
+| 7 | Software pipelining | ~70 TFLOPS† | ~140× | ✅ |
 
 > 💡 The progression from Step 1 to Step 5 demonstrates why modern AI hardware achieves remarkable speedups through specialized units.
 > 
-> *Step 6 currently delegates to Step 5 for stability. Step 7 is planned for future implementation.  
+> *Step 6 currently delegates to Step 5 for stability. Step 7 ships as the maintained software-pipelined path.  
 > †Performance values are projected estimates.
 
 ### Module Status
@@ -244,8 +244,8 @@ FP32 matrix multiplication (4096×4096) on NVIDIA A100:
 └── Profiling & tuning
 
 🏆 Advanced (ongoing)
-├── CUDA 13 Hopper features
-├── CUTLASS deep dive
+├── CUTLASS baseline comparison
+├── Local GPU profiling and validation
 └── Research implementations
 ```
 
@@ -262,8 +262,7 @@ hpc-ai-optimization-lab/
 │   ├── gemm/               # 7-step GEMM optimization
 │   ├── attention/          # FlashAttention, RoPE
 │   ├── convolution/        # Implicit GEMM
-│   ├── quantization/       # INT8/FP8
-│   └── cuda13/             # Hopper-specific features
+│   └── quantization/       # INT8/FP8
 ├── tests/                  # Test suite (GoogleTest + RapidCheck)
 ├── examples/               # Standalone examples
 ├── python/                 # Python bindings

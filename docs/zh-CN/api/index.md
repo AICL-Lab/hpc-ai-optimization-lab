@@ -13,7 +13,6 @@
 - [模块 04: 卷积 (Convolution)](#模块-04-卷积)
 - [模块 05: 注意力 (Attention)](#模块-05-注意力)
 - [模块 06: 量化 (Quantization)](#模块-06-量化)
-- [模块 07: CUDA 13 特性](#模块-07-cuda-13-特性)
 - [Python API](#python-api)
 
 ---
@@ -382,7 +381,7 @@ enum class GemmOpt {
     RegisterTiling,   // 步骤 4: 寄存器分块
     TensorCoreWMMA,   // 步骤 5: WMMA API ✅
     TensorCoreMMA,    // 步骤 6: MMA PTX（委托给步骤 5）🚧
-    SoftwarePipeline  // 步骤 7: 软件流水线（计划中）🚧
+    SoftwarePipeline  // 步骤 7: 软件流水线 ✅
 };
 
 template <typename T, GemmOpt Opt = GemmOpt::SharedMemTiling>
@@ -408,9 +407,9 @@ void gemm_cutlass(const T* A, const T* B, T* C,
 
 | 类型 | 步骤 1-4 | 步骤 5 (WMMA) | 步骤 6 (MMA) | 步骤 7 (流水线) | CUTLASS |
 |------|----------|---------------|--------------|-----------------|---------|
-| `float` | ✅ | ✅ | ✅† | 🚧 | ✅ |
-| `__half` | ✅ | ✅ | ✅† | 🚧 | 🚧 |
-| `int8_t` | ✅‡ | ✅ | ✅† | 🚧 | 🚧 |
+| `float` | ✅ | ✅ | ✅† | ✅ | ✅ |
+| `__half` | ✅ | ✅ | ✅† | ✅ | 🚧 |
+| `int8_t` | ✅‡ | 🚧 | 🚧 | 🚧 | 🚧 |
 
 † 步骤 6 当前为稳定性考虑委托给步骤 5  
 ‡ INT8 GEMM 当前仅 SharedMemTiling 优化完全实现；其他优化级别委托给 SharedMemTiling
@@ -481,34 +480,6 @@ void conv2d_implicit_gemm(const T* input, const T* weight, T* output,
 
 } // namespace hpc::convolution
 ```
-
----
-
-### Winograd 卷积
-
-优化的 3×3 卷积（实验性）。
-
-**头文件**: `convolution/conv_winograd.cuh`
-
-```cpp
-#include "convolution/conv_winograd.cuh"
-
-namespace hpc::convolution {
-
-struct WinogradConfig {
-    int tile_size = 4;
-    bool use_winograd = true;
-};
-
-void conv2d_winograd(const float* input, const float* weight, float* output,
-                     const ConvParams& params,
-                     const WinogradConfig& config = {},
-                     cudaStream_t stream = nullptr);
-
-} // namespace hpc::convolution
-```
-
----
 
 ## 模块 05: 注意力
 
@@ -632,97 +603,6 @@ void dequantize_int8(const int8_t* input, const float* scale,
 
 } // namespace hpc::quantization
 ```
-
----
-
-## 模块 07: CUDA 13 特性
-
-### TMA 拷贝
-
-张量内存加速器（Tensor Memory Accelerator）工具。
-
-**头文件**: `cuda13/tma.cuh`
-
-```cpp
-#include "cuda13/tma.cuh"
-
-namespace hpc::cuda13 {
-
-struct TMAConfig {
-    int cluster_width = 1;
-    int cluster_height = 1;
-    int pipeline_depth = 2;
-    bool use_tma = true;
-};
-
-template <typename T, int NUM_CHANNELS = 8>
-void tma_copy_2d(const T* src, T* dst,
-                 int rows, int cols,
-                 const TMAConfig& config,
-                 cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
----
-
-### 线程块集群 (Thread Block Clusters)
-
-**头文件**: `cuda13/cluster.cuh`
-
-```cpp
-#include "cuda13/cluster.cuh"
-
-namespace hpc::cuda13 {
-
-struct ClusterConfig {
-    dim3 cluster_dims;
-    dim3 grid_dims;
-    dim3 block_dims;
-    bool use_cluster = true;
-};
-
-template <typename T>
-void cluster_reduce(const T* input, T* output, size_t n,
-                    const ClusterConfig& config,
-                    cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
----
-
-### FP8 GEMM
-
-**头文件**: `cuda13/fp8_gemm.cuh`
-
-```cpp
-#include "cuda13/fp8_gemm.cuh"
-
-namespace hpc::cuda13 {
-
-enum class FP8Format { e4m3, e5m2 };
-
-struct FP8GEMMConfig {
-    int tile_m = 128;
-    int tile_n = 128;
-    int tile_k = 64;
-    FP8Format format_a = FP8Format::e4m3;
-    FP8Format format_b = FP8Format::e4m3;
-    float scale_a = 1.0f;
-    float scale_b = 1.0f;
-    bool use_fp8 = true;
-};
-
-void fp8_gemm(const __half* A, const __half* B, __half* C,
-              int M, int N, int K,
-              const FP8GEMMConfig& config,
-              cudaStream_t stream = nullptr);
-
-} // namespace hpc::cuda13
-```
-
----
 
 ## Python API
 

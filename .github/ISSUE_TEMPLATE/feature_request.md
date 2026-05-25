@@ -52,13 +52,12 @@ Describe specific use cases for this feature:
 Which modules would this feature affect?
 
 - [ ] `src/common/` - Common utilities
-- [ ] `src/01_elementwise/` - Elementwise operations
-- [ ] `src/02_reduction/` - Reduction operations
-- [ ] `src/03_gemm/` - GEMM operations
-- [ ] `src/04_convolution/` - Convolution operations
-- [ ] `src/05_attention/` - Attention mechanisms
-- [ ] `src/06_quantization/` - Quantization utilities
-- [ ] `src/07_cuda13_features/` - CUDA 13 features
+- [ ] `src/elementwise/` - Elementwise operations
+- [ ] `src/reduction/` - Reduction operations
+- [ ] `src/gemm/` - GEMM operations
+- [ ] `src/convolution/` - Convolution operations
+- [ ] `src/attention/` - Attention mechanisms
+- [ ] `src/quantization/` - Quantization utilities
 - [ ] `python/` - Python bindings
 - [ ] `docs/` - Documentation
 - [ ] `tests/` - Testing infrastructure

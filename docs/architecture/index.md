@@ -19,7 +19,7 @@ Examples / benchmarks / tests
               |
               v
  CUDA kernels (elementwise / reduction / gemm /
-  convolution / attention / quantization / cuda13)
+  convolution / attention / quantization)
               |
               v
  Shared infrastructure (tensor / timer / CUDA checks /

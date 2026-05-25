@@ -71,7 +71,7 @@ hero:
   </a>
   <a class="entry-card" href="/en/guide/">
     <strong>Guide index</strong>
-    Installation, quick start, memory, reduction, GEMM, FlashAttention, CUDA 13.
+    Installation, quick start, memory, reduction, GEMM, and FlashAttention.
   </a>
   <a class="entry-card" href="/en/api/index">
     <strong>API + architecture</strong>
@@ -84,7 +84,7 @@ hero:
 <div class="status-grid">
   <div class="status-card">
     <strong>GEMM path</strong>
-    Steps 1-5 ship today. Step 6 currently delegates to Step 5 for stability. Step 7 remains planned work.
+    Steps 1-5 ship today. Step 6 delegates to Step 5 for stability. Step 7 ships as the maintained software-pipelined path.
   </div>
   <div class="status-card">
     <strong>Python bindings</strong>

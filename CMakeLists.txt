@@ -103,7 +103,6 @@ add_subdirectory(src/gemm)
 add_subdirectory(src/convolution)
 add_subdirectory(src/attention)
 add_subdirectory(src/quantization)
-add_subdirectory(src/cuda13)
 
 # Python bindings
 if(BUILD_PYTHON_BINDINGS)

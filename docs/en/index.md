@@ -127,7 +127,7 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
 </div>
 
 <div class="status-note">
-  Public docs track shipped behavior. Step 6 currently delegates to Step 5 for stability, Step 7 remains planned, and Python bindings cover <code>elementwise</code>, <code>reduction</code>, and <code>gemm</code> only.
+  Public docs track shipped behavior. Step 6 currently delegates to Step 5 for stability, Step 7 ships as the maintained software-pipelined path, and Python bindings cover <code>elementwise</code>, <code>reduction</code>, and <code>gemm</code> only.
 </div>
 
 ## 👥 Who is this for?
@@ -174,8 +174,8 @@ import MetricsDashboard from '../.vitepress/theme/components/MetricsDashboard.vu
   <div class="path-level advanced">
     <h4>🏆 Advanced (ongoing)</h4>
     <ul>
-      <li><a href="/en/guide/cuda13">CUDA 13 Hopper Features</a></li>
-      <li>Review Step 6/7 plans with the implementation status notes in guides</li>
+      <li>Compare shipped kernels with the CUTLASS baseline and public benchmarks</li>
+      <li>Review Step 6 fallback notes alongside the shipped Step 7 path</li>
       <li>Use architecture + API reference when preparing local GPU experiments</li>
     </ul>
   </div>

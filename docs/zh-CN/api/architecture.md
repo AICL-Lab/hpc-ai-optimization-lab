@@ -31,8 +31,7 @@ hpc-ai-optimization-lab/
 │   ├── gemm/            # 模块 3：矩阵乘法
 │   ├── convolution/     # 模块 4：卷积操作
 │   ├── attention/       # 模块 5：注意力机制
-│   ├── quantization/    # 模块 6：量化工具
-│   └── cuda13/ # 模块 7：实验性功能
+│   └── quantization/    # 模块 6：量化工具
 ├── tests/                  # 测试套件
 ├── examples/               # 可运行示例
 ├── python/                 # Python 绑定
@@ -235,7 +234,6 @@ void kernel_name<float, OptLevel::Advanced>(...) {
 | 操作 | 描述 |
 |------|------|
 | Implicit GEMM | 生产就绪，已验证 |
-| Winograd | 实验性，回退到隐式 GEMM |
 
 ### 模块 05：注意力 (Attention)
 
@@ -256,18 +254,6 @@ void kernel_name<float, OptLevel::Advanced>(...) {
 | INT8 Quantize | 逐行缩放 (Per-row scaling) |
 | INT8 Dequantize | 从量化值还原 |
 | FP8 Scaling | Hopper 架构占位符 |
-
-### 模块 07：CUDA 13 特性
-
-**目的**：实验性 Hopper 架构特性。
-
-| 特性 | 状态 |
-|------|------|
-| TMA | 异步拷贝回退 |
-| Clusters | 块级归约回退 |
-| FP8 GEMM | 缩放 FP16 演示 |
-
----
 
 ## 构建系统
 
@@ -309,7 +295,6 @@ hpc_elementwise  hpc_reduction  hpc_gemm  hpc_attention
      └─────────────────┴─────────────┴───────────┘
                        │
                        ▼
-                  hpc_cuda13
 ```
 
 ---
@@ -327,8 +312,7 @@ tests/
 ├── gemm/
 ├── attention/
 ├── quantization/
-├── convolution/
-└── cuda13/
+└── convolution/
 ```
 
 ### 测试工具

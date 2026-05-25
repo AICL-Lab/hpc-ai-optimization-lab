@@ -46,11 +46,8 @@ add_cuda_example(flash_attention_example attention/flash_attention_example.cu)
 # Quantization examples
 add_cuda_example(quant_example quantization/quant_example.cu)
 
-# CUDA 13 examples
-add_cuda_example(cuda13_example cuda13/cuda13_example.cu)
-
 # Install examples
-install(TARGETS relu_example softmax_benchmark gemm_benchmark conv_example flash_attention_example quant_example cuda13_example
+install(TARGETS relu_example softmax_benchmark gemm_benchmark conv_example flash_attention_example quant_example
     RUNTIME DESTINATION bin/examples
 )
 
